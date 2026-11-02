@@ -1,4 +1,5 @@
-import { json, randomHex, sha256, safeEqual, currentUser } from "./auth.js";
+import { randomHex, sha256, safeEqual, currentUser } from "./auth.js";
+export { randomHex } from "./auth.js";
 
 const enc = new TextEncoder();
 const hex = (bytes) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -122,11 +123,12 @@ export const queryAlipayOrder = async (tradeNo,env) => {
   const status=String(d.trade_status||d.status||result.trade_status||result.status||"").toLowerCase();
   return {paid:["1","trade_success","success","paid","finish"].includes(status),providerTradeNo:String(d.trade_no||d.trade_id||"")};
 };
-export const queueMerchantNotice = async (db,order) => {
+export const queueMerchantNotice = async (env,order) => {
+  const db=env.AUTH_DB;
   if(!order.notify_url) return;
   const payload={out_trade_no:order.out_trade_no,trade_no:order.trade_no,amount:centsToYuan(order.amount_cents),status:"TRADE_SUCCESS",timestamp:String(Math.floor(Date.now()/1000))};
   const merchant=await db.prepare("SELECT app_secret_ciphertext FROM pay_merchants WHERE id=?").bind(order.merchant_id).first();
-  const secret=await decryptSecret(merchant.app_secret_ciphertext,{PAY_MERCHANT_MASTER_KEY:db.__masterKey});
+  const secret=await decryptSecret(merchant.app_secret_ciphertext,env);
   payload.sign=merchantSign(payload,secret);
   await db.prepare("INSERT OR IGNORE INTO payment_webhook_deliveries (id,trade_no,target_url,payload_json,status,attempts,next_attempt_at,created_at) VALUES (?,?,?,?,'pending',0,?,?)")
     .bind(randomHex(16),order.trade_no,order.notify_url,JSON.stringify(payload),Math.floor(Date.now()/1000),Math.floor(Date.now()/1000)).run();
