@@ -165,6 +165,7 @@ async function submitAuth(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const payload = Object.fromEntries(form.entries());
+  if (mode === "register") payload.consent = document.querySelector("#consent").checked;
   const button = event.currentTarget.querySelector(".primary-button");
   if (mode === "register" && !document.querySelector("#consent").checked) {
     showToast("请先阅读并同意用户协议与隐私政策", "error");
