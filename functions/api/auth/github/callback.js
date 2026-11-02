@@ -5,7 +5,7 @@ const clearState = "__Host-qt_oauth_state=; Path=/; HttpOnly; Secure; SameSite=L
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const cookies = request.headers.get("Cookie") || "";
-  const expectedState = cookies.match(/(?:^|;\\s*)__Host-qt_oauth_state=([^;]+)/)?.[1];
+  const expectedState = cookies.match(/(?:^|;\s*)__Host-qt_oauth_state=([^;]+)/)?.[1];
   const state = url.searchParams.get("state");
   if (!expectedState || !state || expectedState !== state || url.searchParams.get("error")) {
     return Response.redirect(`${url.origin}/?oauth=failed`, 302);
