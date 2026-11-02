@@ -11,7 +11,7 @@ export async function onRequestPost({ request, env }) {
     if (!validEmail(email)) return json({ error: "请输入有效的邮箱地址。" }, 400);
     if (!consent) return json({ error: "请先阅读并同意用户协议与隐私政策。" }, 400);
     if (password.length < 8 || password.length > 128) return json({ error: "密码长度需为 8 至 128 位。" }, 400);
-    if (!/^\\d{6}$/.test(code)) return json({ error: "请输入 6 位邮箱验证码。" }, 400);
+    if (!/^\d{6}$/.test(code)) return json({ error: "请输入 6 位邮箱验证码。" }, 400);
 
     const otp = await env.AUTH_DB.prepare("SELECT code_hash, expires_at, attempts FROM email_otps WHERE email = ?").bind(email).first();
     const now = Math.floor(Date.now() / 1000);
