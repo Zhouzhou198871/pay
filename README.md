@@ -8,9 +8,10 @@
 - 邮箱注册：6 位验证码、10 分钟有效期、60 秒发送冷却、错误次数限制
 - 密码使用 PBKDF2-SHA256 保存，登录态使用 HttpOnly + Secure Cookie
 - GitHub OAuth 登录回调（需要配置 OAuth App）
-- Cloudflare D1 用户、验证码与会话表
+- Cloudflare D1 用户、验证码与会话表，建表 SQL 保存在 `migrations/0001_auth.sql`
 - Resend 事务邮件模板，发件人统一为 `晴天支付 <no-reply@lynli.me>`
-- Cloudflare Pages 连接 GitHub `main` 分支，提交后自动构建和部署
+- GitHub Actions 在推送到 `main` 和 Pull Request 时执行后端语法检查、认证基础测试和 Vite 构建
+- Cloudflare Pages 连接 GitHub `main` 分支后，可在每次提交时自动构建和部署
 
 ## 运行环境
 
@@ -19,22 +20,35 @@ Cloudflare Pages 项目：`qingtian-pay`
 D1 数据库：`qingtian-pay-auth`（APAC）  
 D1 binding：`AUTH_DB`
 
-### 必须配置的加密变量
+### 初始化 D1 数据库
 
-在 Cloudflare Dashboard → Workers & Pages → qingtian-pay → Settings → Variables and Secrets 中设置：
+首次启用认证前，在 Cloudflare D1 控制台选择 `qingtian-pay-auth`，执行仓库中的 `migrations/0001_auth.sql`。
+
+也可以在已登录 Cloudflare 的本地环境执行：
+
+```bash
+npx wrangler d1 execute qingtian-pay-auth --remote --file=migrations/0001_auth.sql
+```
+
+迁移使用 `CREATE TABLE IF NOT EXISTS`，重复执行不会覆盖现有用户数据。确认 Pages 项目的 D1 binding 名称为 `AUTH_DB`，并指向 `qingtian-pay-auth`。
+
+### 必须配置的变量与密钥
+
+在 Cloudflare Dashboard → Workers & Pages → qingtian-pay → Settings → Variables and Secrets 中配置：
 
 | 变量 | 类型 | 用途 |
 |---|---|---|
-| `RESEND_API_KEY` | Secret | 已创建为仅发送权限，并限制到 `lynli.me` |
-| `AUTH_SECRET` | Secret | 已由部署配置生成，用于验证码 HMAC |
-| `GITHUB_CLIENT_ID` | Secret / Text | GitHub OAuth App Client ID |
+| `RESEND_API_KEY` | Secret | Resend 仅发送权限 API Key，限制到 `lynli.me` |
+| `AUTH_SECRET` | Secret | 用于验证码 HMAC 的随机密钥 |
+| `MAIL_FROM` | Text | 必须设置为 `晴天支付 <no-reply@lynli.me>` |
+| `GITHUB_CLIENT_ID` | Text | GitHub OAuth App Client ID |
 | `GITHUB_CLIENT_SECRET` | Secret | GitHub OAuth App Client Secret |
 
-发件人已配置为 `晴天支付 <no-reply@lynli.me>`。不要把 API Key、OAuth Secret 写进代码或提交到 Git。
+邮箱验证码接口要求 `AUTH_DB`、`RESEND_API_KEY`、`AUTH_SECRET` 和 `MAIL_FROM` 全部存在；缺少任意一项都会拒绝发送验证码。不要把 API Key、OAuth Secret 或本地密钥写进代码或提交到 Git。
 
 ### Resend
 
-Resend 中 `lynli.me` 已验证且 Sending 已启用。创建一个 `sending_access` API Key，并限制发件域名为 `lynli.me`，将其保存为 Cloudflare Pages 的 `RESEND_API_KEY` Secret。
+Resend 中 `lynli.me` 需要处于已验证且 Sending 已启用状态。创建一个 `sending_access` API Key，并限制发件域名为 `lynli.me`，保存为 Cloudflare Pages 的 `RESEND_API_KEY` Secret。
 
 ### GitHub 一键登录
 
@@ -46,11 +60,19 @@ Resend 中 `lynli.me` 已验证且 Sending 已启用。创建一个 `sending_acc
 
 将 Client ID 和 Client Secret 设置为上述 Pages 环境变量。配置完成后 GitHub 登录按钮即可走真实 OAuth 流程。
 
-## 本地开发
+## 本地开发与验证
 
 ```bash
 npm install
 npm run dev
+```
+
+提交前可运行：
+
+```bash
+npm run check
+npm test
+npm run build
 ```
 
 本地 Functions 需要通过 Wrangler / Cloudflare Pages 本地环境绑定 D1，并在本地密钥文件中配置服务变量。不要把本地密钥文件提交到 Git。
