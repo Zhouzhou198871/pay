@@ -6,7 +6,7 @@
 
 - [开发者接入指南](docs/DEVELOPER_GUIDE.md)：认证接入、GitHub OAuth、数据查询、错误处理与安全建议。
 - [API 接口参考](docs/API_REFERENCE.md)：已实现接口的路径、参数、响应字段、状态码和限制。
-- 生产 API Base URL：`https://qingtian-pay.pages.dev`
+- 生产 API Base URL：`https://pay.lynli.me`
 
 **接口状态说明：** 当前已提供账户认证 API 和商户工作台只读数据 API。支付下单、支付回调、退款、提现申请/审核、商户 API Key 与 Webhook 尚未开放。请勿把规划能力视为可调用接口。
 
@@ -26,7 +26,7 @@
 ## 运行环境
 
 Cloudflare Pages 项目：`qingtian-pay`  
-线上预览域名：`https://qingtian-pay.pages.dev`  
+线上预览域名：`https://pay.lynli.me`  
 D1 数据库：`qingtian-pay-auth`（APAC）  
 D1 binding：`AUTH_DB`
 
@@ -64,8 +64,8 @@ Resend 中 `lynli.me` 需要处于已验证且 Sending 已启用状态。创建�
 
 在 GitHub Developer Settings → OAuth Apps 创建 OAuth App：
 
-- Homepage URL：`https://qingtian-pay.pages.dev`
-- Authorization callback URL：`https://qingtian-pay.pages.dev/api/auth/github/callback`
+- Homepage URL：`https://pay.lynli.me`
+- Authorization callback URL：`https://pay.lynli.me/api/auth/github/callback`
 - Scope：应用会请求 `read:user` 与 `user:email`
 
 将 Client ID 和 Client Secret 设置为上述 Pages 环境变量。配置完成后 GitHub 登录按钮即可走真实 OAuth 流程。
