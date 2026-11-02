@@ -39,14 +39,16 @@ export async function onRequestPost({ request, env }) {
     // D1 batch is transactional: user creation, OTP consumption and session creation
     // either all commit, or all roll back. This prevents stranded accounts on failure.
     stage = "commit-registration";
-    await env.AUTH_DB.batch([
-      env.AUTH_DB.prepare("INSERT INTO users (id, email, password_hash, created_at, status, display_name, terms_accepted_at, terms_version, privacy_version) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)")
-        .bind(userId, email, passwordHash, now, email.split("@")[0], now, "2026-11-02", "2026-11-02"),
-      env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ? AND purpose = 'register' AND code_hash = ?")
-        .bind(email, otp.code_hash),
-      env.AUTH_DB.prepare("INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
-        .bind(tokenHash, userId, now + 60 * 60 * 24 * 30, now)
+    const results = await env.AUTH_DB.batch([
+      env.AUTH_DB.prepare("INSERT INTO users (id, email, password_hash, created_at, status, display_name, terms_accepted_at, terms_version, privacy_version) SELECT ?, ?, ?, ?, 'active', ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM email_otps WHERE email = ? AND purpose = 'register' AND code_hash = ? AND expires_at >= ? AND attempts < 5)")
+        .bind(userId, email, passwordHash, now, email.split("@")[0], now, "2026-11-02", "2026-11-02", email, otp.code_hash, now),
+      env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ? AND purpose = 'register' AND code_hash = ? AND expires_at >= ? AND attempts < 5")
+        .bind(email, otp.code_hash, now),
+      env.AUTH_DB.prepare("INSERT INTO sessions (token_hash, user_id, expires_at, created_at) SELECT ?, id, ?, ? FROM users WHERE id = ?")
+        .bind(tokenHash, now + 60 * 60 * 24 * 30, now, userId)
     ]);
+    if (!results[0]?.meta?.changes) return json({ error: "验证码已失效，请重新获取。" }, 400);
+    if (!results[1]?.meta?.changes || !results[2]?.meta?.changes) throw new Error("registration transaction invariant failed");
     return json({ success: true }, 201, { "Set-Cookie": sessionCookie(token) });
   } catch (error) {
     if (stage === "commit-registration" && env.AUTH_DB) {
