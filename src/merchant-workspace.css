@@ -1,0 +1,10 @@
+.record-status{display:inline-flex;align-items:center;justify-content:center;width:max-content;max-width:100%;padding:4px 9px;border-radius:20px;background:#eaf4fb;color:#2878b8;font-size:10px;font-weight:700}
+.record-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:14px 2px;color:#8393a6;font-size:11px}
+.record-pagination>div{display:flex;gap:8px}
+.record-pagination button,.record-retry{border:1px solid #dce8f2;border-radius:9px;background:#fff;color:#3978bd;padding:8px 13px;font-size:11px;font-weight:700}
+.record-pagination button:disabled{opacity:.4;cursor:not-allowed}
+.record-retry{margin-top:18px}
+.section-empty a{display:inline-flex;margin-top:12px;margin-right:10px;color:#2878c4;font-size:12px;font-weight:700;text-decoration:none}
+.merchant-record .record-meta{align-items:flex-end}
+.merchant-record .record-meta .record-status{align-self:flex-end}
+@media(max-width:600px){.record-pagination{align-items:flex-start;flex-direction:column}.record-pagination>div{width:100%}.record-pagination button{flex:1}.merchant-record .record-meta{max-width:48%}}
