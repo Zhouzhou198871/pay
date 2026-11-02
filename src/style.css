@@ -48,3 +48,100 @@
 }
 
 .captcha-hint{margin:-10px 0 16px;font-size:11px;line-height:1.6;color:#7187a4}
+
+
+/* Merchant workspace inspired by the mobile reference dashboard. */
+.merchant-app{min-height:100vh;background:#f3f7fb;color:#24364b;font-family:"DM Sans","Noto Sans SC",sans-serif}
+.merchant-topbar{height:76px;padding:0 clamp(18px,5vw,64px);display:flex;align-items:center;gap:18px;background:rgba(255,255,255,.92);border-bottom:1px solid #eaf0f6;position:sticky;top:0;z-index:5;backdrop-filter:blur(18px)}
+.merchant-menu-toggle,.merchant-avatar,.merchant-logout-icon{border:0;background:#eef7fb;color:#1689bf;border-radius:14px;width:44px;height:44px;font-size:22px}
+.merchant-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:#152b45;font-weight:800;font-size:19px}
+.merchant-brand img{width:40px;height:40px;object-fit:contain}
+.merchant-top-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+.merchant-secure{font-size:12px;color:#7e8d9d;margin-right:8px}
+.merchant-logout-icon{background:#f4f6f9;color:#667687}
+.merchant-content{max-width:1180px;margin:0 auto;padding:38px clamp(18px,5vw,54px) 60px}
+.merchant-welcome{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:28px}
+.merchant-eyebrow{font-size:10px;letter-spacing:.16em;font-weight:800;color:#168fc2}
+.merchant-welcome h1{font-size:30px;margin:9px 0 5px;color:#172c45}
+.merchant-welcome p{margin:0;color:#8492a1;font-size:13px}
+.merchant-status{font-size:12px;color:#259b7a;background:#eaf8f3;border-radius:20px;padding:9px 13px;white-space:nowrap}
+.merchant-status i{display:inline-block;width:7px;height:7px;background:#2ab58c;border-radius:50%;margin-right:6px}
+.merchant-summary{display:grid;grid-template-columns:1.35fr 1fr 1fr;gap:18px;margin-bottom:20px}
+.merchant-balance,.merchant-stat,.merchant-panel{background:#fff;border:1px solid #edf2f7;border-radius:22px;box-shadow:0 10px 28px rgba(45,77,111,.045)}
+.merchant-balance{padding:26px 28px;background:linear-gradient(135deg,#e5f5fc,#f5fbff)}
+.summary-label,.merchant-stat span{font-size:13px;color:#78899b}
+.summary-value{font-size:38px;font-weight:800;color:#173b60;margin:13px 0}
+.summary-value small{font-size:15px;font-weight:500;color:#78899b}
+.merchant-balance p,.merchant-stat small{font-size:11px;color:#91a0ae;margin:0}
+.merchant-stat{padding:25px;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.merchant-stat b{font-size:30px;color:#243d59}
+.merchant-panel{padding:27px}
+.panel-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.panel-heading h2{font-size:19px;color:#203a57;margin:0 0 6px}
+.panel-heading p{font-size:12px;color:#92a0ad;margin:0}
+.panel-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#e8f7fc;color:#1692bd;font-size:12px;font-weight:800}
+.merchant-profile-row{display:flex;align-items:center;gap:14px;padding:18px;border-radius:17px;background:#f5f9fc}
+.profile-symbol{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#e2f3fb;color:#168bc0;font-size:23px}
+.merchant-profile-row div{min-width:0;display:flex;flex-direction:column;gap:5px}
+.merchant-profile-row b{font-size:14px;color:#33465c;overflow-wrap:anywhere}
+.merchant-profile-row small{font-size:11px;color:#94a0ad}
+.merchant-profile-row button{margin-left:auto;border:0;border-radius:10px;padding:10px 14px;background:#e6f4fa;color:#1789b8;font-size:12px}
+.merchant-shortcuts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.merchant-shortcuts button{border:1px solid #edf1f5;border-radius:13px;background:#fff;padding:15px;color:#536477;font-size:12px}
+.merchant-shortcuts span{display:block;color:#8b70d0;font-size:21px;margin-bottom:8px}
+.merchant-backdrop{position:fixed;inset:0;background:rgba(34,55,79,.34);backdrop-filter:blur(2px);z-index:20;opacity:0;visibility:hidden;transition:opacity .22s,visibility .22s}
+.merchant-backdrop.visible{opacity:1;visibility:visible}
+.merchant-drawer{position:fixed;z-index:21;left:0;top:0;bottom:0;width:min(580px,82vw);padding:30px 34px 24px;background:#fff;box-shadow:18px 0 55px rgba(29,53,80,.12);display:flex;flex-direction:column;transform:translateX(-105%);transition:transform .25s ease;overflow:auto}
+.merchant-drawer.open{transform:translateX(0)}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:58px}
+.drawer-brand{display:flex;align-items:center;gap:15px;text-decoration:none;color:#152a43}
+.drawer-brand img{width:72px;height:72px;object-fit:contain;border-radius:20px}
+.drawer-brand span{display:flex;flex-direction:column;gap:6px}
+.drawer-brand b{font-size:26px}
+.drawer-brand small{font-size:16px;color:#8995a1;letter-spacing:.1em}
+.drawer-close{border:0;width:56px;height:56px;border-radius:50%;background:#f3f7fa;color:#77838e;font-size:34px;font-weight:300}
+.drawer-section-label{font-size:16px;font-weight:600;color:#929da8;margin:0 0 18px 16px}
+.drawer-nav{display:flex;flex-direction:column;gap:7px;margin-bottom:30px}
+.drawer-link{display:flex;align-items:center;gap:18px;min-height:72px;padding:9px 15px;border:0;border-radius:18px;background:transparent;text-align:left;color:#4c5b6c;font-size:18px}
+.drawer-link.active{background:#e5f4fb;color:#1389c2;font-weight:700}
+.drawer-link b{font-size:18px}
+.drawer-link i{font-style:normal;margin-left:auto;color:#1694c6;font-size:24px}
+.drawer-icon{width:54px;height:54px;border-radius:17px;display:grid;place-items:center;font-size:25px;flex:none}
+.drawer-icon.blue{background:#078bd0;color:#fff}
+.drawer-icon.blue-soft{background:#e4f4fb;color:#148fc3}
+.drawer-icon.purple{background:#f0eaff;color:#8b6bd1}
+.drawer-icon.cyan{background:#e5f7fa;color:#319eb4}
+.drawer-user{display:flex;align-items:center;gap:13px;margin-top:auto;padding:17px 18px;border-radius:19px;background:#f2f7fa;min-height:96px}
+.drawer-user-avatar{display:grid;place-items:center;width:55px;height:55px;border-radius:50%;background:#e2f3fb;color:#168fc2;font-size:26px}
+.drawer-user-copy{display:flex;flex-direction:column;gap:5px;min-width:0}
+.drawer-user-copy b{font-size:17px;color:#344357;overflow-wrap:anywhere}
+.drawer-user-copy small{font-size:12px;color:#8794a1;overflow-wrap:anywhere}
+.drawer-user button{margin-left:auto;border:0;background:transparent;color:#71808d;font-size:27px}
+body.merchant-menu-open{overflow:hidden}
+@media(max-width:600px){
+ .merchant-topbar{height:66px;padding:0 15px;gap:12px}
+ .merchant-menu-toggle,.merchant-avatar,.merchant-logout-icon{width:40px;height:40px}
+ .merchant-brand{font-size:16px;gap:7px}.merchant-brand img{width:34px;height:34px}
+ .merchant-secure{display:none}
+ .merchant-content{padding:27px 15px 40px}
+ .merchant-welcome{align-items:flex-start;flex-direction:column;margin-bottom:20px}
+ .merchant-welcome h1{font-size:25px}
+ .merchant-summary{grid-template-columns:1fr 1fr;gap:10px}
+ .merchant-balance{grid-column:1/-1;padding:21px}
+ .merchant-stat{padding:18px;gap:9px}
+ .merchant-stat b{font-size:25px}
+ .merchant-panel{padding:19px}
+ .merchant-shortcuts{gap:8px}
+ .merchant-shortcuts button{padding:12px 5px;font-size:11px}
+ .merchant-drawer{width:min(580px,82vw);padding:25px 20px 20px}
+ .drawer-head{margin-bottom:43px}
+ .drawer-brand img{width:61px;height:61px}
+ .drawer-brand b{font-size:22px}
+ .drawer-brand small{font-size:13px}
+ .drawer-close{width:48px;height:48px;font-size:30px}
+ .drawer-link{min-height:64px;font-size:16px;gap:15px}
+ .drawer-link b{font-size:17px}
+ .drawer-icon{width:48px;height:48px;font-size:22px}
+ .drawer-user{min-height:84px;padding:13px}
+ .drawer-user-avatar{width:47px;height:47px}
+}
