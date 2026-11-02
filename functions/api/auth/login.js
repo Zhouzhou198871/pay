@@ -2,7 +2,7 @@ import { createSession, json, normalizeEmail, sessionCookie, validEmail, verifyP
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env.AUTH_DB) return json({ error: "账户服务尚未完成配置。" }, 503);
+    if (!env.AUTH_DB || !env.TURNSTILE_SECRET_KEY) return json({ error: "账户服务尚未完成配置。" }, 503);
     const body = await request.json();
     if (body.consent !== true) return json({ error: "请先阅读并同意用户协议与隐私政策。" }, 400);
     if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || "", "login", new URL(request.url).hostname))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
