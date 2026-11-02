@@ -90,8 +90,8 @@ function openLegal(kind) {
   const body = document.querySelector("#legal-body");
   title.textContent = kind === "terms" ? "晴天支付用户协议" : "晴天支付隐私政策";
   body.innerHTML = kind === "terms"
-    ? `<h3>一、服务说明</h3><p>晴天支付为开发者与商户提供支付技术接入、订单管理及相关平台服务。具体服务范围以平台实际开放功能和双方确认的协议为准。</p><h3>二、账户责任</h3><p>您应提供真实、准确的信息，妥善保管账户凭据，不得利用平台从事违法违规活动。平台可依法进行必要的商户审核与风险控制。</p><h3>三、交易与费用</h3><p>支付渠道、交易状态、服务费用及结算安排以正式商户协议和平台公示规则为准。未经审核的账户不具备正式支付调用权限。</p><h3>四、风险与合规</h3><p>商户应遵守所在地法律法规、支付渠道规则及反洗钱等适用要求。平台有权对异常交易进行核查、限制或暂停相关服务。</p><h3>五、协议更新</h3><p>平台可在法律允许范围内更新协议，并通过站内公告或适当方式告知。</p>`
-    : `<h3>一、信息收集</h3><p>为创建和保护账户、提供验证码、处理登录请求及维护平台安全，我们可能处理您的邮箱地址、账户凭据的加密摘要、登录记录及必要的设备和网络信息。</p><h3>二、信息使用</h3><p>信息仅用于账户注册、身份验证、安全风控、客户支持及履行法律义务，不会出售您的个人数据。</p><h3>三、信息保护</h3><p>密码采用不可逆的强哈希方式保存；验证码设置有效期与尝试次数限制；会话凭据使用安全 Cookie 保护。</p><h3>四、您的权利</h3><p>您可通过平台支持渠道申请查询、更正或删除依法可删除的个人信息。</p><h3>五、政策更新</h3><p>如本政策发生重要变化，平台将以适当方式提示您。</p>`;
+    ? `<h3>一、协议范围与接受</h3><p>本协议适用于您访问或使用晴天支付网站、账户系统及平台实际开放的相关功能。您点击同意、完成注册或继续使用相关服务，即表示已阅读并接受本协议及单独展示的《隐私政策》。如您不同意，请停止注册或使用。</p><h3>二、账户注册与安全</h3><p>您应提供真实、准确且由您合法控制的邮箱，并及时更新必要信息。您应妥善保管密码、验证码及登录设备，不得出租、出借、转让账户或协助他人规避平台审核。发现未经授权的使用时，应及时通过平台客服渠道通知我们。</p><h3>三、服务范围</h3><p>平台当前提供账户注册、身份验证及账户管理等功能。支付通道接入、商户收款、订单处理、结算等功能仅在平台明确开放并完成必要审核后提供。页面展示或技术演示不构成对任何支付渠道、交易成功率或结算时效的保证。</p><h3>四、商户合规义务</h3><p>如您以商户或开发者身份使用平台，应确保业务、商品和资金来源合法，遵守适用法律法规、支付机构规则以及反洗钱、制裁合规、消费者保护和数据保护要求。不得利用平台从事欺诈、洗钱、赌博、侵害他人权益或其他违法违规活动。</p><h3>五、风险控制与服务限制</h3><p>为保障账户、交易及平台安全，我们可基于合理风险信号采取身份核验、要求补充资料、延迟处理、限制功能或暂停服务等措施，并在法律允许范围内向您说明原因。对涉嫌违法或存在重大风险的行为，我们可依法配合有权机关调查。</p><h3>六、费用、交易与结算</h3><p>如平台后续开放收费、交易或结算功能，适用费用、支付渠道、交易状态定义、退款和结算规则应以届时单独签署的商户协议或正式公示规则为准。本协议本身不构成对支付服务资质、资金托管或结算服务的承诺。</p><h3>七、知识产权与禁止行为</h3><p>平台的标识、页面设计、软件及相关内容受适用法律保护。未经许可，您不得复制、反向工程、干扰系统运行、绕过安全措施、提交恶意代码或侵害平台及第三方权益。</p><h3>八、服务变更与责任</h3><p>我们可因维护、安全、法律要求或业务调整而更新、暂停或终止部分功能，并在合理可行时提前提示。对于法律允许范围内因不可抗力、第三方网络或服务故障造成的中断，我们将在合理范围内采取措施处理；本条不排除依法不得限制的责任。</p><h3>九、协议更新与适用法律</h3><p>协议更新后会在页面展示版本或生效日期。重大变更将通过适当方式提示。适用法律及争议解决方式以平台运营主体所在地及适用的强制性法律规定为准。</p><h3>十、联系与投诉</h3><p>如对本协议或平台服务有疑问，请通过晴天支付平台公布的客服渠道联系。正式商用前，运营主体应补充真实主体名称、注册地址及有效联系信息。</p>`
+    : `<h3>一、我们处理哪些信息</h3><p>注册及登录时，我们处理您主动提交的邮箱地址、密码（仅保存经加盐强哈希处理后的结果）、邮箱验证码校验记录，以及账户创建、登录和安全事件记录。为防范自动化攻击，Cloudflare Turnstile 会处理必要的浏览器、设备和网络信号并生成一次性验证令牌。</p><h3>二、信息用途</h3><p>上述信息用于创建和管理账户、发送注册或密码重置验证码、验证登录身份、保护账户安全、处理客服请求及遵守适用法律义务。若您主动选择 GitHub 登录，平台会向 GitHub 请求授权，并接收其提供的账户标识及已验证邮箱。</p><h3>三、第三方服务</h3><p>平台使用 Cloudflare 提供网站托管、数据库及 Turnstile 人机验证；使用 Resend 发送账户验证码邮件；仅在您主动选择 GitHub 登录时使用 GitHub OAuth。相关服务商会按其适用条款和隐私政策处理必要信息。数据可能根据服务部署情况在您所在地区以外处理。</p><h3>四、保存与保护</h3><p>密码不以明文保存；验证码采用摘要形式保存并设有有效期、发送间隔和错误次数限制；登录会话使用 HttpOnly、Secure Cookie。我们仅在实现服务目的、保障安全或履行法定义务所需期限内保存相关信息，并采取合理的访问控制和安全措施。</p><h3>五、Cookie 与安全技术</h3><p>平台使用必要的登录会话 Cookie 维持您的登录状态。Turnstile 可能使用其安全验证所需的浏览器技术。禁用相关功能可能导致登录、注册或密码找回无法完成。</p><h3>六、您的权利</h3><p>在适用法律允许的范围内，您可以申请查询、更正、删除个人信息，或请求限制相关处理。为核实身份及防止账户被冒用，我们可能要求您完成必要的身份验证。</p><h3>七、未成年人及政策更新</h3><p>本平台面向具备相应民事行为能力的商户及开发者，不以未成年人为服务对象。若隐私政策发生重要变化，我们会通过页面公告或其他适当方式提示。</p><h3>八、联系渠道</h3><p>如需咨询个人信息处理事项，请通过晴天支付平台公布的客服渠道联系。正式商用前，平台运营主体应在此处补充真实、有效的个人信息保护联系信息。</p>`;
   dialog.showModal();
 }
 
@@ -195,10 +195,12 @@ async function submitAuth(event) {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
+    resetCaptcha();
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "操作失败，请稍后重试");
     location.href = "/dashboard";
   } catch (error) {
+    resetCaptcha();
     showToast(error.message, "error");
     button.disabled = false;
     button.querySelector("span").textContent = mode === "register" ? "创建账户" : "登录账户";
@@ -222,15 +224,23 @@ async function loadCaptcha() {
         document.head.appendChild(script);
       });
     }
-    window.turnstile.render(slot, {
+    window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
       theme: "light",
+      action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => { window.__qtCaptchaToken = token; },
       "expired-callback": () => { window.__qtCaptchaToken = ""; },
       "error-callback": () => { window.__qtCaptchaToken = ""; showToast("人机验证暂不可用，请刷新重试", "error"); }
     });
   } catch {
     slot.textContent = "安全验证加载失败，请刷新页面重试";
+  }
+}
+
+function resetCaptcha() {
+  window.__qtCaptchaToken = "";
+  if (window.turnstile && window.__qtCaptchaWidgetId !== undefined) {
+    try { window.turnstile.reset(window.__qtCaptchaWidgetId); } catch {}
   }
 }
 
@@ -259,14 +269,17 @@ function renderForgotPassword() {
     if(!email.includes("@")){showToast("请输入有效邮箱地址","error");return;}
     if(!window.__qtCaptchaToken){showToast("请先完成人机验证","error");return;}
     button.disabled=true;button.textContent="发送中…";
-    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";if(window.turnstile)window.turnstile.reset();showToast("验证码已发送","success");}catch(e){button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
+    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";if(window.turnstile)window.turnstile.reset();showToast("验证码已发送","success");}catch(e){resetCaptcha();button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
   });
   document.querySelector("#reset-form")?.addEventListener("submit",async e=>{
     e.preventDefault();const payload=Object.fromEntries(new FormData(e.currentTarget).entries());
     payload.consent=document.querySelector("#consent").checked;payload.captchaToken=window.__qtCaptchaToken||"";
     if(!payload.consent){showToast("请先阅读并同意用户协议与隐私政策","error");return;}
+    if(!/^\\d{6}$/.test(payload.code||"")){showToast("请输入 6 位邮箱验证码","error");return;}
+    if((payload.password||"").length<8){showToast("新密码至少需要 8 位","error");return;}
+    if(!payload.captchaToken){showToast("请先完成人机验证","error");return;}
     const button=e.currentTarget.querySelector(".primary-button");button.disabled=true;button.querySelector("span").textContent="正在安全重置…";
-    try{const r=await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw new Error(d.error||"重置失败");showToast("密码重置成功，请使用新密码登录","success");setTimeout(()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();},900);}catch(err){showToast(err.message,"error");button.disabled=false;button.querySelector("span").textContent="确认重置密码";}
+    try{const r=await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"重置失败");showToast("密码重置成功，请使用新密码登录","success");setTimeout(()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();},900);}catch(err){resetCaptcha();showToast(err.message,"error");button.disabled=false;button.querySelector("span").textContent="确认重置密码";}
   });
   loadCaptcha();
 }
