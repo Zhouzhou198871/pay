@@ -4,6 +4,7 @@ const LOGO = "https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png
 let mode = "login";
 let countdown = 0;
 let timer = null;
+let captchaLoadSeq = 0;
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -96,6 +97,7 @@ function openLegal(kind) {
 }
 
 async function renderDashboard() {
+  disposeCaptcha();
   app.innerHTML = shell(`<div class="form-heading"><div class="form-kicker">ACCOUNT CENTER</div><h2>账户已登录</h2><p id="account-email">正在读取账户信息…</p></div><div class="dashboard-card"><div class="dashboard-badge">✓</div><h3>欢迎使用晴天支付</h3><p>账户认证已通过。商户功能将在完成平台配置后开放。</p><button class="primary-button" id="logout"><span>安全退出</span><b>→</b></button></div>`);
   const res = await fetch("/api/auth/me");
   if (!res.ok) { location.href = "/"; return; }
@@ -109,6 +111,7 @@ async function renderDashboard() {
 
 function bindAuthEvents() {
   document.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => {
+    disposeCaptcha();
     mode = button.dataset.mode;
     clearInterval(timer);
     countdown = 0;
@@ -212,29 +215,52 @@ async function submitAuth(event) {
 async function loadCaptcha() {
   const slot = document.querySelector("#captcha-slot");
   if (!slot) return;
+  const loadId = ++captchaLoadSeq;
+  window.__qtCaptchaToken = "";
+  slot.textContent = "正在加载安全验证…";
   try {
-    const configResponse = await fetch("/api/auth/config", { cache: "no-store" });
+    const configResponse = await fetch("/api/auth/config", { cache: "no-store", signal: AbortSignal.timeout(10000) });
+    if (!configResponse.ok) throw new Error("安全验证配置读取失败");
     const config = await configResponse.json();
-    if (!config.siteKey) { slot.textContent = "安全验证尚未配置，请联系管理员"; return; }
+    if (!config.siteKey) throw new Error("安全验证尚未配置，请联系管理员");
+
     if (!window.turnstile) {
       await new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-        script.async = true; script.defer = true;
-        script.onload = resolve; script.onerror = reject;
-        document.head.appendChild(script);
+        let script = document.querySelector('script[data-turnstile-loader="true"]');
+        const timeout = setTimeout(() => reject(new Error("安全验证加载超时")), 12000);
+        const finish = (fn) => (event) => { clearTimeout(timeout); fn(event); };
+        if (script) {
+          script.addEventListener("load", finish(resolve), { once: true });
+          script.addEventListener("error", finish(reject), { once: true });
+        } else {
+          script = document.createElement("script");
+          script.dataset.turnstileLoader = "true";
+          script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+          script.async = true;
+          script.defer = true;
+          script.onload = finish(resolve);
+          script.onerror = finish(reject);
+          document.head.appendChild(script);
+        }
       });
     }
+    if (loadId !== captchaLoadSeq || !document.querySelector("#captcha-slot")) return;
     window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
       theme: "light",
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => { window.__qtCaptchaToken = token; },
       "expired-callback": () => { window.__qtCaptchaToken = ""; },
-      "error-callback": () => { window.__qtCaptchaToken = ""; showToast("人机验证暂不可用，请刷新重试", "error"); }
+      "error-callback": () => {
+        window.__qtCaptchaToken = "";
+        showToast("人机验证暂不可用，请重新加载验证", "error");
+      }
     });
-  } catch {
-    slot.textContent = "安全验证加载失败，请刷新页面重试";
+  } catch (error) {
+    if (loadId !== captchaLoadSeq) return;
+    slot.innerHTML = '<span>安全验证加载失败，请重试</span> <button type="button" class="text-link" id="captcha-retry">重新加载</button>';
+    slot.querySelector("#captcha-retry")?.addEventListener("click", loadCaptcha);
+    showToast(error.message || "安全验证加载失败，请刷新页面重试", "error");
   }
 }
 
@@ -245,7 +271,19 @@ function resetCaptcha() {
   }
 }
 
+function disposeCaptcha() {
+  captchaLoadSeq += 1;
+  window.__qtCaptchaToken = "";
+  if (window.turnstile && window.__qtCaptchaWidgetId !== undefined) {
+    try { window.turnstile.remove(window.__qtCaptchaWidgetId); } catch {}
+  }
+  window.__qtCaptchaWidgetId = undefined;
+}
+
 function renderForgotPassword() {
+  disposeCaptcha();
+  clearInterval(timer);
+  countdown = 0;
   mode = "forgot";
   app.innerHTML = shell(`
     <div class="form-heading"><div class="form-kicker">ACCOUNT RECOVERY</div><h2>重置登录密码</h2><p>通过注册邮箱验证身份，重新设置安全密码。</p></div>
@@ -264,7 +302,7 @@ function renderForgotPassword() {
   `);
   document.querySelectorAll("[data-legal]").forEach(b=>b.addEventListener("click",()=>openLegal(b.dataset.legal)));
   document.querySelector("#close-legal")?.addEventListener("click",()=>document.querySelector("#legal-dialog").close());
-  document.querySelector("#back-login")?.addEventListener("click",()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();});
+  document.querySelector("#back-login")?.addEventListener("click",()=>{disposeCaptcha();mode="login";app.innerHTML=authMarkup();bindAuthEvents();});
   document.querySelector("#send-reset-code")?.addEventListener("click", async()=>{
     const email=document.querySelector("#email").value.trim(), button=document.querySelector("#send-reset-code");
     if(!email.includes("@")){showToast("请输入有效邮箱地址","error");return;}
