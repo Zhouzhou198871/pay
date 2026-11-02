@@ -71,8 +71,8 @@ export const currentUser = async (request, db) => {
 export const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 export const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-export const verifyTurnstile = async (token, secret, remoteIp = "") => {
-  if (!token || !secret) return false;
+export const verifyTurnstile = async (token, secret, remoteIp = "", expectedAction = "", expectedHostname = "") => {
+  if (!token || !secret || !expectedAction || !expectedHostname) return false;
   const body = new URLSearchParams({ secret, response: token });
   if (remoteIp) body.set("remoteip", remoteIp);
   try {
@@ -81,6 +81,8 @@ export const verifyTurnstile = async (token, secret, remoteIp = "") => {
     });
     if (!response.ok) return false;
     const result = await response.json();
-    return result.success === true;
+    return result.success === true
+      && result.action === expectedAction
+      && result.hostname === expectedHostname;
   } catch { return false; }
 };
