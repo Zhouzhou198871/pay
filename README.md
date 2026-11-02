@@ -25,7 +25,7 @@ D1 binding：`AUTH_DB`
 
 | 变量 | 类型 | 用途 |
 |---|---|---|
-| `RESEND_API_KEY` | Secret | Resend 仅发送权限、限制到 `lynli.me` 的 API Key |
+| `RESEND_API_KEY` | Secret | 已创建为仅发送权限，并限制到 `lynli.me` |
 | `AUTH_SECRET` | Secret | 已由部署配置生成，用于验证码 HMAC |
 | `GITHUB_CLIENT_ID` | Secret / Text | GitHub OAuth App Client ID |
 | `GITHUB_CLIENT_SECRET` | Secret | GitHub OAuth App Client Secret |
