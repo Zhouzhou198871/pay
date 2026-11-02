@@ -2,11 +2,12 @@ import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, session
 
 export async function onRequestPost({ request, env }) {
   let stage = "configuration";
+  let email = "";
   try {
     if (!env.AUTH_DB || !env.AUTH_SECRET || !env.TURNSTILE_SECRET_KEY) return json({ error: "账户服务尚未完成配置。" }, 503);
     stage = "parse-request";
     const body = await request.json();
-    const email = normalizeEmail(body.email);
+    email = normalizeEmail(body.email);
     const password = String(body.password || "");
     const code = String(body.code || "").trim();
     const consent = body.consent === true;
@@ -52,7 +53,7 @@ export async function onRequestPost({ request, env }) {
   } catch (error) {
     if (stage === "commit-registration" && env.AUTH_DB) {
       try {
-        const existing = await env.AUTH_DB.prepare("SELECT id FROM users WHERE email = ?").bind(normalizeEmail((await request.clone().json()).email)).first();
+        const existing = await env.AUTH_DB.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
         if (existing) return json({ error: "该邮箱已注册，请直接登录。" }, 409);
       } catch {
         // Keep the original failure response if the follow-up lookup is unavailable.
