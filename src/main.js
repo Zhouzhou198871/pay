@@ -61,7 +61,7 @@ function authMarkup() {
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
       <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，建议包含字母和数字" : "请输入登录密码"}" minlength="8" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>
-      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div><p class="captcha-hint" id="captcha-hint" aria-live="polite">请先完成人机验证，再获取邮箱验证码。</p>
+      <label class="field-label" id="captcha-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div><p class="captcha-hint" id="captcha-hint" aria-live="polite">请先完成人机验证，再获取邮箱验证码。</p>
       ${registering ? `
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
@@ -151,7 +151,10 @@ async function sendCode() {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "验证码发送失败");
-    resetCaptcha();
+    disposeCaptcha();
+    document.querySelector("#captcha-label")?.remove();
+    document.querySelector("#captcha-slot")?.remove();
+    document.querySelector("#captcha-hint")?.remove();
     countdown = 60;
     button.textContent = `重新获取 ${countdown}s`;
     timer = setInterval(() => {
@@ -163,7 +166,6 @@ async function sendCode() {
       } else button.textContent = `重新获取 ${countdown}s`;
     }, 1000);
     const hint = document.querySelector("#captcha-hint");
-    if (hint) hint.textContent = "验证码已发送。输入邮箱验证码和密码后，即可提交注册。";
     showToast("验证码已发送，请查收邮箱", "success");
   } catch (error) {
     resetCaptcha();
