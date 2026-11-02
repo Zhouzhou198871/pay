@@ -1,6 +1,6 @@
 import { randomHex } from "../../_lib/auth.js";
 
-const CANONICAL_ORIGIN = "https://qingtian-pay.pages.dev";
+const CANONICAL_ORIGIN = "https://pay.lynli.me";
 
 export async function onRequestGet({ env }) {
   if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
