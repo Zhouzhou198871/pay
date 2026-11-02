@@ -184,7 +184,7 @@ async function renderDashboard() {
       return;
     }
     if (key === "profile") {
-      panel.innerHTML = `<div class="account-detail-list"><div class="account-detail"><span>账户名称</span><b>${escapeHtml(displayName)}</b></div><div class="account-detail"><span>登录邮箱</span><b>${escapeHtml(email)}</b></div><div class="account-detail"><span>账户状态</span><b class="account-active">正常</b></div><div class="account-detail"><span>登录方式</span><b>邮箱 / GitHub（按实际绑定情况）</b></div></div><p class="section-note">资料修改功能尚未开放。为保护账户安全，当前仅展示已验证的账户资料。</p>`;
+      panel.innerHTML = `<div class="account-detail-list"><div class="account-detail"><span>账户名称</span><b>${escapeHtml(displayName)}</b></div><div class="account-detail"><span>登录邮箱</span><b>${escapeHtml(email)}</b></div><div class="account-detail"><span>账户状态</span><b class="account-active">正常</b></div></div><p class="section-note">资料修改功能尚未开放。为保护账户安全，当前仅展示已验证的账户资料。</p>`;
       return;
     }
     const messages = {
