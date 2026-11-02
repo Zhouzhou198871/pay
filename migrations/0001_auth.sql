@@ -17,11 +17,13 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS email_otps (
-  email TEXT PRIMARY KEY NOT NULL COLLATE NOCASE,
+  email TEXT NOT NULL COLLATE NOCASE,
+  purpose TEXT NOT NULL CHECK (purpose IN ('register', 'reset')),
   code_hash TEXT NOT NULL,
   expires_at INTEGER NOT NULL,
   attempts INTEGER NOT NULL DEFAULT 0,
-  sent_at INTEGER NOT NULL
+  sent_at INTEGER NOT NULL,
+  PRIMARY KEY (email, purpose)
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
