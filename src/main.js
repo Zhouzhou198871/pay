@@ -234,9 +234,12 @@ async function renderDashboard() {
           const amount=panel.querySelector("#usdt-amount").value;
           const response=await fetch("/api/recharge/usdt/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount_usdt:amount})});
           const data=await response.json(); if(!response.ok) throw new Error(data.error||"生成 USDT 订单失败");
-          showResult("USDT 收款订单已生成",[["网络",data.network],["收款地址",data.address],["精确转账金额",data.amount_usdt+" USDT"],["订单号",data.trade_no],["说明","请勿转入其他网络；到账需等待链上确认"]]);
+          showResult("USDT 收款订单已生成",[["网络",data.network],["收款地址",data.address],["精确转账金额",data.amount_usdt+" USDT"],["预计入账",data.credit_usdt+" USDT"],["订单号",data.trade_no],["有效期","2 小时；请勿超时转账"]]);
           const copy=document.createElement("button"); copy.type="button"; copy.textContent="复制收款地址"; copy.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(data.address);showToast("收款地址已复制","success");}catch{showToast("复制失败，请手动复制","error");}}); resultBox.append(copy);
           const copyAmount=document.createElement("button"); copyAmount.type="button"; copyAmount.textContent="复制精确金额"; copyAmount.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(data.amount_usdt);showToast("金额已复制","success");}catch{showToast("复制失败","error");}}); resultBox.append(copyAmount);
+          const tradeNo=data.trade_no;
+          const poll=setInterval(async()=>{try{const r=await fetch("/api/recharge/status?trade_no="+encodeURIComponent(tradeNo));const s=await r.json();if(s.status==="paid"){clearInterval(poll);showToast("USDT 充值到账："+s.amount_usdt+" USDT","success");const b=await fetch("/api/wallet/summary");const w=await b.json();const el=document.querySelector(".summary-value");if(el)el.textContent=w.balance+" USDT";}else if(s.status==="expired"||s.status==="cancelled"){clearInterval(poll);showResult("充值订单已失效",[["订单号",tradeNo],["状态",s.status]]);}}catch{}},10000);
+          setTimeout(()=>clearInterval(poll),7200000);
         } catch(error) { showResult("创建失败",[["原因",error.message||"请稍后重试"]]); }
         finally { button.disabled=false; }
       });
