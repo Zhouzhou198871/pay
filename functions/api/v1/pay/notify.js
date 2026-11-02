@@ -33,7 +33,7 @@ export async function onRequestPost({request,env,waitUntil}) {
   }
   try {
     const confirmed=await queryAlipayOrder(tradeNo,env);
-    if(!confirmed.paid) return new Response("fail",{status:409,headers:{"Content-Type":"text/plain"}});
+    if(!confirmed.paid||confirmed.amountCents!==Number(order.amount_cents)) return new Response("fail",{status:409,headers:{"Content-Type":"text/plain"}});
     const result=await settleConfirmedOrder(env,tradeNo,confirmed.providerTradeNo,await sha256(JSON.stringify(params)));
     if(!result.ok) return new Response("fail",{status:503,headers:{"Content-Type":"text/plain"}});
     if(waitUntil) waitUntil(deliverPendingNotice(env,tradeNo));
