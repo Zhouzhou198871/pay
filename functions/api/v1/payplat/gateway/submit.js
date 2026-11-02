@@ -1,5 +1,5 @@
 import { json } from "../../../../_lib/auth.js";
-import { amountToCents, merchantForRequest, createAlipayOrder, randomHex } from "../../../../_lib/payment.js";
+import { amountToCents, merchantForRequest, createAlipayOrder, randomHex, validPublicHttpsUrl } from "../../../../_lib/payment.js";
 
 export async function onRequestPost({request,env}) {
   if(!env.AUTH_DB) return json({code:503,msg:"支付数据库不可用"},503);
@@ -12,7 +12,7 @@ export async function onRequestPost({request,env}) {
   const notifyUrl=String(params.notify_url||merchant.notify_url||"").trim();
   if(!outNo||outNo.length>128||!amount||!subject) return json({code:400,msg:"订单号、金额或商品名称无效"},400);
   if(method!=="alipay") return json({code:400,msg:"该支付渠道尚未在 Cloudflare 完成安全迁移"},400);
-  if(notifyUrl && !await (await import("../../../../_lib/payment.js")).validPublicHttpsUrl(notifyUrl)) return json({code:400,msg:"通知地址必须是公网 HTTPS 地址"},400);
+  if(notifyUrl && !await validPublicHttpsUrl(notifyUrl)) return json({code:400,msg:"通知地址必须是公网 HTTPS 地址"},400);
   const existing=await env.AUTH_DB.prepare("SELECT * FROM payment_orders WHERE merchant_id=? AND out_trade_no=?").bind(merchant.id,outNo).first();
   if(existing) {
     if(existing.amount_cents!==amount) return json({code:409,msg:"商户订单号已存在且金额不一致"},409);
