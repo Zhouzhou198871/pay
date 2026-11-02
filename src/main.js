@@ -99,17 +99,94 @@ function openLegal(kind) {
 
 async function renderDashboard() {
   disposeCaptcha();
-  app.innerHTML = shell(`<div class="form-heading"><div class="form-kicker">ACCOUNT CENTER</div><h2>账户已登录</h2><p id="account-email">正在读取账户信息…</p></div><div class="dashboard-card"><div class="dashboard-badge">✓</div><h3>欢迎使用晴天支付</h3><p>账户认证已通过。商户功能将在完成平台配置后开放。</p><button class="primary-button" id="logout"><span>安全退出</span><b>→</b></button></div>`);
+  app.innerHTML = `
+    <main class="merchant-app">
+      <header class="merchant-topbar">
+        <button class="merchant-menu-toggle" id="open-merchant-menu" aria-label="打开菜单">☰</button>
+        <a class="merchant-brand" href="/"><img src="${LOGO}" alt="晴天支付 Logo"><span>晴天支付</span></a>
+        <div class="merchant-top-actions"><span class="merchant-secure">安全连接</span><button class="merchant-avatar" id="open-profile" aria-label="个人资料">♙</button><button class="merchant-logout-icon" id="top-logout" aria-label="退出登录">⇥</button></div>
+      </header>
+      <div class="merchant-backdrop" id="merchant-backdrop"></div>
+      <aside class="merchant-drawer" id="merchant-drawer" aria-label="商户导航">
+        <div class="drawer-head"><a class="drawer-brand" href="/"><img src="${LOGO}" alt=""><span><b>晴天支付</b><small>商户服务平台</small></span></a><button class="drawer-close" id="close-merchant-menu" aria-label="关闭菜单">×</button></div>
+        <div class="drawer-section-label">商户工作台</div>
+        <nav class="drawer-nav">
+          <button class="drawer-link active" data-section="overview"><span class="drawer-icon blue">▦</span><b>用户中心</b></button>
+          <button class="drawer-link" data-section="profile"><span class="drawer-icon blue-soft">♙</span><span>个人资料</span><i>›</i></button>
+        </nav>
+        <div class="drawer-section-label">交易与资金</div>
+        <nav class="drawer-nav">
+          <button class="drawer-link" data-section="orders"><span class="drawer-icon purple">▤</span><span>订单记录</span></button>
+          <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple">▱</span><span>提现记录</span></button>
+          <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple">▥</span><span>资金明细</span></button>
+        </nav>
+        <div class="drawer-section-label">其他</div>
+        <nav class="drawer-nav">
+          <button class="drawer-link" data-section="payments"><span class="drawer-icon cyan">▣</span><span>聚合收款</span></button>
+          <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan">▤</span><span>开发文档</span></button>
+          <button class="drawer-link" data-section="support"><span class="drawer-icon cyan">♧</span><span>联系客服</span></button>
+        </nav>
+        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">晴天商户</b><small id="drawer-user-email">正在读取账户…</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
+      </aside>
+      <section class="merchant-content">
+        <div class="merchant-welcome"><div><span class="merchant-eyebrow">MERCHANT WORKSPACE</span><h1 id="merchant-greeting">用户中心</h1><p>欢迎使用晴天支付商户服务平台</p></div><span class="merchant-status"><i></i> 账户已登录</span></div>
+        <div class="merchant-summary">
+          <article class="merchant-balance"><div class="summary-label">账户余额</div><div class="summary-value">— <small>USDT</small></div><p>资金数据将在账户服务接通后显示</p></article>
+          <article class="merchant-stat"><span>今日收款</span><b>—</b><small>等待交易数据接入</small></article>
+          <article class="merchant-stat"><span>累计订单</span><b>—</b><small>等待订单服务接入</small></article>
+        </div>
+        <section class="merchant-panel"><div class="panel-heading"><div><h2 id="merchant-panel-title">账户概览</h2><p id="merchant-panel-subtitle">账户基础信息与服务入口</p></div><span class="panel-mark">QT</span></div>
+          <div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b id="merchant-account-email">正在读取账户信息…</b><small>晴天支付账户</small></div><button id="edit-profile">个人资料</button></div>
+          <div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div>
+        </section>
+      </section>
+    </main>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>`;
   const res = await fetch("/api/auth/me");
   if (!res.ok) { location.href = "/"; return; }
   const data = await res.json();
-  document.querySelector("#account-email").textContent = data.user.email;
-  document.querySelector("#logout").addEventListener("click", async () => {
+  const email = data.user?.email || "已登录商户";
+  document.querySelector("#drawer-user-name").textContent = email.split("@")[0] || "晴天商户";
+  document.querySelector("#drawer-user-email").textContent = email;
+  document.querySelector("#merchant-account-email").textContent = email;
+  const drawer = document.querySelector("#merchant-drawer");
+  const backdrop = document.querySelector("#merchant-backdrop");
+  const setDrawer = (open) => {
+    drawer.classList.toggle("open", open);
+    backdrop.classList.toggle("visible", open);
+    document.body.classList.toggle("merchant-menu-open", open);
+  };
+  document.querySelector("#open-merchant-menu").addEventListener("click", () => setDrawer(true));
+  document.querySelector("#close-merchant-menu").addEventListener("click", () => setDrawer(false));
+  backdrop.addEventListener("click", () => setDrawer(false));
+  const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     location.href = "/";
-  });
+  };
+  document.querySelector("#drawer-logout").addEventListener("click", logout);
+  document.querySelector("#top-logout").addEventListener("click", logout);
+  const labels = {
+    overview: ["用户中心", "账户概览", "账户基础信息与服务入口"],
+    profile: ["个人资料", "个人资料", "账户邮箱与登录身份"],
+    orders: ["订单记录", "订单记录", "订单服务接入后将在这里展示"],
+    withdrawals: ["提现记录", "提现记录", "提现服务接入后将在这里展示"],
+    ledger: ["资金明细", "资金明细", "资金账目服务接入后将在这里展示"],
+    payments: ["聚合收款", "聚合收款", "收款通道开通后将在这里展示"],
+    docs: ["开发文档", "开发文档", "查看平台接入说明与接口文档"],
+    support: ["联系客服", "联系客服", "客服渠道开通后将在这里展示"]
+  };
+  const selectSection = (key) => {
+    const item = labels[key] || labels.overview;
+    document.querySelector("#merchant-greeting").textContent = item[0];
+    document.querySelector("#merchant-panel-title").textContent = item[1];
+    document.querySelector("#merchant-panel-subtitle").textContent = item[2];
+    document.querySelectorAll(".drawer-link").forEach((button) => button.classList.toggle("active", button.dataset.section === key));
+    setDrawer(false);
+  };
+  document.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
+  document.querySelector("#open-profile").addEventListener("click", () => selectSection("profile"));
+  document.querySelector("#edit-profile").addEventListener("click", () => selectSection("profile"));
 }
-
 function bindAuthEvents() {
   document.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => {
     disposeCaptcha();
