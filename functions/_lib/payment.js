@@ -1,8 +1,7 @@
-import { randomHex, sha256, safeEqual, currentUser } from "./auth.js";
+import { json, randomHex, sha256, safeEqual, currentUser } from "./auth.js";
 export { randomHex } from "./auth.js";
 
 const enc = new TextEncoder();
-const hex = (bytes) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
 const b64 = (bytes) => btoa(String.fromCharCode(...new Uint8Array(bytes)));
 const unb64 = (value) => Uint8Array.from(atob(value), c => c.charCodeAt(0));
 
@@ -88,9 +87,18 @@ export const merchantForRequest = async (request,env) => {
   return {merchant,params,body};
 };
 export const providerConfigReady = (env) => Boolean(env.ALIPAY_PID && env.ALIPAY_CREATE_URL && env.ALIPAY_QUERY_URL && env.ALIPAY_PRIVATE_KEY && env.ALIPAY_NOTIFY_URL);
+const derLength = (n) => n < 128 ? Uint8Array.of(n) : (() => { const bytes=[]; while(n){bytes.unshift(n&255);n>>=8;} return Uint8Array.of(0x80|bytes.length,...bytes); })();
+const wrapPkcs1AsPkcs8 = (pkcs1) => {
+  const algorithm=Uint8Array.from([0x30,0x0d,0x06,0x09,0x2a,0x86,0x48,0x86,0xf7,0x0d,0x01,0x01,0x01,0x05,0x00]);
+  const octet=Uint8Array.from([0x04,...derLength(pkcs1.length),...pkcs1]);
+  const body=Uint8Array.from([0x02,0x01,0x00,...algorithm,...octet]);
+  return Uint8Array.from([0x30,...derLength(body.length),...body]);
+};
 const privateKey = async (env) => {
   const pem=String(env.ALIPAY_PRIVATE_KEY||"").replace(/\\n/g,"\n");
-  const raw=unb64(pem.replace(/-----[^-]+-----/g,"").replace(/\s/g,""));
+  const isPkcs1=pem.includes("BEGIN RSA PRIVATE KEY");
+  const decoded=unb64(pem.replace(/-----[^-]+-----/g,"").replace(/\s/g,""));
+  const raw=isPkcs1?wrapPkcs1AsPkcs8(decoded):decoded;
   return crypto.subtle.importKey("pkcs8",raw,{name:"RSASSA-PKCS1-v1_5",hash:"SHA-256"},false,["sign"]);
 };
 const rsaSign = async (params,env) => {
@@ -152,7 +160,7 @@ export const settleConfirmedOrder = async (env,tradeNo,providerTradeNo,payloadHa
   await db.prepare("INSERT INTO payment_events (id,event_key,trade_no,event_type,payload_hash,created_at) VALUES (?,?,?,'provider_paid',?,?)")
     .bind(eventId,"paid:"+tradeNo,tradeNo,payloadHash,now).run();
   const fresh={...order,provider_trade_no:providerTradeNo||"",paid_at:now};
-  await queueMerchantNotice(db,fresh,env);
+  await queueMerchantNotice(env,fresh);
   return {ok:true,duplicate:false};
 };
 export const userMerchant = async (request,env) => {
