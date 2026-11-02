@@ -210,6 +210,44 @@ async function renderDashboard() {
   document.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
   document.querySelector("#open-profile").addEventListener("click", () => selectSection("profile"));
   document.querySelector("#edit-profile").addEventListener("click", () => selectSection("profile"));
+  const merchantEndpoints = { orders: "/api/merchant/orders", withdrawals: "/api/merchant/withdrawals", ledger: "/api/merchant/ledger", payments: "/api/merchant/channels" };
+  document.querySelectorAll(".drawer-link").forEach((button) => button.addEventListener("click", async () => {
+    const endpoint = merchantEndpoints[button.dataset.section];
+    if (!endpoint) return;
+    const panel = document.querySelector("#merchant-panel-content");
+    panel.innerHTML = '<div class="section-loading">正在读取真实商户数据…</div>';
+    try {
+      const response = await fetch(endpoint);
+      if (!response.ok) throw new Error(response.status === 401 ? "登录状态已失效，请重新登录。" : "数据读取失败，请稍后重试。");
+      const payload = await response.json();
+      const items = payload.items || [];
+      if (!items.length) { panel.innerHTML = '<div class="section-empty"><h3>暂无记录</h3><p>当前账户没有此类业务记录。</p></div>'; return; }
+      const list = document.createElement("div"); list.className = "merchant-record-list";
+      items.forEach((item) => {
+        const row = document.createElement("article"); row.className = "merchant-record";
+        const left = document.createElement("div"); const right = document.createElement("div"); right.className = "record-meta";
+        const title = document.createElement("b"); title.textContent = item.merchant_order_no || item.request_no || item.entry_no || item.channel_code || "记录";
+        const detail = document.createElement("small"); detail.textContent = item.subject || item.destination_masked || item.description || item.display_name || "—";
+        const value = document.createElement("b"); value.textContent = item.amount_micro === undefined ? (item.status || "—") : (Number(item.amount_micro) / 1000000).toFixed(6).replace(/0+$/, "").replace(/\\.$/, "") + " " + (item.currency || "USDT");
+        const meta = document.createElement("small"); meta.textContent = (item.status || item.direction || "—") + " · " + new Date(Number(item.created_at || item.requested_at || 0) * 1000).toLocaleString();
+        left.append(title, detail); right.append(value, meta); row.append(left, right); list.append(row);
+      });
+      panel.replaceChildren(list);
+      const note = document.createElement("p"); note.className = "section-note"; note.textContent = "共 " + Number(payload.pagination?.total || items.length) + " 条记录"; panel.append(note);
+    } catch (error) { panel.textContent = error.message || "数据读取失败"; }
+  }));
+  try {
+    const response = await fetch("/api/merchant/summary");
+    if (response.ok) {
+      const summary = await response.json();
+      const balance = document.querySelector(".summary-value");
+      if (balance) balance.textContent = summary.balance_micro === null ? "暂无账本余额" : (Number(summary.balance_micro) / 1000000).toFixed(6).replace(/0+$/, "") + " " + (summary.currency || "USDT");
+      const stats = document.querySelectorAll(".merchant-stat");
+      if (stats[0]) stats[0].querySelector("b").textContent = (Number(summary.today_paid_amount_micro || 0) / 1000000).toFixed(2) + " " + (summary.currency || "USDT");
+      if (stats[0]) stats[0].querySelector("small").textContent = Number(summary.today_paid_orders || 0) + " 笔已支付订单";
+      if (stats[1]) stats[1].querySelector("b").textContent = String(summary.total_orders || 0);
+    }
+  } catch (error) { console.warn("[merchant/summary]", error); }
 }
 function bindAuthEvents() {
   document.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => {
