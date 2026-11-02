@@ -5,6 +5,7 @@ let mode = "login";
 let countdown = 0;
 let timer = null;
 let captchaLoadSeq = 0;
+let turnstileLoaderPromise = null;
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -212,6 +213,38 @@ async function submitAuth(event) {
 }
 
 
+async function ensureTurnstileScript() {
+  if (window.turnstile) return;
+  if (turnstileLoaderPromise) return turnstileLoaderPromise;
+  turnstileLoaderPromise = new Promise((resolve, reject) => {
+    let script = document.querySelector('script[data-turnstile-loader="true"]');
+    const created = !script;
+    if (!script) {
+      script = document.createElement("script");
+      script.dataset.turnstileLoader = "true";
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+    }
+    let settled = false;
+    const finish = (error) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      script.removeEventListener("load", onLoad);
+      script.removeEventListener("error", onError);
+      if (error) reject(error); else resolve();
+    };
+    const onLoad = () => window.turnstile ? finish() : finish(new Error("安全验证脚本未正确初始化"));
+    const onError = () => finish(new Error("安全验证脚本加载失败"));
+    const timeout = setTimeout(() => finish(new Error("安全验证加载超时")), 15000);
+    script.addEventListener("load", onLoad, { once: true });
+    script.addEventListener("error", onError, { once: true });
+    if (created) document.head.appendChild(script);
+  }).finally(() => { turnstileLoaderPromise = null; });
+  return turnstileLoaderPromise;
+}
+
 async function loadCaptcha() {
   const slot = document.querySelector("#captcha-slot");
   if (!slot) return;
@@ -224,20 +257,7 @@ async function loadCaptcha() {
     const config = await configResponse.json();
     if (!config.siteKey) throw new Error("安全验证尚未配置，请联系管理员");
 
-    if (!window.turnstile) {
-      await new Promise((resolve, reject) => {
-        document.querySelector('script[data-turnstile-loader="true"]')?.remove();
-        const script = document.createElement("script");
-        const timeout = setTimeout(() => { script.remove(); reject(new Error("安全验证加载超时")); }, 12000);
-        script.dataset.turnstileLoader = "true";
-        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-        script.async = true;
-        script.defer = true;
-        script.onload = () => { clearTimeout(timeout); window.turnstile ? resolve() : reject(new Error("安全验证脚本未正确初始化")); };
-        script.onerror = () => { clearTimeout(timeout); reject(new Error("安全验证脚本加载失败")); };
-        document.head.appendChild(script);
-      });
-    }
+    await ensureTurnstileScript();
     if (loadId !== captchaLoadSeq || !document.querySelector("#captcha-slot")) return;
     window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
@@ -246,6 +266,10 @@ async function loadCaptcha() {
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => { window.__qtCaptchaToken = token; },
       "expired-callback": () => { window.__qtCaptchaToken = ""; },
+      "timeout-callback": () => {
+        window.__qtCaptchaToken = "";
+        showToast("人机验证已超时，请重新验证", "error");
+      },
       "error-callback": () => {
         window.__qtCaptchaToken = "";
         showToast("人机验证暂不可用，请重新加载验证", "error");
