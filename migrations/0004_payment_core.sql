@@ -70,4 +70,4 @@ CREATE TABLE IF NOT EXISTS payment_webhook_deliveries (
   FOREIGN KEY (trade_no) REFERENCES payment_orders(trade_no) ON DELETE RESTRICT
 );
 CREATE INDEX IF NOT EXISTS idx_payment_webhooks_due ON payment_webhook_deliveries(status, next_attempt_at);
-CREATE INDEX IF NOT EXISTS idx_payment_webhooks_trade ON payment_webhook_deliveries(trade_no, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_webhooks_trade_unique ON payment_webhook_deliveries(trade_no);
