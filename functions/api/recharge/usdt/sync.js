@@ -3,7 +3,7 @@ import { creditWallet } from "../../../_lib/wallet.js";
 import { findTransferEventIndex } from "../../../_lib/tron.js";
 
 export async function onRequestPost({request,env}) {
-  const supplied=(request.headers.get("Authorization")||"").replace(/^Bearer\\s+/i,"");
+  const supplied=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
   const expected=String(env.USDT_SCAN_SECRET||"");
   if(!expected||supplied.length!==expected.length) return json({error:"无权访问。"},403);
   let diff=0; for(let i=0;i<supplied.length;i++) diff|=supplied.charCodeAt(i)^expected.charCodeAt(i);
@@ -14,7 +14,7 @@ export async function onRequestPost({request,env}) {
   await db.prepare("UPDATE recharge_orders SET status='expired' WHERE channel='usdt_trc20' AND status='pending' AND expires_at IS NOT NULL AND expires_at<?").bind(now).run();
   const state=await db.prepare("SELECT fingerprint FROM wallet_scan_state WHERE scanner_key='usdt_trc20'").first();
   let backlogCursor=String(state?.fingerprint||""), scanned=0, credited=0, ignored=0, pages=0;
-  const base=String(env.TRONGRID_API_URL||"https://api.trongrid.io").replace(/\\/$/,"");
+  const base=String(env.TRONGRID_API_URL||"https://api.trongrid.io").replace(/\/$/,"");
   const headers={Accept:"application/json"}; if(env.TRONGRID_API_KEY) headers["TRON-PRO-API-KEY"]=env.TRONGRID_API_KEY;
   const eventCache=new Map(), usedEventIndexes=new Map();
   const resolveEventIndex=async tx=>{
