@@ -49,11 +49,18 @@
 - `POST /api/v1/payplat/gateway/submit`：兼容旧商户签名参数，当前仅接受 `type=alipay`
 - `GET /api/v1/payplat/gateway/query`：签名查单
 - `GET /api/v1/payplat/cashier/status?trade_no=...`：收银台状态
-- `POST /api/v1/pay/notify`：支付宝通知入口；查单失败、金额不符、订单不存在均拒绝确认
+- `POST /api/v1/pay/notify`：支付宝通知入口；用户充值与旧商户订单均先服务端查单并核对精确金额
+- `GET /api/wallet/summary`：读取统一 USDT 余额
+- `POST /api/recharge/alipay/create`：用户支付宝充值，创建时锁定 CNY/USDT 汇率
+- `POST /api/recharge/usdt/create`：生成 TRC20 精确金额充值订单
+- `GET /api/recharge/status?trade_no=...`：读取本人充值订单状态
+- `POST /api/recharge/usdt/sync`：受 `USDT_SCAN_SECRET` 保护的确认交易扫描入口
 
 ## 迁移边界与未开放项目
 
-- 本阶段**没有启用 USDT/TRC20 链上监听**。旧监听依赖 TronGrid 凭据、地址、确认数、交易哈希唯一性及定时扫描；必须独立迁移和测试后才能开放，当前网关会明确拒绝非支付宝方式。
+- 用户账户充值代码现已包含支付宝与 USDT/TRC20 两个独立入口；旧商户网关 `POST /api/v1/payplat/gateway/submit` 仍只接受支付宝。TRC20 仅接受配置的收款地址和 USDT 合约，按唯一精确金额匹配两小时内的待支付订单，等待 TronGrid confirmed 数据后入账。
+- 统一 USDT 钱包新增 migration 0005、0006、0007；0005 将旧 `merchant_ledger` 最新 USDT 余额结转到新钱包，0006 增加精确付款金额和过期时间，0007 保存链上扫描分页游标。必须按顺序应用。
+- 支付宝人民币充值通过 `CNY_PER_USDT` 配置汇率，创建订单时保存汇率快照；历史充值金额不随之后汇率变化。
 - 商户通知已持久化，但自动周期重试调度尚需接入 Cloudflare Cron/Queue；单次通知失败会保留记录，不代表已完成自动补偿。
 - 本分支不含真实支付服务商凭据；未配置 Secrets 前下单会 fail closed，不会返回虚假的支付成功。
 - 不迁移旧 OSS / MySQL / ECS 凭据。旧仓库中暴露的密钥需在原平台轮换。
@@ -61,10 +68,10 @@
 
 ## 上线前验收
 
-1. 在 Cloudflare 设置全部 Secrets。
-2. 应用 D1 migration。
+1. 在 Cloudflare 设置全部 Secrets/Variables，包括 `CNY_PER_USDT`、`USDT_TRC20_ADDRESS`、`USDT_TRC20_CONTRACT`、`TRONGRID_API_KEY` 和 `USDT_SCAN_SECRET`。
+2. 按顺序应用 D1 migrations 0004、0005、0006、0007。
 3. 在测试环境申请商户并审核通过。
-4. 使用服务商沙箱完成下单、异步回调、主动查单、金额不符拒绝、重复回调、并发回调、商户通知失败恢复测试。
+4. 使用服务商沙箱完成支付宝下单、异步回调、主动查单、金额不符拒绝、重复回调和并发回调测试；另用小额真实 TRC20 转账核对收款地址、合约、精确金额、确认状态和仅入账一次。
 5. 为通知补偿配置 Cron/Queue 后，再切换服务商回调到 Cloudflare。
 6. 确认旧 ECS 不再收到任何支付流量后，才清理旧支付服务；爬虫服务保持运行。
 
