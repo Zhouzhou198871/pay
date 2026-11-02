@@ -1,3 +1,4 @@
+import "./style.css";
 const app = document.querySelector("#app");
 const LOGO = "https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png";
 let mode = "login";
