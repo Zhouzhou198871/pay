@@ -60,7 +60,7 @@ function authMarkup() {
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
       <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，建议包含字母和数字" : "请输入登录密码"}" minlength="8" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>
-      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot"><span>正在加载安全验证…</span></div>
+      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div>
       ${registering ? `
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
@@ -217,7 +217,7 @@ async function loadCaptcha() {
   if (!slot) return;
   const loadId = ++captchaLoadSeq;
   window.__qtCaptchaToken = "";
-  slot.textContent = "正在加载安全验证…";
+  slot.replaceChildren();
   try {
     const configResponse = await fetch("/api/auth/config", { cache: "no-store", signal: AbortSignal.timeout(10000) });
     if (!configResponse.ok) throw new Error("安全验证配置读取失败");
@@ -242,6 +242,7 @@ async function loadCaptcha() {
     window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
       theme: "light",
+      size: "flexible",
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => { window.__qtCaptchaToken = token; },
       "expired-callback": () => { window.__qtCaptchaToken = ""; },
@@ -284,7 +285,7 @@ function renderForgotPassword() {
     <form id="reset-form" class="recovery-form" novalidate>
       <label class="field-label" for="email">注册邮箱</label>
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入注册邮箱" required /></div>
-      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot"><span>正在加载安全验证…</span></div>
+      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div>
       <label class="field-label" for="code">邮箱验证码</label>
       <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-reset-code">获取验证码</button></div>
       <label class="field-label" for="password">新密码</label>
