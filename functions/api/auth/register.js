@@ -1,18 +1,16 @@
-import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, sha256, validEmail, verifyTurnstile } from "../../_lib/auth.js";
+import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, sha256, validEmail } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   let stage = "configuration";
   let email = "";
   try {
-    if (!env.AUTH_DB || !env.AUTH_SECRET || !env.TURNSTILE_SECRET_KEY) return json({ error: "账户服务尚未完成配置。" }, 503);
+    if (!env.AUTH_DB || !env.AUTH_SECRET) return json({ error: "账户服务尚未完成配置。" }, 503);
     stage = "parse-request";
     const body = await request.json();
     email = normalizeEmail(body.email);
     const password = String(body.password || "");
     const code = String(body.code || "").trim();
     const consent = body.consent === true;
-    stage = "turnstile";
-    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || "", "register", new URL(request.url).hostname))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
     if (!validEmail(email)) return json({ error: "请输入有效的邮箱地址。" }, 400);
     if (!consent) return json({ error: "请先阅读并同意用户协议与隐私政策。" }, 400);
     if (password.length < 8 || password.length > 128) return json({ error: "密码长度需为 8 至 128 位。" }, 400);
