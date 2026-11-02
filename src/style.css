@@ -145,3 +145,17 @@ body.merchant-menu-open{overflow:hidden}
  .drawer-user{min-height:84px;padding:13px}
  .drawer-user-avatar{width:47px;height:47px}
 }
+
+
+.account-detail-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.account-detail{display:flex;flex-direction:column;gap:9px;padding:18px 19px;border:1px solid #edf1f5;border-radius:14px;background:#fbfdff;min-width:0}
+.account-detail span{font-size:12px;color:#8a99a8}
+.account-detail b{font-size:14px;color:#30465f;overflow-wrap:anywhere}
+.account-detail .account-active{color:#168c70}
+.section-note{font-size:12px;line-height:1.8;color:#8998a7;margin:18px 2px 0}
+.section-empty{min-height:250px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 20px;border:1px dashed #dfe8f0;border-radius:17px;background:#fbfdff}
+.section-empty-icon{width:54px;height:54px;display:grid;place-items:center;border-radius:17px;background:#eaf6fb;color:#278db8;font-size:30px}
+.section-empty h3{font-size:17px;color:#30465f;margin:17px 0 8px}
+.section-empty p{max-width:430px;font-size:12px;line-height:1.8;color:#8998a7;margin:0}
+.section-empty-tag{margin-top:18px;padding:6px 12px;border-radius:20px;background:#f0f4f8;color:#8795a3;font-size:11px}
+@media(max-width:600px){.account-detail-list{grid-template-columns:1fr}.account-detail{padding:15px 16px}.section-empty{min-height:220px}}
