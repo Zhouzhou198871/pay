@@ -59,11 +59,12 @@ function authMarkup() {
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
       <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，建议包含字母和数字" : "请输入登录密码"}" minlength="8" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>
+      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot"><span>正在加载安全验证…</span></div>
       ${registering ? `
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
         <label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label>
-      ` : `<div class="login-meta"><span>使用邮箱与密码安全登录</span><span class="secure-mark">● SSL 安全保护</span></div>`}
+      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><span>使用邮箱与密码安全登录</span><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
       <button class="primary-button" type="submit"><span>${registering ? "创建账户" : "登录账户"}</span><b>→</b></button>
     </form>
     <div class="separator"><span>或使用以下方式</span></div>
@@ -123,12 +124,15 @@ function bindAuthEvents() {
     document.querySelector("#toggle-password").textContent = visible ? "隐藏" : "显示";
   });
   document.querySelector("#send-code")?.addEventListener("click", sendCode);
+  document.querySelector("#forgot-password")?.addEventListener("click", renderForgotPassword);
+  loadCaptcha();
   document.querySelector("#auth-form")?.addEventListener("submit", submitAuth);
 }
 
 async function sendCode() {
   const email = document.querySelector("#email").value.trim();
   const button = document.querySelector("#send-code");
+  if (!window.__qtCaptchaToken) { showToast("请先完成人机验证", "error"); return; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast("请先输入有效的邮箱地址", "error");
     document.querySelector("#email").focus();
@@ -139,7 +143,7 @@ async function sendCode() {
   try {
     const response = await fetch("/api/auth/send-code", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, purpose: "register", captchaToken: window.__qtCaptchaToken || "" })
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "验证码发送失败");
@@ -165,9 +169,10 @@ async function submitAuth(event) {
   event.preventDefault();
   const form = new FormData(event.currentTarget);
   const payload = Object.fromEntries(form.entries());
-  if (mode === "register") payload.consent = document.querySelector("#consent").checked;
+  payload.consent = document.querySelector("#consent")?.checked === true;
+  payload.captchaToken = window.__qtCaptchaToken || "";
   const button = event.currentTarget.querySelector(".primary-button");
-  if (mode === "register" && !document.querySelector("#consent").checked) {
+  if (!payload.consent) {
     showToast("请先阅读并同意用户协议与隐私政策", "error");
     return;
   }
@@ -175,6 +180,7 @@ async function submitAuth(event) {
     showToast("请输入 6 位邮箱验证码", "error");
     return;
   }
+  if (!payload.captchaToken) { showToast("请先完成人机验证", "error"); return; }
   if ((payload.password || "").length < 8) {
     showToast("密码至少需要 8 位", "error");
     return;
@@ -195,6 +201,72 @@ async function submitAuth(event) {
     button.disabled = false;
     button.querySelector("span").textContent = mode === "register" ? "创建账户" : "登录账户";
   }
+}
+
+
+async function loadCaptcha() {
+  const slot = document.querySelector("#captcha-slot");
+  if (!slot) return;
+  try {
+    const configResponse = await fetch("/api/auth/config", { cache: "no-store" });
+    const config = await configResponse.json();
+    if (!config.siteKey) { slot.textContent = "安全验证尚未配置，请联系管理员"; return; }
+    if (!window.turnstile) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true; script.defer = true;
+        script.onload = resolve; script.onerror = reject;
+        document.head.appendChild(script);
+      });
+    }
+    window.turnstile.render(slot, {
+      sitekey: config.siteKey,
+      theme: "light",
+      callback: (token) => { window.__qtCaptchaToken = token; },
+      "expired-callback": () => { window.__qtCaptchaToken = ""; },
+      "error-callback": () => { window.__qtCaptchaToken = ""; showToast("人机验证暂不可用，请刷新重试", "error"); }
+    });
+  } catch {
+    slot.textContent = "安全验证加载失败，请刷新页面重试";
+  }
+}
+
+function renderForgotPassword() {
+  mode = "forgot";
+  app.innerHTML = shell(`
+    <div class="form-heading"><div class="form-kicker">ACCOUNT RECOVERY</div><h2>重置登录密码</h2><p>通过注册邮箱验证身份，重新设置安全密码。</p></div>
+    <form id="reset-form" class="recovery-form" novalidate>
+      <label class="field-label" for="email">注册邮箱</label>
+      <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入注册邮箱" required /></div>
+      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot"><span>正在加载安全验证…</span></div>
+      <label class="field-label" for="code">邮箱验证码</label>
+      <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-reset-code">获取验证码</button></div>
+      <label class="field-label" for="password">新密码</label>
+      <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" minlength="8" autocomplete="new-password" placeholder="至少 8 位新密码" required /></div>
+      <label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label>
+      <button class="primary-button" type="submit"><span>确认重置密码</span><b>→</b></button>
+    </form>
+    <p class="form-foot"><button class="text-link" id="back-login">返回登录</button></p>
+  `);
+  document.querySelectorAll("[data-legal]").forEach(b=>b.addEventListener("click",()=>openLegal(b.dataset.legal)));
+  document.querySelector("#close-legal")?.addEventListener("click",()=>document.querySelector("#legal-dialog").close());
+  document.querySelector("#back-login")?.addEventListener("click",()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();});
+  document.querySelector("#send-reset-code")?.addEventListener("click", async()=>{
+    const email=document.querySelector("#email").value.trim(), button=document.querySelector("#send-reset-code");
+    if(!email.includes("@")){showToast("请输入有效邮箱地址","error");return;}
+    if(!window.__qtCaptchaToken){showToast("请先完成人机验证","error");return;}
+    button.disabled=true;button.textContent="发送中…";
+    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);showToast("验证码已发送","success");}catch(e){button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
+  });
+  document.querySelector("#reset-form")?.addEventListener("submit",async e=>{
+    e.preventDefault();const payload=Object.fromEntries(new FormData(e.currentTarget).entries());
+    payload.consent=document.querySelector("#consent").checked;payload.captchaToken=window.__qtCaptchaToken||"";
+    if(!payload.consent){showToast("请先阅读并同意用户协议与隐私政策","error");return;}
+    const button=e.currentTarget.querySelector(".primary-button");button.disabled=true;button.querySelector("span").textContent="正在安全重置…";
+    try{const r=await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const d=await r.json();if(!r.ok)throw new Error(d.error||"重置失败");showToast("密码重置成功，请使用新密码登录","success");setTimeout(()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();},900);}catch(err){showToast(err.message,"error");button.disabled=false;button.querySelector("span").textContent="确认重置密码";}
+  });
+  loadCaptcha();
 }
 
 if (location.pathname === "/dashboard") {
