@@ -52,12 +52,12 @@ test("Turnstile requires success, expected action, and exact hostname", async ()
   const originalFetch = globalThis.fetch;
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({
-      success: true, action: "register", hostname: "qingtian-pay.pages.dev"
+      success: true, action: "register", hostname: "pay.lynli.me"
     }), { status: 200, headers: { "Content-Type": "application/json" } });
-    assert.equal(await verifyTurnstile("valid-token", "secret", "", "register", "qingtian-pay.pages.dev"), true);
-    assert.equal(await verifyTurnstile("valid-token", "secret", "", "login", "qingtian-pay.pages.dev"), false);
+    assert.equal(await verifyTurnstile("valid-token", "secret", "", "register", "pay.lynli.me"), true);
+    assert.equal(await verifyTurnstile("valid-token", "secret", "", "login", "pay.lynli.me"), false);
     assert.equal(await verifyTurnstile("valid-token", "secret", "", "register", "evil.example"), false);
-    assert.equal(await verifyTurnstile("", "secret", "", "register", "qingtian-pay.pages.dev"), false);
+    assert.equal(await verifyTurnstile("", "secret", "", "register", "pay.lynli.me"), false);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -94,9 +94,9 @@ test("registration commits user, OTP consumption, and session in one D1 batch", 
   };
   try {
     globalThis.fetch = async () => new Response(JSON.stringify({
-      success: true, action: "register", hostname: "qingtian-pay.pages.dev"
+      success: true, action: "register", hostname: "pay.lynli.me"
     }), { status: 200, headers: { "Content-Type": "application/json" } });
-    const request = new Request("https://qingtian-pay.pages.dev/api/auth/register", {
+    const request = new Request("https://pay.lynli.me/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password: "Safe-Password-123", code, consent: true })
@@ -148,12 +148,12 @@ test("failed email delivery removes only the pending OTP created by that request
     globalThis.fetch = async (url) => {
       if (String(url).includes("/siteverify")) {
         return new Response(JSON.stringify({
-          success: true, action: "register", hostname: "qingtian-pay.pages.dev"
+          success: true, action: "register", hostname: "pay.lynli.me"
         }), { status: 200, headers: { "Content-Type": "application/json" } });
       }
       throw new Error("simulated mail provider network failure");
     };
-    const request = new Request("https://qingtian-pay.pages.dev/api/auth/send-code", {
+    const request = new Request("https://pay.lynli.me/api/auth/send-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: "retry@example.com", purpose: "register", captchaToken: "valid-token" })
@@ -179,7 +179,7 @@ test("failed email delivery removes only the pending OTP created by that request
 
 test("GitHub OAuth callback rejects a mismatched state and clears the state cookie", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github/callback.js");
-  const request = new Request("https://qingtian-pay.pages.dev/api/auth/github/callback?code=abc&state=wrong", {
+  const request = new Request("https://pay.lynli.me/api/auth/github/callback?code=abc&state=wrong", {
     headers: { Cookie: "__Host-qt_oauth_state=expected" }
   });
   const response = await onRequestGet({ request, env: {} });
@@ -227,7 +227,7 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
       }
       throw new Error("unexpected GitHub API URL");
     };
-    const request = new Request("https://qingtian-pay.pages.dev/api/auth/github/callback?code=mock-code&state=valid-state", {
+    const request = new Request("https://pay.lynli.me/api/auth/github/callback?code=mock-code&state=valid-state", {
       headers: { Cookie: "__Host-qt_oauth_state=valid-state" }
     });
     const response = await onRequestGet({
@@ -235,7 +235,7 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
       env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "mock-secret", AUTH_DB: db }
     });
     assert.equal(response.status, 302);
-    assert.equal(response.headers.get("Location"), "https://qingtian-pay.pages.dev/dashboard");
+    assert.equal(response.headers.get("Location"), "https://pay.lynli.me/dashboard");
     assert.match(response.headers.get("Set-Cookie"), /__Host-qt_oauth_state=/);
     assert.match(response.headers.get("Set-Cookie"), /__Host-qt_session=/);
     assert.equal(calls, 3);
@@ -257,7 +257,7 @@ test("GitHub OAuth initiation uses the production callback and sets a short-live
   assert.equal(location.origin, "https://github.com");
   assert.equal(location.pathname, "/login/oauth/authorize");
   assert.equal(location.searchParams.get("client_id"), "public-client-id");
-  assert.equal(location.searchParams.get("redirect_uri"), "https://qingtian-pay.pages.dev/api/auth/github/callback");
+  assert.equal(location.searchParams.get("redirect_uri"), "https://pay.lynli.me/api/auth/github/callback");
   assert.equal(location.searchParams.get("scope"), "read:user user:email");
   const state = location.searchParams.get("state");
   assert.match(state, /^[a-f0-9]{48}$/);
