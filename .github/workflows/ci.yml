@@ -1,12 +1,15 @@
-name: Build check
+name: Build and auth checks
 
 on:
   push:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,4 +17,6 @@ jobs:
         with:
           node-version: 22
       - run: npm install
+      - run: npm run check
+      - run: npm test
       - run: npm run build
