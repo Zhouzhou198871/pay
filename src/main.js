@@ -226,22 +226,16 @@ async function loadCaptcha() {
 
     if (!window.turnstile) {
       await new Promise((resolve, reject) => {
-        let script = document.querySelector('script[data-turnstile-loader="true"]');
-        const timeout = setTimeout(() => reject(new Error("安全验证加载超时")), 12000);
-        const finish = (fn) => (event) => { clearTimeout(timeout); fn(event); };
-        if (script) {
-          script.addEventListener("load", finish(resolve), { once: true });
-          script.addEventListener("error", finish(reject), { once: true });
-        } else {
-          script = document.createElement("script");
-          script.dataset.turnstileLoader = "true";
-          script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-          script.async = true;
-          script.defer = true;
-          script.onload = finish(resolve);
-          script.onerror = finish(reject);
-          document.head.appendChild(script);
-        }
+        document.querySelector('script[data-turnstile-loader="true"]')?.remove();
+        const script = document.createElement("script");
+        const timeout = setTimeout(() => { script.remove(); reject(new Error("安全验证加载超时")); }, 12000);
+        script.dataset.turnstileLoader = "true";
+        script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+        script.async = true;
+        script.defer = true;
+        script.onload = () => { clearTimeout(timeout); window.turnstile ? resolve() : reject(new Error("安全验证脚本未正确初始化")); };
+        script.onerror = () => { clearTimeout(timeout); reject(new Error("安全验证脚本加载失败")); };
+        document.head.appendChild(script);
       });
     }
     if (loadId !== captchaLoadSeq || !document.querySelector("#captcha-slot")) return;
