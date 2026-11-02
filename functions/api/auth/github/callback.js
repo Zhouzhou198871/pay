@@ -1,6 +1,6 @@
 import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
 
-const CANONICAL_ORIGIN = "https://qingtian-pay.pages.dev";
+const CANONICAL_ORIGIN = "https://pay.lynli.me";
 const clearState = "__Host-qt_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 
 function redirect(path, cookie = clearState) {
