@@ -151,16 +151,14 @@ export const settleConfirmedOrder = async (env,tradeNo,providerTradeNo,payloadHa
     return {ok:true,duplicate:true};
   }
   const eventId=randomHex(16);
-  const update=await db.prepare("UPDATE payment_orders SET status='paid',provider_trade_no=?,paid_at=? WHERE trade_no=? AND status='pending'")
-    .bind(providerTradeNo||null,now,tradeNo).run();
-  if((update.meta?.changes||0)!==1) {
-    const latest=await db.prepare("SELECT status FROM payment_orders WHERE trade_no=?").bind(tradeNo).first();
-    return {ok:latest?.status==="paid",duplicate:latest?.status==="paid"};
-  }
-  await db.prepare("INSERT INTO payment_events (id,event_key,trade_no,event_type,payload_hash,created_at) VALUES (?,?,?,'provider_paid',?,?)")
-    .bind(eventId,"paid:"+tradeNo,tradeNo,payloadHash,now).run();
-  const fresh={...order,provider_trade_no:providerTradeNo||"",paid_at:now};
-  await queueMerchantNotice(env,fresh);
+  const results=await db.batch([
+    db.prepare("UPDATE payment_orders SET status='paid',provider_trade_no=?,paid_at=? WHERE trade_no=? AND status='pending'").bind(providerTradeNo||null,now,tradeNo),
+    db.prepare("INSERT OR IGNORE INTO payment_events (id,event_key,trade_no,event_type,payload_hash,created_at) SELECT ?,? ,?,'provider_paid',?,? WHERE EXISTS (SELECT 1 FROM payment_orders WHERE trade_no=? AND status='paid')").bind(eventId,"paid:"+tradeNo,tradeNo,payloadHash,now,tradeNo)
+  ]);
+  const latest=await db.prepare("SELECT * FROM payment_orders WHERE trade_no=? LIMIT 1").bind(tradeNo).first();
+  if(latest?.status!=="paid") return {ok:false,reason:"settlement_not_committed"};
+  const existingNotice=await db.prepare("SELECT id FROM payment_webhook_deliveries WHERE trade_no=? LIMIT 1").bind(tradeNo).first();
+  if(!existingNotice) await queueMerchantNotice(env,{...latest,notify_url:order.notify_url});
   return {ok:true,duplicate:false};
 };
 export const userMerchant = async (request,env) => {
