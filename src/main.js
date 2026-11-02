@@ -116,6 +116,7 @@ async function renderDashboard() {
         </nav>
         <div class="drawer-section-label">交易与资金</div>
         <nav class="drawer-nav">
+          <button class="drawer-link" data-section="recharge"><span class="drawer-icon purple">＋</span><span>账户充值</span></button>
           <button class="drawer-link" data-section="orders"><span class="drawer-icon purple">▤</span><span>订单记录</span></button>
           <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple">▱</span><span>提现记录</span></button>
           <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple">▥</span><span>资金明细</span></button>
@@ -168,6 +169,7 @@ async function renderDashboard() {
   const labels = {
     overview: ["用户中心", "账户概览", "账户基础信息与服务入口"],
     profile: ["个人资料", "个人资料", "当前登录账户信息"],
+    recharge: ["账户充值", "账户充值", "支付宝与 USDT（TRC20）充值，余额统一以 USDT 记账"],
     orders: ["订单记录", "订单记录", "交易订单服务尚未接入"],
     withdrawals: ["提现记录", "提现记录", "提现服务尚未接入"],
     ledger: ["资金明细", "资金明细", "资金账目服务尚未接入"],
@@ -185,6 +187,59 @@ async function renderDashboard() {
     }
     if (key === "profile") {
       panel.innerHTML = `<div class="account-detail-list"><div class="account-detail"><span>账户名称</span><b>${escapeHtml(displayName)}</b></div><div class="account-detail"><span>登录邮箱</span><b>${escapeHtml(email)}</b></div><div class="account-detail"><span>账户状态</span><b class="account-active">正常</b></div></div><p class="section-note">资料修改功能尚未开放。为保护账户安全，当前仅展示已验证的账户资料。</p>`;
+      return;
+    }
+    if (key === "recharge") {
+      panel.innerHTML = `
+        <div class="account-detail-list">
+          <div class="account-detail"><span>记账单位</span><b>USDT</b></div>
+          <div class="account-detail"><span>充值方式</span><b>支付宝 · TRON（TRC20）</b></div>
+        </div>
+        <p class="section-note">全站余额统一按 USDT 记账。支付宝按创建订单时锁定的人民币兑 USDT 汇率换算。</p>
+        <form id="alipay-recharge-form" class="recharge-form">
+          <h3>支付宝充值</h3><label for="alipay-usdt-amount">充值金额（USDT）</label>
+          <input id="alipay-usdt-amount" name="amount_usdt" type="number" min="0.01" step="0.01" placeholder="例如 10.00" required />
+          <button class="primary-button" type="submit">创建支付宝订单</button>
+        </form>
+        <form id="usdt-recharge-form" class="recharge-form">
+          <h3>USDT 充值</h3><label for="usdt-amount">充值金额（USDT）</label>
+          <input id="usdt-amount" name="amount_usdt" type="number" min="0.000001" step="0.000001" placeholder="例如 10.00" required />
+          <button class="primary-button" type="submit">生成 TRC20 收款订单</button>
+        </form>
+        <div id="recharge-result" aria-live="polite"></div>`;
+      const resultBox=panel.querySelector("#recharge-result");
+      const showResult=(title,lines,link)=> {
+        resultBox.replaceChildren();
+        const h=document.createElement("h3"); h.textContent=title; resultBox.append(h);
+        for(const [label,value] of lines) { const p=document.createElement("p"); p.textContent=label+"："+value; resultBox.append(p); }
+        if(link) { const a=document.createElement("a"); a.href=link; a.target="_blank"; a.rel="noopener noreferrer"; a.textContent="打开支付宝付款页面"; resultBox.append(a); }
+      };
+      panel.querySelector("#alipay-recharge-form").addEventListener("submit",async event=>{
+        event.preventDefault(); const button=event.currentTarget.querySelector("button"); button.disabled=true;
+        try {
+          const amount=panel.querySelector("#alipay-usdt-amount").value;
+          const response=await fetch("/api/recharge/alipay/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount_usdt:amount})});
+          const data=await response.json(); if(!response.ok) throw new Error(data.error||"创建支付宝订单失败");
+          showResult("支付宝订单已创建",[["订单号",data.trade_no],["应付人民币","¥"+data.fiat_cny],["预计入账",data.credit_usdt+" USDT"],["锁定汇率","1 USDT = "+data.fx_rate+" CNY"]],data.pay_url||"");
+          if(data.pay_info) { const p=document.createElement("p"); p.textContent="支付信息："+data.pay_info; resultBox.append(p); }
+          const tradeNo=data.trade_no;
+          const poll=setInterval(async()=>{try{const r=await fetch("/api/recharge/status?trade_no="+encodeURIComponent(tradeNo));const s=await r.json();if(s.status==="paid"){clearInterval(poll);showToast("支付宝充值到账："+s.amount_usdt+" USDT","success");const b=await fetch("/api/wallet/summary");const w=await b.json();const el=document.querySelector(".summary-value");if(el)el.textContent=w.balance+" USDT";}}catch{}},4000);
+          setTimeout(()=>clearInterval(poll),300000);
+        } catch(error) { showResult("创建失败",[["原因",error.message||"请稍后重试"]]); }
+        finally { button.disabled=false; }
+      });
+      panel.querySelector("#usdt-recharge-form").addEventListener("submit",async event=>{
+        event.preventDefault(); const button=event.currentTarget.querySelector("button"); button.disabled=true;
+        try {
+          const amount=panel.querySelector("#usdt-amount").value;
+          const response=await fetch("/api/recharge/usdt/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({amount_usdt:amount})});
+          const data=await response.json(); if(!response.ok) throw new Error(data.error||"生成 USDT 订单失败");
+          showResult("USDT 收款订单已生成",[["网络",data.network],["收款地址",data.address],["精确转账金额",data.amount_usdt+" USDT"],["订单号",data.trade_no],["说明","请勿转入其他网络；到账需等待链上确认"]]);
+          const copy=document.createElement("button"); copy.type="button"; copy.textContent="复制收款地址"; copy.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(data.address);showToast("收款地址已复制","success");}catch{showToast("复制失败，请手动复制","error");}}); resultBox.append(copy);
+          const copyAmount=document.createElement("button"); copyAmount.type="button"; copyAmount.textContent="复制精确金额"; copyAmount.addEventListener("click",async()=>{try{await navigator.clipboard.writeText(data.amount_usdt);showToast("金额已复制","success");}catch{showToast("复制失败","error");}}); resultBox.append(copyAmount);
+        } catch(error) { showResult("创建失败",[["原因",error.message||"请稍后重试"]]); }
+        finally { button.disabled=false; }
+      });
       return;
     }
     const messages = {
@@ -237,11 +292,15 @@ async function renderDashboard() {
     } catch (error) { panel.textContent = error.message || "数据读取失败"; }
   }));
   try {
+    const walletResponse = await fetch("/api/wallet/summary");
+    if (walletResponse.ok) {
+      const wallet = await walletResponse.json();
+      const balance = document.querySelector(".summary-value");
+      if (balance) balance.textContent = wallet.balance + " USDT";
+    }
     const response = await fetch("/api/merchant/summary");
     if (response.ok) {
       const summary = await response.json();
-      const balance = document.querySelector(".summary-value");
-      if (balance) balance.textContent = summary.balance_micro === null ? "暂无账本余额" : (Number(summary.balance_micro) / 1000000).toFixed(6).replace(/0+$/, "") + " " + (summary.currency || "USDT");
       const stats = document.querySelectorAll(".merchant-stat");
       if (stats[0]) stats[0].querySelector("b").textContent = (Number(summary.today_paid_amount_micro || 0) / 1000000).toFixed(2) + " " + (summary.currency || "USDT");
       if (stats[0]) stats[0].querySelector("small").textContent = Number(summary.today_paid_orders || 0) + " 笔已支付订单";
