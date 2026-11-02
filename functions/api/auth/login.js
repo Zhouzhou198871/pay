@@ -1,4 +1,4 @@
-import { createSession, json, normalizeEmail, sessionCookie, validEmail, verifyPassword } from "../../_lib/auth.js";
+import { createSession, json, normalizeEmail, sessionCookie, validEmail, verifyPassword, verifyTurnstile } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   try {
