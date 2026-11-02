@@ -56,10 +56,10 @@ export async function onRequestGet({ request, env }) {
       }
     }
     const session = await createSession(env.AUTH_DB, user.id);
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${url.origin}/dashboard`, "Set-Cookie": [clearState, sessionCookie(session)] }
-    });
+    const responseHeaders = new Headers({ Location: `${url.origin}/dashboard` });
+    responseHeaders.append("Set-Cookie", clearState);
+    responseHeaders.append("Set-Cookie", sessionCookie(session));
+    return new Response(null, { status: 302, headers: responseHeaders });
   } catch (error) {
     return new Response("GitHub 登录失败，请稍后重试。", { status: 502, headers: { "Content-Type": "text/plain; charset=utf-8", "Set-Cookie": clearState } });
   }
