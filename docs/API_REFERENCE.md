@@ -2,7 +2,7 @@
 
 - 文档版本：1.0
 - 更新日期：2026-11-02
-- 当前线上环境：`https://qingtian-pay.pages.dev`
+- 当前线上环境：`https://pay.lynli.me`
 - 协议：HTTPS；请求与响应使用 UTF-8 JSON（OAuth 跳转接口除外）
 - 认证方式：同源 HttpOnly Session Cookie
 - 当前接口状态以本文“已实现 / 未开放”标记为准
@@ -16,7 +16,7 @@
 生产环境：
 
 ```text
-https://qingtian-pay.pages.dev
+https://pay.lynli.me
 ```
 
 所有 API 路径均相对于 Base URL。当前 Functions 使用同源 Cookie 会话，不提供跨域 API 或独立 Bearer Token 接口。
@@ -227,8 +227,8 @@ OAuth App 配置：
 
 | 设置 | 值 |
 |---|---|
-| Homepage URL | `https://qingtian-pay.pages.dev` |
-| Authorization callback URL | `https://qingtian-pay.pages.dev/api/auth/github/callback` |
+| Homepage URL | `https://pay.lynli.me` |
+| Authorization callback URL | `https://pay.lynli.me/api/auth/github/callback` |
 | Scope | `read:user user:email` |
 
 环境变量：`GITHUB_CLIENT_ID`（Text）和 `GITHUB_CLIENT_SECRET`（Secret）。服务端只接受 GitHub 返回的已验证邮箱；没有已验证邮箱会跳转到 `/?oauth=email-required`。用户取消授权跳转到 `/?oauth=cancelled`；state 或流程失败跳转到 `/?oauth=failed`。
