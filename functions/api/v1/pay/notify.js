@@ -7,7 +7,10 @@ export async function onRequestPost({request,env,waitUntil}) {
   if(!tradeNo) return new Response("fail",{status:400,headers:{"Content-Type":"text/plain"}});
   const order=await env.AUTH_DB.prepare("SELECT trade_no,status,amount_cents FROM payment_orders WHERE trade_no=? LIMIT 1").bind(tradeNo).first();
   if(!order) return new Response("fail",{status:404,headers:{"Content-Type":"text/plain"}});
-  if(order.status==="paid") return new Response("success",{headers:{"Content-Type":"text/plain"}});
+  if(order.status==="paid") {
+    try { await settleConfirmedOrder(env,tradeNo,"",await sha256(JSON.stringify(params))); return new Response("success",{headers:{"Content-Type":"text/plain"}}); }
+    catch { return new Response("fail",{status:503,headers:{"Content-Type":"text/plain"}}); }
+  }
   try {
     const confirmed=await queryAlipayOrder(tradeNo,env);
     if(!confirmed.paid) return new Response("fail",{status:409,headers:{"Content-Type":"text/plain"}});
