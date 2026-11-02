@@ -1,4 +1,4 @@
-import { createSession, hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, validEmail, verifyTurnstile } from "../../_lib/auth.js";
+import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, sha256, validEmail, verifyTurnstile } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   let stage = "configuration";
@@ -30,18 +30,34 @@ export async function onRequestPost({ request, env }) {
     stage = "check-existing-user";
     const existing = await env.AUTH_DB.prepare("SELECT id FROM users WHERE email = ?").bind(email).first();
     if (existing) return json({ error: "该邮箱已注册，请直接登录。" }, 409);
+
     stage = "hash-password";
     const userId = crypto.randomUUID();
     const passwordHash = await hashPassword(password);
-    stage = "insert-user";
-    await env.AUTH_DB.prepare("INSERT INTO users (id, email, password_hash, created_at, status, display_name, terms_accepted_at, terms_version, privacy_version) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)")
-      .bind(userId, email, passwordHash, now, email.split("@")[0], now, "2026-11-02", "2026-11-02").run();
-    stage = "delete-otp";
-    await env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ? AND purpose = 'register'").bind(email).run();
-    stage = "create-session";
-    const token = await createSession(env.AUTH_DB, userId);
+    const token = randomHex(32);
+    const tokenHash = await sha256(token);
+
+    // D1 batch is transactional: user creation, OTP consumption and session creation
+    // either all commit, or all roll back. This prevents stranded accounts on failure.
+    stage = "commit-registration";
+    await env.AUTH_DB.batch([
+      env.AUTH_DB.prepare("INSERT INTO users (id, email, password_hash, created_at, status, display_name, terms_accepted_at, terms_version, privacy_version) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)")
+        .bind(userId, email, passwordHash, now, email.split("@")[0], now, "2026-11-02", "2026-11-02"),
+      env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ? AND purpose = 'register' AND code_hash = ?")
+        .bind(email, otp.code_hash),
+      env.AUTH_DB.prepare("INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
+        .bind(tokenHash, userId, now + 60 * 60 * 24 * 30, now)
+    ]);
     return json({ success: true }, 201, { "Set-Cookie": sessionCookie(token) });
   } catch (error) {
+    if (stage === "commit-registration" && env.AUTH_DB) {
+      try {
+        const existing = await env.AUTH_DB.prepare("SELECT id FROM users WHERE email = ?").bind(normalizeEmail((await request.clone().json()).email)).first();
+        if (existing) return json({ error: "该邮箱已注册，请直接登录。" }, 409);
+      } catch {
+        // Keep the original failure response if the follow-up lookup is unavailable.
+      }
+    }
     console.error("[auth/register] failed", {
       stage,
       name: String(error?.name || "Error").slice(0, 80),
