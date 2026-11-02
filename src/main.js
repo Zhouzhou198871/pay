@@ -163,8 +163,8 @@ async function sendCode() {
       } else button.textContent = `重新获取 ${countdown}s`;
     }, 1000);
     const hint = document.querySelector("#captcha-hint");
-    if (hint) hint.textContent = "验证码已发送。请再次完成人机验证，然后点击创建账户。";
-    showToast("验证码已发送，请再次完成人机验证后提交注册", "success");
+    if (hint) hint.textContent = "验证码已发送。输入邮箱验证码和密码后，即可提交注册。";
+    showToast("验证码已发送，请查收邮箱", "success");
   } catch (error) {
     resetCaptcha();
     button.disabled = false;
@@ -190,7 +190,7 @@ async function submitAuth(event) {
     showToast("请输入 6 位邮箱验证码", "error");
     return;
   }
-  if (!payload.captchaToken) { showToast("请先完成人机验证", "error"); return; }
+  if (mode !== "register" && !payload.captchaToken) { showToast("请先完成人机验证", "error"); return; }
   if ((payload.password || "").length < 8) {
     showToast("密码至少需要 8 位", "error");
     return;
@@ -276,7 +276,7 @@ async function loadCaptcha() {
       callback: (token) => {
         window.__qtCaptchaToken = token;
         const hint = document.querySelector("#captcha-hint");
-        if (hint && mode === "register") hint.textContent = "人机验证已完成，可以创建账户。";
+        if (hint && mode === "register") hint.textContent = "人机验证已完成，可以获取邮箱验证码。";
       },
       "expired-callback": () => {
         window.__qtCaptchaToken = "";
