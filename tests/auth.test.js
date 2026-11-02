@@ -247,3 +247,20 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("GitHub OAuth initiation uses the production callback and sets a short-lived state cookie", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github.js");
+  const response = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id" } });
+  assert.equal(response.status, 302);
+  const location = new URL(response.headers.get("Location"));
+  assert.equal(location.origin, "https://github.com");
+  assert.equal(location.pathname, "/login/oauth/authorize");
+  assert.equal(location.searchParams.get("client_id"), "public-client-id");
+  assert.equal(location.searchParams.get("redirect_uri"), "https://qingtian-pay.pages.dev/api/auth/github/callback");
+  assert.equal(location.searchParams.get("scope"), "read:user user:email");
+  const state = location.searchParams.get("state");
+  assert.match(state, /^[a-f0-9]{48}$/);
+  assert.match(response.headers.get("Set-Cookie"), new RegExp(`__Host-qt_oauth_state=${state}`));
+  assert.match(response.headers.get("Set-Cookie"), /Max-Age=600/);
+});
