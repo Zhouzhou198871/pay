@@ -18,7 +18,10 @@ export async function onRequestPost({request,env}) {
   for(let page=0;page<5;page++) {
     const url=new URL(base+"/v1/accounts/"+address+"/transactions/trc20");
     url.searchParams.set("only_confirmed","true"); url.searchParams.set("limit","200"); url.searchParams.set("contract_address",contract);
-    url.searchParams.set("order_by","block_timestamp,asc");
+    // Scan newest transfers first. When a backlog spans multiple invocations, the
+    // persisted fingerprint walks older pages; after exhaustion it resets so
+    // the next scheduled run starts at the newest transfers again.
+    url.searchParams.set("order_by","block_timestamp,desc");
     if(cursor) url.searchParams.set("fingerprint",cursor);
     const response=await fetch(url,{headers,signal:AbortSignal.timeout(12000)});
     if(!response.ok) return json({error:"链上数据源暂不可用，扫描游标已保留。"},503);
