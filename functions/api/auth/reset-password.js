@@ -11,7 +11,7 @@ export async function onRequestPost({ request, env }) {
     if (body.consent !== true) return json({ error: "请先阅读并同意用户协议与隐私政策。" }, 400);
     if (password.length < 8 || password.length > 128) return json({ error: "新密码长度需为 8 至 128 位。" }, 400);
     if (!/^\d{6}$/.test(code)) return json({ error: "请输入 6 位邮箱验证码。" }, 400);
-    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || ""))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
+    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || "", "password_reset", new URL(request.url).hostname))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
     const otp = await env.AUTH_DB.prepare("SELECT code_hash, expires_at, attempts FROM email_otps WHERE email = ? AND purpose = 'reset'").bind(email).first();
     const now = Math.floor(Date.now() / 1000);
     if (!otp || otp.expires_at < now || otp.attempts >= 5) return json({ error: "验证码已失效，请重新获取。" }, 400);
