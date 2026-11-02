@@ -7,14 +7,19 @@ export async function onRequestGet({ request, env }) {
   const now = Math.floor(Date.now() / 1000);
   const startOfDay = Math.floor(now / 86400) * 86400;
   try {
-    const [balance, today, totals] = await Promise.all([
-      context.db.prepare("SELECT balance_after_micro, currency FROM merchant_ledger WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1").bind(context.user.id).first(),
-      context.db.prepare("SELECT COUNT(*) AS order_count, COALESCE(SUM(amount_micro), 0) AS amount_micro FROM merchant_orders WHERE user_id = ? AND status = 'paid' AND paid_at >= ?").bind(context.user.id, startOfDay).first(),
-      context.db.prepare("SELECT COUNT(*) AS order_count FROM merchant_orders WHERE user_id = ?").bind(context.user.id).first()
+    const [balance,today,totals] = await Promise.all([
+      context.db.prepare("SELECT balance_micro FROM wallet_accounts WHERE user_id=?").bind(context.user.id).first(),
+      context.db.prepare(`SELECT COUNT(*) AS order_count,COALESCE(SUM(amount_micro),0) AS amount_micro FROM (
+        SELECT amount_micro,paid_at FROM merchant_orders WHERE user_id=? AND status='paid' AND currency='USDT'
+        UNION ALL
+        SELECT credit_micro AS amount_micro,paid_at FROM recharge_orders WHERE user_id=? AND status='paid'
+      ) WHERE paid_at>=?`).bind(context.user.id,context.user.id,startOfDay).first(),
+      context.db.prepare("SELECT (SELECT COUNT(*) FROM merchant_orders WHERE user_id=?)+(SELECT COUNT(*) FROM recharge_orders WHERE user_id=?) AS order_count")
+        .bind(context.user.id,context.user.id).first()
     ]);
     return json({
-      balance_micro: balance?.balance_after_micro ?? null,
-      currency: balance?.currency || "USDT",
+      balance_micro: balance?.balance_micro ?? 0,
+      currency: "USDT",
       today_paid_orders: today?.order_count || 0,
       today_paid_amount_micro: today?.amount_micro || 0,
       total_orders: totals?.order_count || 0
