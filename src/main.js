@@ -161,6 +161,7 @@ async function sendCode() {
     }, 1000);
     showToast("验证码已发送，请查收邮箱", "success");
   } catch (error) {
+    resetCaptcha();
     button.disabled = false;
     button.textContent = "获取验证码";
     showToast(error.message, "error");
