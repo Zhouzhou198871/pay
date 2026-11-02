@@ -80,3 +80,15 @@ npm run build
 ## 重要说明
 
 当前交付范围是账户认证基础。商户入驻审核、支付订单、支付宝 / USDT 渠道、分账与结算均未在本次登录注册版本中开放。协议文案是产品初稿，上线前应按实际经营主体、服务地区和支付业务合规要求审阅完善。
+
+
+## 登录安全配置
+
+登录、注册、验证码发送和密码找回均启用 Cloudflare Turnstile 服务端校验。请在 Cloudflare Dashboard 为此站点创建 Turnstile Widget，并将以下变量配置到 Pages 的 Production 环境：
+
+- `TURNSTILE_SITE_KEY`：公开 Site Key
+- `TURNSTILE_SECRET_KEY`：私密 Secret Key（使用 Secret 类型）
+
+配置完成后重新部署。未配置这两个变量时，人机验证会拒绝通过，认证接口不会降级为无验证模式。
+
+登录、注册及密码找回均要求明确勾选《用户协议》和《隐私政策》。忘记密码通过邮箱验证码重置；重置成功后会撤销该账户的现有登录会话。
