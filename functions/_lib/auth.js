@@ -70,3 +70,17 @@ export const currentUser = async (request, db) => {
 
 export const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 export const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+export const verifyTurnstile = async (token, secret, remoteIp = "") => {
+  if (!token || !secret) return false;
+  const body = new URLSearchParams({ secret, response: token });
+  if (remoteIp) body.set("remoteip", remoteIp);
+  try {
+    const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body
+    });
+    if (!response.ok) return false;
+    const result = await response.json();
+    return result.success === true;
+  } catch { return false; }
+};
