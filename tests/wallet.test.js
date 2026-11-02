@@ -13,7 +13,7 @@ test("USDT amounts parse to integer micro-units", () => {
 });
 test("USDT balances format without floating point arithmetic", () => {
   assert.equal(formatUsdt(1350000), "1.35");
-  assert.equal(formatUsdt(1), "0.01");
+  assert.equal(formatUsdt(1), "0.000001");
   assert.equal(formatUsdt(1000001), "1.000001");
 });
 
