@@ -44,3 +44,21 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_recharge_provider_trade ON recharge_orders
 CREATE UNIQUE INDEX IF NOT EXISTS idx_recharge_chain_event ON recharge_orders(channel, tx_hash, tx_event_index) WHERE tx_hash IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_recharge_user_time ON recharge_orders(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_recharge_pending_channel ON recharge_orders(channel, status, created_at);
+
+-- Preserve each user's latest pre-existing USDT balance when moving the displayed wallet balance.
+INSERT OR IGNORE INTO wallet_accounts (user_id,balance_micro,currency,updated_at)
+SELECT ml.user_id,ml.balance_after_micro,'USDT',ml.created_at
+FROM merchant_ledger ml
+WHERE ml.currency='USDT'
+  AND ml.balance_after_micro>=0
+  AND ml.id=(
+    SELECT prior.id FROM merchant_ledger prior
+    WHERE prior.user_id=ml.user_id AND prior.currency='USDT'
+    ORDER BY prior.created_at DESC,prior.rowid DESC LIMIT 1
+  );
+
+INSERT OR IGNORE INTO wallet_ledger
+(id,user_id,source_key,source_type,direction,amount_micro,balance_after_micro,currency,description,created_at)
+SELECT 'legacy-opening-'||user_id,user_id,'legacy-opening:'||user_id,'adjustment','credit',
+       balance_micro,balance_micro,'USDT','迁移前 USDT 余额结转',updated_at
+FROM wallet_accounts WHERE balance_micro>0;
