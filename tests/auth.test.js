@@ -99,11 +99,11 @@ test("registration commits user, OTP consumption, and session in one D1 batch", 
     const request = new Request("https://qingtian-pay.pages.dev/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: "Safe-Password-123", code, consent: true, captchaToken: "valid-token" })
+      body: JSON.stringify({ email, password: "Safe-Password-123", code, consent: true })
     });
     const response = await onRequestPost({
       request,
-      env: { AUTH_DB: db, AUTH_SECRET: authSecret, TURNSTILE_SECRET_KEY: "turnstile-secret" }
+      env: { AUTH_DB: db, AUTH_SECRET: authSecret }
     });
     assert.equal(response.status, 201);
     assert.match(response.headers.get("Set-Cookie"), /__Host-qt_session=/);
