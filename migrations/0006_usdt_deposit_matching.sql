@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS idx_usdt_pending_exact_amount ON recharge_orders(credit_micro) WHERE channel='usdt_trc20' AND status='pending';
