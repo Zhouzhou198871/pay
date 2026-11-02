@@ -382,9 +382,27 @@ function renderForgotPassword() {
   loadCaptcha();
 }
 
+function showOAuthFeedback() {
+  const params = new URLSearchParams(location.search);
+  const result = params.get("oauth");
+  const messages = {
+    cancelled: ["已取消 GitHub 授权。", "info"],
+    failed: ["GitHub 授权校验失败，请重新发起登录。", "error"],
+    "email-required": ["GitHub 账户没有可用的已验证邮箱，请在 GitHub 验证邮箱后重试。", "error"],
+    "account-disabled": ["该账户当前不可用，请联系管理员。", "error"]
+  };
+  if (!result || !messages[result]) return;
+  const [message, type] = messages[result];
+  showToast(message, type);
+  params.delete("oauth");
+  const query = params.toString();
+  history.replaceState(null, "", location.pathname + (query ? `?${query}` : "") + location.hash);
+}
+
 if (location.pathname === "/dashboard") {
   renderDashboard();
 } else {
   app.innerHTML = authMarkup();
   bindAuthEvents();
+  showOAuthFeedback();
 }
