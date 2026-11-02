@@ -275,7 +275,7 @@ function renderForgotPassword() {
     e.preventDefault();const payload=Object.fromEntries(new FormData(e.currentTarget).entries());
     payload.consent=document.querySelector("#consent").checked;payload.captchaToken=window.__qtCaptchaToken||"";
     if(!payload.consent){showToast("请先阅读并同意用户协议与隐私政策","error");return;}
-    if(!/^\\d{6}$/.test(payload.code||"")){showToast("请输入 6 位邮箱验证码","error");return;}
+    if(!/^\d{6}$/.test(payload.code||"")){showToast("请输入 6 位邮箱验证码","error");return;}
     if((payload.password||"").length<8){showToast("新密码至少需要 8 位","error");return;}
     if(!payload.captchaToken){showToast("请先完成人机验证","error");return;}
     const button=e.currentTarget.querySelector(".primary-button");button.disabled=true;button.querySelector("span").textContent="正在安全重置…";
