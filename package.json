@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check": "find functions -type f -name '*.js' -print0 | xargs -0 -n1 node --check",
+    "test": "node --test",
     "build": "vite build",
     "preview": "vite preview"
   },
