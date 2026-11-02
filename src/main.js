@@ -151,8 +151,7 @@ async function sendCode() {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "验证码发送失败");
-    window.__qtCaptchaToken = "";
-    if (window.turnstile) window.turnstile.reset();
+    resetCaptcha();
     countdown = 60;
     button.textContent = `重新获取 ${countdown}s`;
     timer = setInterval(() => {
