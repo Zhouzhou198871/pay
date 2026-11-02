@@ -1,6 +1,6 @@
-import { json } from "../../../../_lib/auth.js";
-import { jsonBody, queryAlipayOrder, sha256, settleConfirmedOrder } from "../../../../_lib/payment.js";
-import { creditWallet } from "../../../../_lib/wallet.js";
+import { json } from "../../../_lib/auth.js";
+import { jsonBody, queryAlipayOrder, sha256, settleConfirmedOrder } from "../../../_lib/payment.js";
+import { creditWallet } from "../../../_lib/wallet.js";
 
 export async function onRequestPost({request,env,waitUntil}) {
   const params=await jsonBody(request);
