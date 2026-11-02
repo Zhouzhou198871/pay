@@ -56,7 +56,7 @@ export async function onRequestPost({ request, env }) {
     }
     pendingOtp = null;
     return json({ success: true, message: "验证码已发送。" });
-  } catch {
+  } catch (error) {
     const failedStage = stage;
     if (pendingOtp && env.AUTH_DB) {
       try {
