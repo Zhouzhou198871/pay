@@ -251,7 +251,7 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
 
 test("GitHub OAuth initiation uses the production callback and sets a short-lived state cookie", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
-  const response = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id" } });
+  const response = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
   assert.equal(location.origin, "https://github.com");
@@ -263,4 +263,14 @@ test("GitHub OAuth initiation uses the production callback and sets a short-live
   assert.match(state, /^[a-f0-9]{48}$/);
   assert.match(response.headers.get("Set-Cookie"), new RegExp(`__Host-qt_oauth_state=${state}`));
   assert.match(response.headers.get("Set-Cookie"), /Max-Age=600/);
+});
+
+
+test("GitHub OAuth initiation fails closed when the client secret or database is missing", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github.js");
+  const missingSecret = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", AUTH_DB: {} } });
+  assert.equal(missingSecret.status, 503);
+  assert.match(await missingSecret.text(), /Client Secret/);
+  const missingDatabase = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret" } });
+  assert.equal(missingDatabase.status, 503);
 });
