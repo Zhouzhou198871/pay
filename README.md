@@ -5,7 +5,7 @@
 ## 开发者文档
 
 - [开发者接入指南](docs/DEVELOPER_GUIDE.md)：认证接入、GitHub OAuth、数据查询、错误处理与安全建议。
-- [API 接口参考](docs/API_REFERENCE.md)：已实现接口的路径、参数、响应字段、状态码和限制。
+- [API 接口参考](docs/API_REFERENCE.md)：已实现接口的路径、参数、响应字段、状态码和限制。\n- [Firebase / Firestore 接入规范](docs/FIREBASE_FIRESTORE_GUIDE.md)：官方文档索引、Cloudflare Workers REST 接入、安全边界与上线检查。
 - 生产 API Base URL：`https://pay.lynli.me`
 
 **接口状态说明：** 当前已提供账户认证 API 和商户工作台只读数据 API。支付下单、支付回调、退款、提现申请/审核、商户 API Key 与 Webhook 尚未开放。请勿把规划能力视为可调用接口。
