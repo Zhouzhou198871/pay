@@ -136,8 +136,7 @@ async function renderDashboard() {
           <article class="merchant-stat"><span>累计订单</span><b>—</b><small>等待订单服务接入</small></article>
         </div>
         <section class="merchant-panel"><div class="panel-heading"><div><h2 id="merchant-panel-title">账户概览</h2><p id="merchant-panel-subtitle">账户基础信息与服务入口</p></div><span class="panel-mark">QT</span></div>
-          <div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b id="merchant-account-email">正在读取账户信息…</b><small>晴天支付账户</small></div><button id="edit-profile">个人资料</button></div>
-          <div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div>
+          <div id="merchant-panel-content"><div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b id="merchant-account-email">正在读取账户信息…</b><small>晴天支付账户</small></div><button id="edit-profile">个人资料</button></div><div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div></div>
         </section>
       </section>
     </main>
@@ -146,7 +145,8 @@ async function renderDashboard() {
   if (!res.ok) { location.href = "/"; return; }
   const data = await res.json();
   const email = data.user?.email || "已登录商户";
-  document.querySelector("#drawer-user-name").textContent = email.split("@")[0] || "晴天商户";
+  const displayName = data.user?.display_name || email.split("@")[0] || "晴天商户";
+  document.querySelector("#drawer-user-name").textContent = displayName;
   document.querySelector("#drawer-user-email").textContent = email;
   document.querySelector("#merchant-account-email").textContent = email;
   const drawer = document.querySelector("#merchant-drawer");
@@ -167,13 +167,36 @@ async function renderDashboard() {
   document.querySelector("#top-logout").addEventListener("click", logout);
   const labels = {
     overview: ["用户中心", "账户概览", "账户基础信息与服务入口"],
-    profile: ["个人资料", "个人资料", "账户邮箱与登录身份"],
-    orders: ["订单记录", "订单记录", "订单服务接入后将在这里展示"],
-    withdrawals: ["提现记录", "提现记录", "提现服务接入后将在这里展示"],
-    ledger: ["资金明细", "资金明细", "资金账目服务接入后将在这里展示"],
-    payments: ["聚合收款", "聚合收款", "收款通道开通后将在这里展示"],
-    docs: ["开发文档", "开发文档", "查看平台接入说明与接口文档"],
-    support: ["联系客服", "联系客服", "客服渠道开通后将在这里展示"]
+    profile: ["个人资料", "个人资料", "当前登录账户信息"],
+    orders: ["订单记录", "订单记录", "交易订单服务尚未接入"],
+    withdrawals: ["提现记录", "提现记录", "提现服务尚未接入"],
+    ledger: ["资金明细", "资金明细", "资金账目服务尚未接入"],
+    payments: ["聚合收款", "聚合收款", "收款通道服务尚未接入"],
+    docs: ["开发文档", "开发文档", "平台接口与接入文档"],
+    support: ["联系客服", "联系客服", "客服渠道尚未配置"]
+  };
+  const panel = document.querySelector("#merchant-panel-content");
+  const renderSection = (key) => {
+    if (key === "overview") {
+      panel.innerHTML = `<div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b>${escapeHtml(displayName)}</b><small>${escapeHtml(email)}</small></div><button id="edit-profile">个人资料</button></div><div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div>`;
+      panel.querySelector("#edit-profile").addEventListener("click", () => selectSection("profile"));
+      panel.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
+      return;
+    }
+    if (key === "profile") {
+      panel.innerHTML = `<div class="account-detail-list"><div class="account-detail"><span>账户名称</span><b>${escapeHtml(displayName)}</b></div><div class="account-detail"><span>登录邮箱</span><b>${escapeHtml(email)}</b></div><div class="account-detail"><span>账户状态</span><b class="account-active">正常</b></div><div class="account-detail"><span>登录方式</span><b>邮箱 / GitHub（按实际绑定情况）</b></div></div><p class="section-note">资料修改功能尚未开放。为保护账户安全，当前仅展示已验证的账户资料。</p>`;
+      return;
+    }
+    const messages = {
+      orders: ["订单记录暂不可用", "订单查询接口尚未建立，当前没有可展示的真实订单数据。"],
+      withdrawals: ["提现记录暂不可用", "提现申请与审核接口尚未建立。"],
+      ledger: ["资金明细暂不可用", "账户账本接口尚未建立，当前不会展示虚构的余额或流水。"],
+      payments: ["聚合收款暂未开通", "支付渠道、商户进件及回调处理尚未接入。"],
+      docs: ["开发文档正在整理", "接口规范和商户接入流程完成后会在此提供正式文档。"],
+      support: ["客服渠道尚未配置", "目前尚未配置可验证的官方客服入口，请勿向非官方账号提供账户信息。"]
+    };
+    const message = messages[key] || messages.orders;
+    panel.innerHTML = `<div class="section-empty"><span class="section-empty-icon">⌁</span><h3>${message[0]}</h3><p>${message[1]}</p><span class="section-empty-tag">功能准备中</span></div>`;
   };
   const selectSection = (key) => {
     const item = labels[key] || labels.overview;
@@ -181,6 +204,7 @@ async function renderDashboard() {
     document.querySelector("#merchant-panel-title").textContent = item[1];
     document.querySelector("#merchant-panel-subtitle").textContent = item[2];
     document.querySelectorAll(".drawer-link").forEach((button) => button.classList.toggle("active", button.dataset.section === key));
+    renderSection(key);
     setDrawer(false);
   };
   document.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
