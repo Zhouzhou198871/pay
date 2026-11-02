@@ -2,7 +2,7 @@ import { hmac, json, normalizeEmail, validEmail, verifyTurnstile } from "../../_
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env.AUTH_DB || !env.RESEND_API_KEY || !env.AUTH_SECRET || !env.MAIL_FROM) {
+    if (!env.AUTH_DB || !env.RESEND_API_KEY || !env.AUTH_SECRET || !env.MAIL_FROM || !env.TURNSTILE_SECRET_KEY) {
       return json({ error: "邮件服务尚未完成密钥配置，请联系平台管理员。" }, 503);
     }
     const body = await request.json();
