@@ -1,6 +1,6 @@
-import { json, currentUser } from "../../../_lib/auth.js";
-import { formatUsdt, creditWallet } from "../../../_lib/wallet.js";
-import { queryAlipayOrder } from "../../../_lib/payment.js";
+import { json, currentUser } from "../../_lib/auth.js";
+import { formatUsdt, creditWallet } from "../../_lib/wallet.js";
+import { queryAlipayOrder } from "../../_lib/payment.js";
 export async function onRequestGet({request,env}) {
   const user=await currentUser(request,env.AUTH_DB);
   if(!user) return json({error:"请先登录。"},401);
