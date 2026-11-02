@@ -3,8 +3,8 @@ import { randomHex } from "../../_lib/auth.js";
 const CANONICAL_ORIGIN = "https://qingtian-pay.pages.dev";
 
 export async function onRequestGet({ env }) {
-  if (!env.GITHUB_CLIENT_ID) {
-    return new Response("GitHub 一键登录尚未配置 OAuth App Client ID。请在 Cloudflare Pages 设置 GITHUB_CLIENT_ID。", {
+  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
+    return new Response("GitHub 一键登录尚未完成配置，请检查 OAuth Client ID、Client Secret 和 AUTH_DB。", {
       status: 503,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
