@@ -159,3 +159,12 @@ body.merchant-menu-open{overflow:hidden}
 .section-empty p{max-width:430px;font-size:12px;line-height:1.8;color:#8998a7;margin:0}
 .section-empty-tag{margin-top:18px;padding:6px 12px;border-radius:20px;background:#f0f4f8;color:#8795a3;font-size:11px}
 @media(max-width:600px){.account-detail-list{grid-template-columns:1fr}.account-detail{padding:15px 16px}.section-empty{min-height:220px}}
+
+.section-loading{padding:34px;text-align:center;color:#8798a8;font-size:13px}
+.merchant-record-list{display:flex;flex-direction:column;gap:10px}
+.merchant-record{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:16px 18px;border:1px solid #edf1f5;border-radius:14px;background:#fbfdff}
+.merchant-record>div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.merchant-record b{font-size:13px;color:#30465f;overflow-wrap:anywhere}
+.merchant-record small{font-size:11px;color:#8998a7;overflow-wrap:anywhere}
+.merchant-record .record-meta{text-align:right;flex:none}
+@media(max-width:600px){.merchant-record{padding:13px;gap:9px}.merchant-record b{font-size:12px}.merchant-record small{font-size:10px}}
