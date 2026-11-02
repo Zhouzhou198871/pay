@@ -72,17 +72,40 @@ export const normalizeEmail = (email) => String(email || "").trim().toLowerCase(
 export const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 export const verifyTurnstile = async (token, secret, remoteIp = "", expectedAction = "", expectedHostname = "") => {
-  if (!token || !secret || !expectedAction || !expectedHostname) return false;
+  if (!token || !secret || !expectedAction || !expectedHostname) {
+    console.warn("[auth/turnstile] missing verification input", {
+      tokenPresent: Boolean(token), secretPresent: Boolean(secret),
+      actionPresent: Boolean(expectedAction), hostnamePresent: Boolean(expectedHostname)
+    });
+    return false;
+  }
   const body = new URLSearchParams({ secret, response: token });
   if (remoteIp) body.set("remoteip", remoteIp);
   try {
     const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
       method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body
     });
-    if (!response.ok) return false;
-    const result = await response.json();
-    return result.success === true
-      && result.action === expectedAction
-      && result.hostname === expectedHostname;
-  } catch { return false; }
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.success !== true) {
+      console.warn("[auth/turnstile] provider rejected token", {
+        status: response.status, errorCodes: result["error-codes"] || []
+      });
+      return false;
+    }
+    if (result.action !== expectedAction || result.hostname !== expectedHostname) {
+      console.warn("[auth/turnstile] claim mismatch", {
+        actionMatched: result.action === expectedAction,
+        hostnameMatched: result.hostname === expectedHostname,
+        expectedAction, returnedAction: result.action || "",
+        expectedHostname, returnedHostname: result.hostname || ""
+      });
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.warn("[auth/turnstile] verification request failed", {
+      message: String(error?.message || "unknown").slice(0, 180)
+    });
+    return false;
+  }
 };
