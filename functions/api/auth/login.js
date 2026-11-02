@@ -5,7 +5,7 @@ export async function onRequestPost({ request, env }) {
     if (!env.AUTH_DB) return json({ error: "账户服务尚未完成配置。" }, 503);
     const body = await request.json();
     if (body.consent !== true) return json({ error: "请先阅读并同意用户协议与隐私政策。" }, 400);
-    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || ""))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
+    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || "", "login", new URL(request.url).hostname))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
     if (!validEmail(email) || !password) return json({ error: "请输入邮箱和密码。" }, 400);
