@@ -175,3 +175,75 @@ test("failed email delivery removes only the pending OTP created by that request
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("GitHub OAuth callback rejects a mismatched state and clears the state cookie", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github/callback.js");
+  const request = new Request("https://qingtian-pay.pages.dev/api/auth/github/callback?code=abc&state=wrong", {
+    headers: { Cookie: "__Host-qt_oauth_state=expected" }
+  });
+  const response = await onRequestGet({ request, env: {} });
+  assert.equal(response.status, 302);
+  assert.match(response.headers.get("Location"), /oauth=failed/);
+  assert.match(response.headers.get("Set-Cookie"), /Max-Age=0/);
+});
+
+test("GitHub OAuth callback creates a session for a verified GitHub email", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github/callback.js");
+  const originalFetch = globalThis.fetch;
+  const statements = [];
+  const db = {
+    prepare(sql) {
+      return {
+        sql,
+        bind(...values) {
+          return {
+            first: async () => {
+              if (sql.includes("WHERE github_id")) return null;
+              if (sql.includes("WHERE email")) return null;
+              return null;
+            },
+            run: async () => {
+              statements.push({ sql, values });
+              return { meta: { changes: 1 } };
+            }
+          };
+        }
+      };
+    }
+  };
+  let calls = 0;
+  try {
+    globalThis.fetch = async (url) => {
+      calls += 1;
+      if (String(url).includes("/login/oauth/access_token")) {
+        return new Response(JSON.stringify({ access_token: "mock-access-token" }), { status: 200 });
+      }
+      if (String(url).endsWith("/user")) {
+        return new Response(JSON.stringify({ id: 12345, login: "test-user", name: "Test User" }), { status: 200 });
+      }
+      if (String(url).endsWith("/user/emails")) {
+        return new Response(JSON.stringify([{ email: "Verified@Example.com", primary: true, verified: true }]), { status: 200 });
+      }
+      throw new Error("unexpected GitHub API URL");
+    };
+    const request = new Request("https://qingtian-pay.pages.dev/api/auth/github/callback?code=mock-code&state=valid-state", {
+      headers: { Cookie: "__Host-qt_oauth_state=valid-state" }
+    });
+    const response = await onRequestGet({
+      request,
+      env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "mock-secret", AUTH_DB: db }
+    });
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("Location"), "https://qingtian-pay.pages.dev/dashboard");
+    assert.match(response.headers.get("Set-Cookie"), /__Host-qt_oauth_state=/);
+    assert.match(response.headers.get("Set-Cookie"), /__Host-qt_session=/);
+    assert.equal(calls, 3);
+    assert.equal(statements.length, 2);
+    assert.match(statements[0].sql, /^INSERT INTO users/);
+    assert.equal(statements[0].values[1], "verified@example.com");
+    assert.match(statements[1].sql, /^INSERT INTO sessions/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
