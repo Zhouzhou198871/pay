@@ -14,12 +14,12 @@ test("merchant list queries are scoped to the current user and pagination is bou
   const request = new Request("https://qingtian-pay.pages.dev/api/merchant/orders?page=0&page_size=999", { headers: { Cookie: "__Host-qt_session=test-session-token" } });
   const response = await listForMerchant({ request, env: { AUTH_DB: db }, table: "merchant_orders", columns: "id", orderBy: "created_at DESC" });
   assert.equal(response.status, 200);
-  assert.equal(calls.length, 2);
-  assert.ok(calls[0].sql.includes("WHERE user_id = ?"));
-  assert.equal(calls[0].values[0], "user-A");
-  assert.equal(calls[0].values[1], 50);
-  assert.equal(calls[0].values[2], 0);
+  assert.equal(calls.length, 3);
+  assert.ok(calls[1].sql.includes("WHERE user_id = ?"));
   assert.equal(calls[1].values[0], "user-A");
+  assert.equal(calls[1].values[1], 50);
+  assert.equal(calls[1].values[2], 0);
+  assert.equal(calls[2].values[0], "user-A");
   const payload = await response.json();
   assert.equal(payload.items[0].id, "own-order");
   assert.equal(payload.pagination.page_size, 50);
