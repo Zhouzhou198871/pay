@@ -19,7 +19,7 @@ export async function onRequestPost({ request, env }) {
     if (!otp || otp.expires_at < now || otp.attempts >= 5) return json({ error: "验证码已失效，请重新获取。" }, 400);
     const submitted = await hmac(`${email}:${code}`, env.AUTH_SECRET);
     if (!safeEqual(submitted, otp.code_hash)) {
-      await env.AUTH_DB.prepare("UPDATE email_otps SET attempts = attempts + 1 WHERE email = ?").bind(email).run();
+      await env.AUTH_DB.prepare("UPDATE email_otps SET attempts = attempts + 1 WHERE email = ? AND purpose = 'register'").bind(email).run();
       return json({ error: "验证码不正确，请检查后重试。" }, 400);
     }
 
@@ -29,7 +29,7 @@ export async function onRequestPost({ request, env }) {
     const passwordHash = await hashPassword(password);
     await env.AUTH_DB.prepare("INSERT INTO users (id, email, password_hash, created_at, status, display_name, terms_accepted_at, terms_version, privacy_version) VALUES (?, ?, ?, ?, 'active', ?, ?, ?, ?)")
       .bind(userId, email, passwordHash, now, email.split("@")[0], now, "2026-11-02", "2026-11-02").run();
-    await env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ?").bind(email).run();
+    await env.AUTH_DB.prepare("DELETE FROM email_otps WHERE email = ? AND purpose = 'register'").bind(email).run();
     const token = await createSession(env.AUTH_DB, userId);
     return json({ success: true }, 201, { "Set-Cookie": sessionCookie(token) });
   } catch (error) {
