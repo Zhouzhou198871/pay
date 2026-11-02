@@ -8,7 +8,7 @@ export async function onRequestPost({ request, env }) {
     const body = await request.json();
     const email = normalizeEmail(body.email);
     const purpose = body.purpose === "reset" ? "reset" : "register";
-    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || ""))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
+    if (!(await verifyTurnstile(body.captchaToken, env.TURNSTILE_SECRET_KEY, request.headers.get("CF-Connecting-IP") || "", body.purpose === "reset" ? "password_reset" : "register", new URL(request.url).hostname))) return json({ error: "人机验证未通过，请重新验证。" }, 400);
     if (!validEmail(email)) return json({ error: "请输入有效的邮箱地址。" }, 400);
 
     const now = Math.floor(Date.now() / 1000);
