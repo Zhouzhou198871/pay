@@ -110,11 +110,11 @@ test("registration commits user, OTP consumption, and session in one D1 batch", 
     assert.equal(statements.length, 3);
     assert.match(statements[0].sql, /^INSERT INTO users/);
     assert.match(statements[0].sql, /SELECT .* WHERE EXISTS/);
-    assert.match(statements[0].sql, /expires_at >= \\? AND attempts < 5/);
+    assert.ok(statements[0].sql.includes("expires_at >= ? AND attempts < 5"));
     assert.match(statements[1].sql, /^DELETE FROM email_otps/);
-    assert.match(statements[1].sql, /expires_at >= \\? AND attempts < 5/);
+    assert.ok(statements[1].sql.includes("expires_at >= ? AND attempts < 5"));
     assert.match(statements[2].sql, /^INSERT INTO sessions/);
-    assert.match(statements[2].sql, /SELECT \\?, id, \\?, \\? FROM users WHERE id = \\?/);
+    assert.ok(statements[2].sql.includes("SELECT ?, id, ?, ? FROM users WHERE id = ?"));
   } finally {
     globalThis.fetch = originalFetch;
   }
