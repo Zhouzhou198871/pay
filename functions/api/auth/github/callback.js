@@ -12,7 +12,7 @@ function redirect(path, cookie = clearState) {
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const cookies = request.headers.get("Cookie") || "";
-  const expectedState = cookies.match(/(?:^|;\\s*)__Host-qt_oauth_state=([^;]+)/)?.[1] || "";
+  const expectedState = cookies.match(/(?:^|;\s*)__Host-qt_oauth_state=([^;]+)/)?.[1] || "";
   const state = url.searchParams.get("state") || "";
   const code = url.searchParams.get("code") || "";
 
