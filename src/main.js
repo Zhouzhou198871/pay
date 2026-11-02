@@ -61,7 +61,7 @@ function authMarkup() {
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
       <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，建议包含字母和数字" : "请输入登录密码"}" minlength="8" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>
-      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div>
+      <label class="field-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div><p class="captcha-hint" id="captcha-hint" aria-live="polite">请先完成人机验证，再获取邮箱验证码。</p>
       ${registering ? `
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
@@ -162,11 +162,15 @@ async function sendCode() {
         button.textContent = "重新获取";
       } else button.textContent = `重新获取 ${countdown}s`;
     }, 1000);
-    showToast("验证码已发送，请查收邮箱", "success");
+    const hint = document.querySelector("#captcha-hint");
+    if (hint) hint.textContent = "验证码已发送。请再次完成人机验证，然后点击创建账户。";
+    showToast("验证码已发送，请再次完成人机验证后提交注册", "success");
   } catch (error) {
     resetCaptcha();
     button.disabled = false;
     button.textContent = "获取验证码";
+    const hint = document.querySelector("#captcha-hint");
+    if (hint) hint.textContent = "验证码发送未完成，请检查提示后重试。";
     showToast(error.message, "error");
   }
 }
@@ -269,14 +273,26 @@ async function loadCaptcha() {
       theme: "light",
       size: "flexible",
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
-      callback: (token) => { window.__qtCaptchaToken = token; },
-      "expired-callback": () => { window.__qtCaptchaToken = ""; },
+      callback: (token) => {
+        window.__qtCaptchaToken = token;
+        const hint = document.querySelector("#captcha-hint");
+        if (hint && mode === "register") hint.textContent = "人机验证已完成，可以创建账户。";
+      },
+      "expired-callback": () => {
+        window.__qtCaptchaToken = "";
+        const hint = document.querySelector("#captcha-hint");
+        if (hint && mode === "register") hint.textContent = "人机验证已过期，请重新验证。";
+      },
       "timeout-callback": () => {
         window.__qtCaptchaToken = "";
+        const hint = document.querySelector("#captcha-hint");
+        if (hint && mode === "register") hint.textContent = "人机验证超时，请重新验证。";
         showToast("人机验证已超时，请重新验证", "error");
       },
       "error-callback": () => {
         window.__qtCaptchaToken = "";
+        const hint = document.querySelector("#captcha-hint");
+        if (hint && mode === "register") hint.textContent = "人机验证暂不可用，请重新加载。";
         showToast("人机验证暂不可用，请重新加载验证", "error");
       }
     });
