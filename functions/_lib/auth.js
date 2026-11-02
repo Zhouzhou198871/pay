@@ -59,7 +59,7 @@ export const expiredSessionCookie = () => "__Host-qt_session=; Path=/; HttpOnly;
 
 export const currentUser = async (request, db) => {
   const cookie = request.headers.get("Cookie") || "";
-  const token = cookie.match(/(?:^|;\\s*)__Host-qt_session=([^;]+)/)?.[1];
+  const token = cookie.match(/(?:^|;\s*)__Host-qt_session=([^;]+)/)?.[1];
   if (!token) return null;
   const tokenHash = await sha256(token);
   const now = Math.floor(Date.now() / 1000);
@@ -69,4 +69,4 @@ export const currentUser = async (request, db) => {
 };
 
 export const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
-export const validEmail = (email) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email);
+export const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
