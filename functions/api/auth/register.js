@@ -2,7 +2,7 @@ import { createSession, hashPassword, hmac, json, normalizeEmail, randomHex, saf
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (!env.AUTH_DB || !env.AUTH_SECRET) return json({ error: "账户服务尚未完成配置。" }, 503);
+    if (!env.AUTH_DB || !env.AUTH_SECRET || !env.TURNSTILE_SECRET_KEY) return json({ error: "账户服务尚未完成配置。" }, 503);
     const body = await request.json();
     const email = normalizeEmail(body.email);
     const password = String(body.password || "");
