@@ -163,9 +163,26 @@ async function sendCode() {
         clearInterval(timer);
         button.disabled = false;
         button.textContent = "重新获取";
+        const codeLabel = document.querySelector('label[for="code"]');
+        if (codeLabel && !document.querySelector("#captcha-slot")) {
+          const captchaLabel = document.createElement("label");
+          captchaLabel.className = "field-label";
+          captchaLabel.id = "captcha-label";
+          captchaLabel.textContent = "人机验证";
+          const captchaSlot = document.createElement("div");
+          captchaSlot.className = "captcha-slot";
+          captchaSlot.id = "captcha-slot";
+          captchaSlot.setAttribute("aria-live", "polite");
+          const captchaHint = document.createElement("p");
+          captchaHint.className = "captcha-hint";
+          captchaHint.id = "captcha-hint";
+          captchaHint.setAttribute("aria-live", "polite");
+          captchaHint.textContent = "请先完成人机验证，再获取邮箱验证码。";
+          codeLabel.before(captchaLabel, captchaSlot, captchaHint);
+          loadCaptcha();
+        }
       } else button.textContent = `重新获取 ${countdown}s`;
     }, 1000);
-    const hint = document.querySelector("#captcha-hint");
     showToast("验证码已发送，请查收邮箱", "success");
   } catch (error) {
     resetCaptcha();
