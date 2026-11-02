@@ -236,8 +236,14 @@ async function ensureTurnstileScript() {
       if (error) reject(error); else resolve();
     };
     const onLoad = () => window.turnstile ? finish() : finish(new Error("安全验证脚本未正确初始化"));
-    const onError = () => finish(new Error("安全验证脚本加载失败"));
-    const timeout = setTimeout(() => finish(new Error("安全验证加载超时")), 15000);
+    const onError = () => {
+      script.remove();
+      finish(new Error("安全验证脚本加载失败"));
+    };
+    const timeout = setTimeout(() => {
+      script.remove();
+      finish(new Error("安全验证加载超时"));
+    }, 15000);
     script.addEventListener("load", onLoad, { once: true });
     script.addEventListener("error", onError, { once: true });
     if (created) document.head.appendChild(script);
