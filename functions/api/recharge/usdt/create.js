@@ -7,18 +7,16 @@ export async function onRequestPost({request,env}) {
   const address=String(env.USDT_TRC20_ADDRESS||""), contract=String(env.USDT_TRC20_CONTRACT||"");
   if(!requested) return json({error:"请输入有效的 USDT 金额（最多 6 位小数）。"},400);
   if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)||!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(contract)) return json({error:"USDT TRC20 收款通道尚未配置。"},503);
-  // A tiny unique micro-unit suffix attributes a shared-wallet transfer to exactly one user.
-  for(let attempt=0;attempt<30;attempt++) {
-    const suffix=1+Math.floor(Math.random()*999);
-    const payMicro=requested+suffix;
+  for(let attempt=0;attempt<60;attempt++) {
+    const suffix=1+Math.floor(Math.random()*999), expectedMicro=requested+suffix;
     const tradeNo="QTU"+Date.now().toString(36).toUpperCase()+randomHex(6).toUpperCase();
     try {
-      const now=Math.floor(Date.now()/1000);
-      await ctx.db.prepare("INSERT INTO recharge_orders (id,trade_no,user_id,channel,status,credit_micro,created_at) VALUES (?,?,?,'usdt_trc20','pending',?,?)")
-        .bind(randomHex(16),tradeNo,ctx.user.id,payMicro,now).run();
-      return json({trade_no:tradeNo,channel:"usdt_trc20",network:"TRON (TRC20)",address,contract,amount_micro:payMicro,amount_usdt:formatUsdt(payMicro),status:"pending",note:"请按显示的精确金额转账；到账确认后自动入账。"},201);
+      const now=Math.floor(Date.now()/1000), expires=now+2*60*60;
+      await ctx.db.prepare("INSERT INTO recharge_orders (id,trade_no,user_id,channel,status,credit_micro,expected_micro,expires_at,created_at) VALUES (?,?,?,'usdt_trc20','pending',?,?,?,?)")
+        .bind(randomHex(16),tradeNo,ctx.user.id,requested,expectedMicro,expires,now).run();
+      return json({trade_no:tradeNo,channel:"usdt_trc20",network:"TRON (TRC20)",address,contract,credit_micro:requested,amount_micro:expectedMicro,amount_usdt:formatUsdt(expectedMicro),credit_usdt:formatUsdt(requested),expires_at:expires,status:"pending",note:"请在 2 小时内按显示的精确金额转账；多出的微量尾数仅用于识别订单，不计入余额。"},201);
     } catch(error) {
-      if(attempt===29) return json({error:"暂时无法生成唯一充值金额，请重试。"},503);
+      if(attempt===59) return json({error:"暂时无法生成唯一充值金额，请重试。"},503);
     }
   }
   return json({error:"暂时无法生成充值订单。"},503);
