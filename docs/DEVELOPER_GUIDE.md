@@ -4,8 +4,8 @@
 
 晴天支付当前生产入口：
 
-- 商户工作台：https://qingtian-pay.pages.dev
-- API Base URL：`https://qingtian-pay.pages.dev`
+- 商户工作台：https://pay.lynli.me
+- API Base URL：`https://pay.lynli.me`
 - API 参考：[API_REFERENCE.md](./API_REFERENCE.md)
 
 当前公开 API 主要覆盖账户认证和商户工作台只读数据。支付下单、收款回调、退款、提现申请及商户 API Key 尚未开放。
@@ -44,8 +44,8 @@ fetch("/api/merchant/summary", {
 
 在 GitHub OAuth App 中设置：
 
-- Homepage URL：`https://qingtian-pay.pages.dev`
-- Callback URL：`https://qingtian-pay.pages.dev/api/auth/github/callback`
+- Homepage URL：`https://pay.lynli.me`
+- Callback URL：`https://pay.lynli.me/api/auth/github/callback`
 
 在生产环境安全配置 OAuth Client ID 和 Client Secret。前端只需将浏览器导航到：
 
