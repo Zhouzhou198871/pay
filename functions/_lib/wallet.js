@@ -1,6 +1,5 @@
 import { randomHex, json, currentUser } from "./auth.js";
 
-const USDT_SCALE = 1000000;
 export const parseUsdtMicro = (value) => {
   const s=String(value??"").trim();
   if(!/^\d{1,10}(?:\.\d{1,6})?$/.test(s)) return null;
@@ -19,20 +18,19 @@ export const userContext = async (request,env) => {
   return {user,db:env.AUTH_DB};
 };
 
-// D1 batch is transactional. changes() gates the balance mutation on a newly inserted unique ledger row.
+// The unique source_key insert and balance mutation run in one D1 transaction.
 export const creditWallet = async ({db,userId,sourceKey,sourceType,amountMicro,description,now=Math.floor(Date.now()/1000)}) => {
   if(!Number.isSafeInteger(amountMicro)||amountMicro<=0) throw new Error("invalid_credit_amount");
-  const id=randomHex(16);
   await db.prepare("INSERT OR IGNORE INTO wallet_accounts (user_id,balance_micro,updated_at) VALUES (?,0,?)").bind(userId,now).run();
-  const inserted=await db.prepare(
-    "INSERT OR IGNORE INTO wallet_ledger (id,user_id,source_key,source_type,direction,amount_micro,balance_after_micro,currency,description,created_at) SELECT ?,?,?,?,'credit',?,balance_micro+?,'USDT',?,? FROM wallet_accounts WHERE user_id=?"
-  ).bind(id,userId,sourceKey,sourceType,amountMicro,amountMicro,description,now,userId).run();
-  const changes=Number(inserted.meta?.changes||0);
-  if(changes===1){
-    await db.prepare("UPDATE wallet_accounts SET balance_micro=balance_micro+?,updated_at=? WHERE user_id=?").bind(amountMicro,now,userId).run();
-  }
+  const results=await db.batch([
+    db.prepare("INSERT OR IGNORE INTO wallet_ledger (id,user_id,source_key,source_type,direction,amount_micro,balance_after_micro,currency,description,created_at) SELECT ?,?,?,?,'credit',?,balance_micro+?,'USDT',?,? FROM wallet_accounts WHERE user_id=?")
+      .bind(randomHex(16),userId,sourceKey,sourceType,amountMicro,amountMicro,description,now,userId),
+    db.prepare("UPDATE wallet_accounts SET balance_micro=balance_micro+?,updated_at=? WHERE user_id=? AND changes()=1")
+      .bind(amountMicro,now,userId)
+  ]);
+  const credited=Number(results?.[0]?.meta?.changes||0)===1;
   const account=await db.prepare("SELECT balance_micro FROM wallet_accounts WHERE user_id=?").bind(userId).first();
-  return {credited:changes===1,balanceMicro:Number(account?.balance_micro||0)};
+  return {credited,balanceMicro:Number(account?.balance_micro||0)};
 };
 export const walletBalance = async (db,userId) => {
   const row=await db.prepare("SELECT balance_micro FROM wallet_accounts WHERE user_id=?").bind(userId).first();
