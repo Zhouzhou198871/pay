@@ -168,3 +168,13 @@ body.merchant-menu-open{overflow:hidden}
 .merchant-record small{font-size:11px;color:#8998a7;overflow-wrap:anywhere}
 .merchant-record .record-meta{text-align:right;flex:none}
 @media(max-width:600px){.merchant-record{padding:13px;gap:9px}.merchant-record b{font-size:12px}.merchant-record small{font-size:10px}}
+
+/* Authentication form quality-of-life states. */
+.remember-me{display:inline-flex;align-items:center;gap:8px;color:#74859a;font-size:11px;white-space:nowrap;cursor:pointer}
+.remember-me input{width:14px;height:14px;margin:0;accent-color:#3479db}
+.password-hint{margin:-12px 0 18px;color:#8192a8;font-size:10px;line-height:1.6}
+.primary-button.is-loading{cursor:wait}
+.primary-button.is-loading span{display:inline-flex;align-items:center;gap:9px}
+.primary-button.is-loading span:before{content:"";width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:qt-auth-spin .7s linear infinite}
+@keyframes qt-auth-spin{to{transform:rotate(360deg)}}
+@media(max-width:380px){.remember-me{font-size:10px}.login-meta{gap:8px}}
