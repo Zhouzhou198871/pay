@@ -6,7 +6,22 @@ const ALLOWED_CALLBACK_HOSTS = new Set([
   "feat-unified-usdt-recharge.qingtian-pay.pages.dev",
   "qingtian-pay.pages.dev"
 ]);
-const clearState = "__Host-qt_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+async function verifySignedState(state, secret) {
+  const [nonce, supplied] = String(state || "").split(".");
+  if (!nonce || !supplied || !/^[a-f0-9]{48}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(supplied)) return false;
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce)));
+  const expected = Array.from(signature, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  let mismatch = 0;
+  for (let i = 0; i < expected.length; i++) mismatch |= expected.charCodeAt(i) ^ supplied.charCodeAt(i);
+  return mismatch === 0;
+}
 
 function getCallbackUrl(env) {
   const value = (env.GITHUB_CALLBACK_URL || "").trim();
@@ -38,7 +53,7 @@ export async function onRequestGet({ request, env }) {
   } catch {
     return new Response("GitHub OAuth 回调地址配置无效。", {
       status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Set-Cookie": clearState }
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
   }
 
@@ -49,7 +64,7 @@ export async function onRequestGet({ request, env }) {
   const code = url.searchParams.get("code") || "";
 
   if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);
-  if (!expectedState || !state || expectedState !== state || !code) return redirect("/?oauth=failed", origin);
+  if (!code || !await verifySignedState(state, env.GITHUB_CLIENT_SECRET || "")) return redirect("/?oauth=failed", origin);
 
   if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
     return new Response("GitHub OAuth 尚未完成配置。", {
@@ -59,7 +74,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   try {
-    const redirectUri = `${callback.origin}${CALLBACK_PATH}`;
+    const redirectUri = env.GITHUB_CALLBACK_URL.trim();
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -124,7 +139,6 @@ export async function onRequestGet({ request, env }) {
     if (user.status !== "active") return redirect("/?oauth=account-disabled", origin);
     const session = await createSession(env.AUTH_DB, user.id);
     const responseHeaders = new Headers({ Location: new URL("/dashboard", origin).toString(), "Cache-Control": "no-store" });
-    responseHeaders.append("Set-Cookie", clearState);
     responseHeaders.append("Set-Cookie", sessionCookie(session));
     return new Response(null, { status: 302, headers: responseHeaders });
   } catch {
