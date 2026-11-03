@@ -1,3 +1,5 @@
+export const DEFAULT_USDT_TRC20_CONTRACT = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t";
+
 export const findTransferEventIndex = (events,{contract,from,to,value,used=new Set()}) => {
   const same=(a,b)=>String(a??"").toLowerCase()===String(b??"").toLowerCase();
   for(const event of Array.isArray(events)?events:[]) {
