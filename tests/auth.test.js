@@ -14,6 +14,16 @@ import {
   verifyTurnstile
 } from "../functions/_lib/auth.js";
 
+async function signedStateForTest(secret) {
+  const nonce = randomHex(24);
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce)));
+  return `${nonce}.${Array.from(signature, byte => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+
 test("email normalization trims whitespace and lowercases", () => {
   assert.equal(normalizeEmail("  User@Example.COM "), "user@example.com");
 });
@@ -195,15 +205,20 @@ test("failed email delivery removes only the pending OTP created by that request
 });
 
 
-test("GitHub OAuth callback rejects a mismatched state and clears the state cookie", async () => {
+test("GitHub OAuth callback rejects a mismatched signed state", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github/callback.js");
-  const request = new Request("https://pay.lynli.me/api/auth/github/callback?code=abc&state=wrong", {
-    headers: { Cookie: "__Host-qt_oauth_state=expected" }
+  const request = new Request("https://pay.lynli.me/api/auth/github/callback?code=abc&state=wrong");
+  const response = await onRequestGet({
+    request,
+    env: {
+      GITHUB_CALLBACK_URL: "https://pay.lynli.me/api/auth/github/callback",
+      GITHUB_CLIENT_ID: "public-client-id",
+      GITHUB_CLIENT_SECRET: "mock-secret",
+      AUTH_DB: {}
+    }
   });
-  const response = await onRequestGet({ request, env: {} });
   assert.equal(response.status, 302);
   assert.match(response.headers.get("Location"), /oauth=failed/);
-  assert.match(response.headers.get("Set-Cookie"), /Max-Age=0/);
 });
 
 test("GitHub OAuth callback creates a session for a verified GitHub email", async () => {
@@ -245,16 +260,19 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
       }
       throw new Error("unexpected GitHub API URL");
     };
-    const request = new Request("https://pay.lynli.me/api/auth/github/callback?code=mock-code&state=valid-state", {
-      headers: { Cookie: "__Host-qt_oauth_state=valid-state" }
-    });
+    const state = await signedStateForTest("mock-secret");
+    const request = new Request(`https://pay.lynli.me/api/auth/github/callback?code=mock-code&state=${state}`);
     const response = await onRequestGet({
       request,
-      env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "mock-secret", AUTH_DB: db }
+      env: {
+        GITHUB_CALLBACK_URL: "https://pay.lynli.me/api/auth/github/callback",
+        GITHUB_CLIENT_ID: "public-client-id",
+        GITHUB_CLIENT_SECRET: "mock-secret",
+        AUTH_DB: db
+      }
     });
     assert.equal(response.status, 302);
     assert.equal(response.headers.get("Location"), "https://pay.lynli.me/dashboard");
-    assert.match(response.headers.get("Set-Cookie"), /__Host-qt_oauth_state=/);
     assert.match(response.headers.get("Set-Cookie"), /__Host-qt_session=/);
     assert.equal(calls, 3);
     assert.equal(statements.length, 2);
@@ -270,7 +288,10 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
 test("GitHub OAuth initiation uses the request origin for the callback URL", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
   const request = new Request("https://pay.lynli.me/api/auth/github");
-  const response = await onRequestGet({ request, env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
+  const response = await onRequestGet({ request, env: {
+    GITHUB_CALLBACK_URL: "https://pay.lynli.me/api/auth/github/callback",
+    GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {}
+  } });
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
   assert.equal(location.origin, "https://github.com");
@@ -279,9 +300,8 @@ test("GitHub OAuth initiation uses the request origin for the callback URL", asy
   assert.equal(location.searchParams.get("redirect_uri"), "https://pay.lynli.me/api/auth/github/callback");
   assert.equal(location.searchParams.get("scope"), "read:user user:email");
   const state = location.searchParams.get("state");
-  assert.match(state, /^[a-f0-9]{48}$/);
-  assert.match(response.headers.get("Set-Cookie"), new RegExp(`__Host-qt_oauth_state=${state}`));
-  assert.match(response.headers.get("Set-Cookie"), /Max-Age=600/);
+  assert.match(state, /^[a-f0-9]{48}\\.[a-f0-9]{64}$/);
+  assert.equal(response.headers.get("Set-Cookie"), null);
 });
 
 
@@ -298,13 +318,16 @@ test("GitHub OAuth initiation fails closed when the client secret or database is
 
 test("GitHub OAuth initiation uses the preview deployment origin as callback", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
-  const previewUrl = "https://abc123.qingtian-pay.pages.dev/api/auth/github";
+  const previewUrl = "https://qingtian-pay.pages.dev/api/auth/github";
   const request = new Request(previewUrl);
-  const response = await onRequestGet({ request, env: { GITHUB_CLIENT_ID: "preview-client-id", GITHUB_CLIENT_SECRET: "preview-secret", AUTH_DB: {} } });
+  const response = await onRequestGet({ request, env: {
+    GITHUB_CALLBACK_URL: "https://qingtian-pay.pages.dev/api/auth/github/callback",
+    GITHUB_CLIENT_ID: "preview-client-id", GITHUB_CLIENT_SECRET: "preview-secret", AUTH_DB: {}
+  } });
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
   assert.equal(location.searchParams.get("client_id"), "preview-client-id");
-  assert.equal(location.searchParams.get("redirect_uri"), "https://abc123.qingtian-pay.pages.dev/api/auth/github/callback");
+  assert.equal(location.searchParams.get("redirect_uri"), "https://qingtian-pay.pages.dev/api/auth/github/callback");
 });
 
 
@@ -336,15 +359,19 @@ test("GitHub OAuth callback uses the preview origin for redirect after session c
       }
       throw new Error("unexpected GitHub API URL");
     };
-    const request = new Request("https://abc123.qingtian-pay.pages.dev/api/auth/github/callback?code=mock-code&state=valid-state", {
-      headers: { Cookie: "__Host-qt_oauth_state=valid-state" }
-    });
+    const state = await signedStateForTest("mock-secret");
+    const request = new Request(`https://qingtian-pay.pages.dev/api/auth/github/callback?code=mock-code&state=${state}`);
     const response = await onRequestGet({
       request,
-      env: { GITHUB_CLIENT_ID: "preview-client-id", GITHUB_CLIENT_SECRET: "mock-secret", AUTH_DB: db }
+      env: {
+        GITHUB_CALLBACK_URL: "https://qingtian-pay.pages.dev/api/auth/github/callback",
+        GITHUB_CLIENT_ID: "preview-client-id",
+        GITHUB_CLIENT_SECRET: "mock-secret",
+        AUTH_DB: db
+      }
     });
     assert.equal(response.status, 302);
-    assert.equal(response.headers.get("Location"), "https://abc123.qingtian-pay.pages.dev/dashboard");
+    assert.equal(response.headers.get("Location"), "https://qingtian-pay.pages.dev/dashboard");
   } finally {
     globalThis.fetch = originalFetch;
   }
