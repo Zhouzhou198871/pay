@@ -46,15 +46,16 @@ export const verifyPassword = async (password, stored) => {
   return safeEqual(actual, expected);
 };
 
-export const createSession = async (db, userId) => {
+export const createSession = async (db, userId, ttlSeconds = 60 * 60 * 24 * 30) => {
   const token = randomHex(32);
   const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + Math.max(1, Math.floor(ttlSeconds));
   await db.prepare("INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)")
-    .bind(await sha256(token), userId, now + 60 * 60 * 24 * 30, now).run();
+    .bind(await sha256(token), userId, expiresAt, now).run();
   return token;
 };
 
-export const sessionCookie = (token) => `__Host-qt_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000`;
+export const sessionCookie = (token, maxAgeSeconds = 60 * 60 * 24 * 30) => `__Host-qt_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(1, Math.floor(maxAgeSeconds))}`;
 export const expiredSessionCookie = () => "__Host-qt_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 
 export const currentUser = async (request, db) => {
