@@ -71,7 +71,7 @@ function authMarkup() {
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
         <label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label>
-      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><label class="remember-me"><input type="checkbox" id="remember-me" checked /><span>记住我（30天内免登录）</span></label><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
+      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><label class="remember-me"><input type="checkbox" id="remember-me" checked /><span>保持登录（30天）</span></label><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
       <button class="primary-button" type="submit"><span>${registering ? "创建账户" : "登录账户"}</span><b>→</b></button>
     </form>
     <div class="separator"><span>或使用以下方式</span></div>
@@ -364,7 +364,7 @@ async function submitAuth(event) {
     showToast("请先阅读并同意用户协议与隐私政策", "error");
     return;
   }
-  if (mode === "register" && (payload.password.length < 8 || payload.password.length > 128 || !/[A-Za-z]/.test(payload.password) || !/\\d/.test(payload.password))) {
+  if (mode === "register" && (payload.password.length < 8 || payload.password.length > 128 || !/[A-Za-z]/.test(payload.password) || !/\d/.test(payload.password))) {
     showToast("注册密码需为 8–128 位，并同时包含字母和数字", "error");
     document.querySelector("#password")?.focus();
     return;
@@ -374,7 +374,7 @@ async function submitAuth(event) {
     document.querySelector("#password")?.focus();
     return;
   }
-  if (mode === "register" && !/^\\d{6}$/.test(payload.code || "")) {
+  if (mode === "register" && !/^\d{6}$/.test(payload.code || "")) {
     showToast("请输入 6 位邮箱验证码", "error");
     document.querySelector("#code")?.focus();
     return;
