@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createSession,
+  csrfCookie,
+  expiredCsrfCookie,
   expiredSessionCookie,
   hashPassword,
   hmac,
@@ -58,7 +60,11 @@ test("session cookies are HttpOnly, Secure and use the requested Max-Age", () =>
   assert.match(cookie, /SameSite=Lax/);
   assert.match(cookie, /Max-Age=2592000/);
   assert.match(sessionCookie("short-token", 86400), /Max-Age=86400/);
+  assert.doesNotMatch(sessionCookie("session-token", null), /Max-Age=/);
+  assert.match(csrfCookie("csrf-token", 2592000), /Max-Age=2592000/);
+  assert.doesNotMatch(csrfCookie("csrf-token", null), /Max-Age=/);
   assert.match(expiredSessionCookie(), /Max-Age=0/);
+  assert.match(expiredCsrfCookie(), /Max-Age=0/);
 });
 
 test("session database expiry follows the requested lifetime", async () => {
@@ -379,7 +385,7 @@ test("GitHub OAuth callback uses the preview origin for redirect after session c
 
 
 
-test("login rememberMe controls both database session expiry and cookie lifetime", async () => {
+test("login remember_me controls matching session and csrf cookie lifetimes", async () => {
   const { onRequestPost } = await import("../functions/api/auth/login.js");
   const originalFetch = globalThis.fetch;
   const passwordHash = await hashPassword("Correct-Horse-42");
@@ -411,15 +417,22 @@ test("login rememberMe controls both database session expiry and cookie lifetime
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: "user@example.com", password: "Correct-Horse-42",
-          consent: true, captchaToken: "valid-token", rememberMe
+          consent: true, captchaToken: "valid-token", remember_me: rememberMe
         })
       });
       const before = Math.floor(Date.now() / 1000);
       const response = await onRequestPost({ request, env: { AUTH_DB: db, TURNSTILE_SECRET_KEY: "turnstile-secret" } });
       const after = Math.floor(Date.now() / 1000);
-      const ttl = rememberMe ? 30 * 86400 : 86400;
+      const ttl = 30 * 86400;
       assert.equal(response.status, 200);
-      assert.match(response.headers.get("Set-Cookie"), new RegExp(`Max-Age=${ttl}`));
+      const cookies = response.headers.get("Set-Cookie") || "";
+      assert.match(cookies, /__Host-qt_session=/);
+      assert.match(cookies, /csrf_token=/);
+      if (rememberMe) {
+        assert.equal((cookies.match(/Max-Age=2592000/g) || []).length, 2);
+      } else {
+        assert.doesNotMatch(cookies, /Max-Age=/);
+      }
       const session = issued.at(-1);
       assert.ok(session[2] >= before + ttl && session[2] <= after + ttl);
     }
