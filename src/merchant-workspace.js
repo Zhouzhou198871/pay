@@ -63,6 +63,7 @@ function showEmpty(title, description) {
   const p = document.createElement("p"); p.textContent = description;
   box.append(h, p); panel.append(box);
 }
+function lastSevenDateLabels() { const now = new Date(); return Array.from({length:7}, (_,i) => { const d = new Date(now); d.setDate(now.getDate() - 6 + i); return String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }); }
 function formatYuanMicro(value, currency = "CNY") {
   if (value === null || value === undefined || !Number.isFinite(Number(value))) return "—";
   return (Number(value) / 1000000).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + (currency === "CNY" ? " 元" : " " + currency);
@@ -72,7 +73,7 @@ function renderOverview() {
   const name = currentUser?.display_name || currentUser?.email?.split("@")[0] || "商户";
   panel.innerHTML = `
     <section class="qt-stat-grid" aria-label="数据概览">
-      <article class="qt-stat-card qt-stat-blue"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">可提现余额</span><strong id="qt-withdrawable">—</strong><small>USDT</small></article>
+      <article class="qt-stat-card qt-stat-blue"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">可提现余额</span><strong id="qt-withdrawable">—</strong><small>账户币种</small></article>
       <article class="qt-stat-card qt-stat-violet"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">待提现余额</span><strong id="qt-pending">—</strong><small>USDT</small></article>
       <article class="qt-stat-card qt-stat-cyan"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="qt-stat-label">订单总数</span><strong id="qt-order-count">—</strong><small>笔订单</small></article>
       <article class="qt-stat-card qt-stat-green"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 2 5-7"/></svg></span><span class="qt-stat-label">今日订单</span><strong id="qt-today-orders">—</strong><small>笔订单</small></article>
@@ -89,7 +90,7 @@ function renderOverview() {
     <section class="qt-card qt-trend-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 6-7"/></svg></span><div><h3>近 7 天收入走势</h3><p>按订单支付时间统计</p></div></div>
       <div class="qt-trend-total"><strong id="qt-seven-day-total">—</strong><span id="qt-seven-day-orders">— 单</span></div>
-      <div class="qt-chart-empty"><div class="qt-chart-empty-icon">⌁</div><b>暂时没有可用的收入趋势数据</b><span>接入订单收入汇总接口后，将在这里展示最近 7 天的每日收入与订单数。</span></div>
+      <div class="qt-chart" aria-label="近七天收入图表，暂无可用统计数据"><div class="qt-chart-columns">${lastSevenDateLabels().map(day => `<div class="qt-chart-column"><div class="qt-chart-value"><b>—</b><small>— 单</small></div><div class="qt-chart-track"><i></i></div><span>${day}</span></div>`).join("")}</div><p class="qt-chart-caption">暂无收入汇总数据，图表数值将在统计接口开放后显示</p></div>
     </section>
     <section class="qt-card qt-steps-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span><div><h3>新商户快速开始</h3><p>按以下步骤完成收款接入</p></div></div>
@@ -101,12 +102,12 @@ function renderOverview() {
     </section>
     <section class="qt-card qt-channel-info">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h3>交易说明</h3><p>请根据平台实际开放的通道与业务规则进行接入</p></div></div>
-      <div class="qt-info-block"><b>支持业务类型</b><div class="qt-tag-cloud"><span>数字服务</span><span>软件服务</span><span>在线内容</span><span>游戏服务</span><span>会员订阅</span><span>技术服务</span></div></div>
+      <div class="qt-info-block"><b>支持业务类型</b><div class="qt-tag-cloud"><span>支持范围以商户审核结果为准</span></div></div>
       <div class="qt-warning"><strong><svg viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/><path d="M12 9v5M12 18h.01"/></svg>禁止事项</strong><p>请勿开展违法违规、侵权、欺诈或违反支付通道规则的业务。具体限制以平台协议及通道审核要求为准。</p></div>
       <div class="qt-info-grid">
-        <article><span>充值范围</span><b>以订单配置为准</b><p>按已开放产品规则执行</p></article>
-        <article><span>入款方式</span><b>已启用的支付通道</b><p>以商户通道列表为准</p></article>
-        <article><span>结算说明</span><b>以商户协议为准</b><p>结算周期与币种以实际配置为准</p></article>
+        <article><span>充值范围</span><b>—</b><p>以账户实际配置为准</p></article>
+        <article><span>入款方式</span><b>—</b><p>以已启用通道为准</p></article>
+        <article><span>结算说明</span><b>—</b><p>以商户结算配置为准</p></article>
       </div>
     </section>
   `;
