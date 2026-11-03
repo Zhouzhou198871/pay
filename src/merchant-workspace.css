@@ -167,3 +167,15 @@
  .qt-stat-card strong{font-size:19px}
  .qt-channel-metrics{grid-template-columns:1fr 1fr}
 }
+
+.qt-chart{padding:10px 2px 0;border-top:1px solid #edf1f4}
+.qt-chart-columns{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;align-items:end;min-height:190px;padding-top:16px}
+.qt-chart-column{min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.qt-chart-value{min-height:31px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;color:#8b9aa6;white-space:nowrap}
+.qt-chart-value b{font-size:9px;font-weight:650}
+.qt-chart-value small{font-size:8px}
+.qt-chart-track{height:115px;width:100%;max-width:46px;background:#f3f9fc;display:flex;align-items:flex-end;border-radius:2px 2px 0 0;overflow:hidden}
+.qt-chart-track i{display:block;width:100%;height:3px;background:#2998d3;border-radius:5px 5px 0 0;opacity:.45}
+.qt-chart-column>span{font-size:10px;color:#7e8993;white-space:nowrap}
+.qt-chart-caption{text-align:center;margin:15px 0 0;color:#a0aab3;font-size:10px;line-height:1.6}
+@media(max-width:380px){.qt-chart-columns{gap:4px}.qt-chart-column>span{font-size:9px}.qt-chart-value b{font-size:8px}}
