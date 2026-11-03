@@ -1,4 +1,4 @@
-import { createSession, json, normalizeEmail, sessionCookie, validEmail, verifyPassword, verifyTurnstile } from "../../_lib/auth.js";
+import { createSession, json, normalizeEmail, randomHex, sessionCookie, csrfCookie, validEmail, verifyPassword, verifyTurnstile } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   try {
@@ -15,9 +15,13 @@ export async function onRequestPost({ request, env }) {
     }
     const now = Math.floor(Date.now() / 1000);
     await env.AUTH_DB.prepare("UPDATE users SET terms_accepted_at = ?, terms_version = ?, privacy_version = ? WHERE id = ?").bind(now, "2026-11-02", "2026-11-02", user.id).run();
-    const sessionTtl = body.rememberMe === true ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+    const sessionTtl = 60 * 60 * 24 * 30;
+    const rememberMe = body.remember_me === true;
+    const cookieMaxAge = rememberMe ? sessionTtl : null;
     const token = await createSession(env.AUTH_DB, user.id, sessionTtl);
-    return json({ success: true }, 200, { "Set-Cookie": sessionCookie(token, sessionTtl) });
+    const response = json({ success: true }, 200, { "Set-Cookie": sessionCookie(token, cookieMaxAge) });
+    response.headers.append("Set-Cookie", csrfCookie(randomHex(32), cookieMaxAge));
+    return response;
   } catch (error) {
     return json({ error: "登录暂时失败，请稍后重试。" }, 500);
   }
