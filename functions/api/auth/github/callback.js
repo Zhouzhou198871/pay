@@ -87,8 +87,13 @@ export async function onRequestGet({ request, env }) {
         redirect_uri: redirectUri
       })
     });
-    const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (!tokenResponse.ok || !tokenData.access_token) throw new Error("OAuth token exchange failed");
+    const tokenBody = await tokenResponse.text();
+    let tokenData = {};
+    try { tokenData = tokenBody ? JSON.parse(tokenBody) : {}; } catch {}
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      const detail = tokenData.error_description || tokenData.error || tokenBody || "empty response";
+      throw new Error(`GitHub access_token 请求失败 (HTTP ${tokenResponse.status}): ${String(detail).slice(0, 500)}`);
+    }
 
     const headers = {
       Authorization: `Bearer ${tokenData.access_token}`,
@@ -100,7 +105,11 @@ export async function onRequestGet({ request, env }) {
       fetch("https://api.github.com/user", { headers }),
       fetch("https://api.github.com/user/emails", { headers })
     ]);
-    if (!profileResponse.ok || !emailResponse.ok) throw new Error("Unable to read GitHub profile");
+    if (!profileResponse.ok || !emailResponse.ok) {
+      const failed = !profileResponse.ok ? profileResponse : emailResponse;
+      const detail = await failed.text().catch(() => "");
+      throw new Error(`GitHub 用户信息请求失败 (HTTP ${failed.status}): ${detail.slice(0, 500) || failed.statusText}`);
+    }
 
     const profile = await profileResponse.json();
     const emails = await emailResponse.json();
@@ -146,8 +155,14 @@ export async function onRequestGet({ request, env }) {
     });
     responseHeaders.append("Set-Cookie", sessionCookie(session));
     return new Response(null, { status: 302, headers: responseHeaders });
-  } catch {
-    return new Response("GitHub 登录失败，请稍后重试。", {
+  } catch (e) {
+    const message = String(e?.message || e || "Unknown GitHub OAuth error").slice(0, 800);
+    console.error("[github-oauth-callback] login failed", JSON.stringify({
+      message,
+      stack: String(e?.stack || "").slice(0, 6000),
+      callbackUrl: env.GITHUB_CALLBACK_URL || null
+    }));
+    return new Response(`GitHub 登录失败: ${message}`, {
       status: 502,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
