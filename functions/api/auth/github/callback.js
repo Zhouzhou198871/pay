@@ -1,4 +1,4 @@
-import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
+import { createSession, csrfCookie, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
 
 const CALLBACK_PATH = "/api/auth/github/callback";
 const ALLOWED_CALLBACK_HOSTS = new Set([
@@ -154,6 +154,7 @@ export async function onRequestGet({ request, env }) {
       "Cache-Control": "no-store"
     });
     responseHeaders.append("Set-Cookie", sessionCookie(session));
+    responseHeaders.append("Set-Cookie", csrfCookie(randomHex(32)));
     return new Response(null, { status: 302, headers: responseHeaders });
   } catch (e) {
     const message = String(e?.message || e || "Unknown GitHub OAuth error").slice(0, 800);
