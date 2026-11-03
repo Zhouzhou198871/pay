@@ -1,6 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../functions/_lib/tron.js";
+import { DEFAULT_USDT_TRC20_CONTRACT, findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../functions/_lib/tron.js";
+
+test("uses the official TRON USDT contract configured by the legacy listener", () => {
+  assert.equal(DEFAULT_USDT_TRC20_CONTRACT, "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t");
+});
 
 test("resolves the exact confirmed Transfer event by token, recipient, sender and raw amount", () => {
   const events=[
