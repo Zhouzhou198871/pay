@@ -491,9 +491,7 @@ async function loadCaptcha() {
     window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
       theme: "light",
-      size: "invisible",
       execution: "execute",
-      appearance: "execute",
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => {
         window.__qtCaptchaToken = token;
