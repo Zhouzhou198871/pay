@@ -1,4 +1,4 @@
-import { expiredSessionCookie, json, sha256 } from "../../_lib/auth.js";
+import { expiredCsrfCookie, expiredSessionCookie, json, sha256 } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   const cookie = request.headers.get("Cookie") || "";
@@ -6,5 +6,7 @@ export async function onRequestPost({ request, env }) {
   if (token && env.AUTH_DB) {
     await env.AUTH_DB.prepare("DELETE FROM sessions WHERE token_hash = ?").bind(await sha256(token)).run();
   }
-  return json({ success: true }, 200, { "Set-Cookie": expiredSessionCookie() });
+  const response = json({ success: true }, 200, { "Set-Cookie": expiredSessionCookie() });
+  response.headers.append("Set-Cookie", expiredCsrfCookie());
+  return response;
 }
