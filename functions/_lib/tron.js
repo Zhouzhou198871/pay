@@ -16,10 +16,10 @@ export const findTransferEventIndex = (events,{contract,from,to,value,used=new S
 export const selectUniqueDepositCandidate = (orders) =>
   Array.isArray(orders) && orders.length === 1 ? orders[0] : null;
 
-/** A transfer is valid only when its confirmed block time falls inside the order's inclusive validity window. */
-export const isTransferWithinOrderWindow = (order, transferTimestamp) =>
-  Number.isSafeInteger(transferTimestamp) &&
+/** TRON block timestamps are milliseconds; order timestamps are seconds. Compare without truncating sub-second lateness. */
+export const isTransferWithinOrderWindow = (order, transferTimestampMs) =>
+  Number.isSafeInteger(transferTimestampMs) &&
   Number.isSafeInteger(Number(order?.created_at)) &&
   Number.isSafeInteger(Number(order?.expires_at)) &&
-  transferTimestamp >= Number(order.created_at) &&
-  transferTimestamp <= Number(order.expires_at);
+  transferTimestampMs >= Number(order.created_at) * 1000 &&
+  transferTimestampMs <= Number(order.expires_at) * 1000;
