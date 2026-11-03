@@ -244,6 +244,9 @@ function initWorkspace() {
 
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
+    if (target?.closest("#open-merchant-menu")) { $("#merchant-drawer")?.classList.add("open"); $("#merchant-backdrop")?.classList.add("visible"); document.body.classList.add("merchant-menu-open"); return; }
+    if (target?.closest("#close-merchant-menu,#merchant-backdrop")) { $("#merchant-drawer")?.classList.remove("open"); $("#merchant-backdrop")?.classList.remove("visible"); document.body.classList.remove("merchant-menu-open"); return; }
+    if (target?.closest("#top-logout,#drawer-logout")) { event.preventDefault(); fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" }).finally(() => { location.href = "/"; }); return; }
     const sectionButton = target?.closest("[data-section]");
     if (sectionButton && $(".merchant-app")) {
       event.preventDefault(); event.stopImmediatePropagation();
