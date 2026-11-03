@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { findTransferEventIndex, selectUniqueDepositCandidate } from "../functions/_lib/tron.js";
+import { findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../functions/_lib/tron.js";
 
 test("resolves the exact confirmed Transfer event by token, recipient, sender and raw amount", () => {
   const events=[
@@ -34,4 +34,12 @@ test("ambiguous reused quote amounts are never assigned to an arbitrary user", (
   const second = { id: "order-2", user_id: "user-2" };
   assert.equal(selectUniqueDepositCandidate([first, second]), null);
   assert.equal(selectUniqueDepositCandidate([]), null);
+});
+
+test("TRC20 order accepts transfer at 600 seconds and rejects transfer after 600 seconds", () => {
+  const order = { created_at: 1000, expires_at: 1600 };
+  assert.equal(isTransferWithinOrderWindow(order, 1000), true);
+  assert.equal(isTransferWithinOrderWindow(order, 1600), true);
+  assert.equal(isTransferWithinOrderWindow(order, 1601), false);
+  assert.equal(isTransferWithinOrderWindow(order, 999), false);
 });
