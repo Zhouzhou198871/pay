@@ -123,7 +123,7 @@ test("different email addresses have independent failure counters and locks", as
 });
 
 test("unknown, disabled, and wrong-password accounts share the same public failure", async (t) => {
-  const { login } = setup(t);
+  const { login, db } = setup(t);
   const responses = await Promise.all([
     login("missing@example.com", PASSWORD),
     login("disabled@example.com", PASSWORD),
@@ -136,4 +136,6 @@ test("unknown, disabled, and wrong-password accounts share the same public failu
     { error: "邮箱或密码不正确。" },
     { error: "邮箱或密码不正确。" }
   ]);
+  assert.equal(db.attempts.get("missing@example.com").failed_attempts, 1);
+  assert.equal(db.attempts.get("disabled@example.com").failed_attempts, 1);
 });
