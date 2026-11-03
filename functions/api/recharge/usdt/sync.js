@@ -1,6 +1,6 @@
 import { json } from "../../../_lib/auth.js";
 import { creditWallet } from "../../../_lib/wallet.js";
-import { findTransferEventIndex } from "../../../_lib/tron.js";
+import { findTransferEventIndex, selectUniqueDepositCandidate } from "../../../_lib/tron.js";
 
 export async function onRequestPost({request,env}) {
   const supplied=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
@@ -84,8 +84,8 @@ export async function onRequestPost({request,env}) {
         const candidates=Array.isArray(matching?.results)?matching.results:[];
         // Expired orders can reuse a quote amount. Never guess which user owns
         // a transfer if more than one order fits the transfer timestamp.
-        if(candidates.length!==1){ignored++;continue;}
-        deposit=candidates[0];
+        deposit=selectUniqueDepositCandidate(candidates);
+        if(!deposit){ignored++;continue;}
         try { eventIndex=await resolveEventIndex(tx); }
         catch(error) {
           console.error("[usdt/sync] event index lookup failed",String(error?.message||error).slice(0,120));
