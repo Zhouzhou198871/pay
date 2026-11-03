@@ -1,6 +1,5 @@
 import { randomHex } from "../../_lib/auth.js";
 
-const CANONICAL_ORIGIN = "https://pay.lynli.me";
 const CALLBACK_PATH = "/api/auth/github/callback";
 const ALLOWED_CALLBACK_HOSTS = new Set([
   "pay.lynli.me",
@@ -9,7 +8,8 @@ const ALLOWED_CALLBACK_HOSTS = new Set([
 ]);
 
 function getCallbackUrl(env) {
-  const value = env.GITHUB_CALLBACK_URL || `${CANONICAL_ORIGIN}${CALLBACK_PATH}`;
+  const value = (env.GITHUB_CALLBACK_URL || "").trim();
+  if (!value) throw new Error("Missing GitHub OAuth callback URL");
   const callback = new URL(value);
 
   if (
@@ -44,16 +44,6 @@ export async function onRequestGet({ request, env }) {
     callback = getCallbackUrl(env);
   } catch {
     return new Response("GitHub OAuth 回调地址配置无效。", {
-      status: 503,
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "no-store"
-      }
-    });
-  }
-
-  if (new URL(request.url).origin !== callback.origin) {
-    return new Response("当前环境与配置的 GitHub OAuth 回调地址不匹配。", {
       status: 503,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
