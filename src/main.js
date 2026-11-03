@@ -491,7 +491,9 @@ async function loadCaptcha() {
     window.__qtCaptchaWidgetId = window.turnstile.render(slot, {
       sitekey: config.siteKey,
       theme: "light",
-      size: "flexible",
+      size: "invisible",
+      execution: "execute",
+      appearance: "execute",
       action: mode === "register" ? "register" : mode === "forgot" ? "password_reset" : "login",
       callback: (token) => {
         window.__qtCaptchaToken = token;
@@ -509,13 +511,21 @@ async function loadCaptcha() {
         if (hint && mode === "register") hint.textContent = "人机验证超时，请重新验证。";
         showToast("人机验证已超时，请重新验证", "error");
       },
-      "error-callback": () => {
+      "error-callback": (code) => {
         window.__qtCaptchaToken = "";
+        const errorCode = String(code || "unknown").slice(0, 32);
+        console.warn("[auth/turnstile] widget error", { code: errorCode });
         const hint = document.querySelector("#captcha-hint");
-        if (hint && mode === "register") hint.textContent = "人机验证暂不可用，请重新加载。";
-        showToast("人机验证暂不可用，请重新加载验证", "error");
+        if (hint) hint.textContent = `安全验证暂不可用（${errorCode}），请重新加载。`;
+        const currentSlot = document.querySelector("#captcha-slot");
+        if (currentSlot) {
+          currentSlot.innerHTML = '<span>安全验证暂不可用</span> <button type="button" class="text-link" id="captcha-retry">重新加载</button>';
+          currentSlot.querySelector("#captcha-retry")?.addEventListener("click", loadCaptcha);
+        }
+        showToast("安全验证暂不可用，请重新加载验证", "error");
       }
     });
+    window.turnstile.execute(window.__qtCaptchaWidgetId);
   } catch (error) {
     if (loadId !== captchaLoadSeq) return;
     slot.innerHTML = '<span>安全验证加载失败，请重试</span> <button type="button" class="text-link" id="captcha-retry">重新加载</button>';
@@ -527,7 +537,10 @@ async function loadCaptcha() {
 function resetCaptcha() {
   window.__qtCaptchaToken = "";
   if (window.turnstile && window.__qtCaptchaWidgetId !== undefined) {
-    try { window.turnstile.reset(window.__qtCaptchaWidgetId); } catch {}
+    try {
+      window.turnstile.reset(window.__qtCaptchaWidgetId);
+      window.turnstile.execute(window.__qtCaptchaWidgetId);
+    } catch {}
   }
 }
 
@@ -568,7 +581,7 @@ function renderForgotPassword() {
     if(!email.includes("@")){showToast("请输入有效邮箱地址","error");return;}
     if(!window.__qtCaptchaToken){showToast("请先完成人机验证","error");return;}
     button.disabled=true;button.textContent="发送中…";
-    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";if(window.turnstile)window.turnstile.reset();showToast("验证码已发送","success");}catch(e){resetCaptcha();button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
+    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";showToast("验证码已发送","success");}catch(e){resetCaptcha();button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
   });
   document.querySelector("#reset-form")?.addEventListener("submit",async e=>{
     e.preventDefault();const payload=Object.fromEntries(new FormData(e.currentTarget).entries());
