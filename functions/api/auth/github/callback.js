@@ -1,6 +1,5 @@
 import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
 
-const CANONICAL_ORIGIN = "https://pay.lynli.me";
 const CALLBACK_PATH = "/api/auth/github/callback";
 const ALLOWED_CALLBACK_HOSTS = new Set([
   "pay.lynli.me",
@@ -10,7 +9,8 @@ const ALLOWED_CALLBACK_HOSTS = new Set([
 const clearState = "__Host-qt_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 
 function getCallbackUrl(env) {
-  const value = env.GITHUB_CALLBACK_URL || `${CANONICAL_ORIGIN}${CALLBACK_PATH}`;
+  const value = (env.GITHUB_CALLBACK_URL || "").trim();
+  if (!value) throw new Error("Missing GitHub OAuth callback URL");
   const callback = new URL(value);
   if (
     callback.protocol !== "https:" ||
@@ -32,7 +32,6 @@ function redirect(path, origin, cookie = clearState) {
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
-  const origin = url.origin;
   let callback;
   try {
     callback = getCallbackUrl(env);
@@ -43,13 +42,7 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  if (origin !== callback.origin || !ALLOWED_CALLBACK_HOSTS.has(url.hostname)) {
-    return new Response("GitHub OAuth 回调域名与当前环境不匹配。", {
-      status: 400,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Set-Cookie": clearState }
-    });
-  }
-
+  const origin = callback.origin;
   const cookies = request.headers.get("Cookie") || "";
   const expectedState = cookies.match(/(?:^|;\s*)__Host-qt_oauth_state=([^;]+)/)?.[1] || "";
   const state = url.searchParams.get("state") || "";
@@ -66,7 +59,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   try {
-    const redirectUri = `${origin}${CALLBACK_PATH}`;
+    const redirectUri = `${callback.origin}${CALLBACK_PATH}`;
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
