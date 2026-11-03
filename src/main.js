@@ -276,6 +276,12 @@ function bindAuthEvents() {
     input.type = visible ? "text" : "password";
     document.querySelector("#toggle-password").textContent = visible ? "隐藏" : "显示";
   });
+  document.querySelector("#remember-me")?.addEventListener("change", (event) => {
+    if (!event.currentTarget.checked) {
+      try { localStorage.removeItem("qt_remembered_email"); }
+      catch { /* Storage may be disabled. */ }
+    }
+  });
   document.querySelector("#send-code")?.addEventListener("click", sendCode);
   document.querySelector("#forgot-password")?.addEventListener("click", renderForgotPassword);
   loadCaptcha();
