@@ -36,10 +36,11 @@ test("ambiguous reused quote amounts are never assigned to an arbitrary user", (
   assert.equal(selectUniqueDepositCandidate([]), null);
 });
 
-test("TRC20 order accepts transfer at 600 seconds and rejects transfer after 600 seconds", () => {
+test("TRC20 order enforces the exact 600-second deadline at millisecond precision", () => {
   const order = { created_at: 1000, expires_at: 1600 };
-  assert.equal(isTransferWithinOrderWindow(order, 1000), true);
-  assert.equal(isTransferWithinOrderWindow(order, 1600), true);
-  assert.equal(isTransferWithinOrderWindow(order, 1601), false);
-  assert.equal(isTransferWithinOrderWindow(order, 999), false);
+  assert.equal(isTransferWithinOrderWindow(order, 1000000), true);
+  assert.equal(isTransferWithinOrderWindow(order, 1600000), true);
+  assert.equal(isTransferWithinOrderWindow(order, 1600001), false);
+  assert.equal(isTransferWithinOrderWindow(order, 1599999), true);
+  assert.equal(isTransferWithinOrderWindow(order, 999999), false);
 });
