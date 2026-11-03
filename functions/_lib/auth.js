@@ -55,8 +55,10 @@ export const createSession = async (db, userId, ttlSeconds = 60 * 60 * 24 * 30) 
   return token;
 };
 
-export const sessionCookie = (token, maxAgeSeconds = 60 * 60 * 24 * 30) => `__Host-qt_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${Math.max(1, Math.floor(maxAgeSeconds))}`;
+export const sessionCookie = (token, maxAgeSeconds = 60 * 60 * 24 * 30) => `__Host-qt_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax${Number.isFinite(maxAgeSeconds) && maxAgeSeconds > 0 ? `; Max-Age=${Math.floor(maxAgeSeconds)}` : ""}`;
+export const csrfCookie = (token, maxAgeSeconds = 60 * 60 * 24 * 30) => `csrf_token=${token}; Path=/; Secure; SameSite=Strict${Number.isFinite(maxAgeSeconds) && maxAgeSeconds > 0 ? `; Max-Age=${Math.floor(maxAgeSeconds)}` : ""}`;
 export const expiredSessionCookie = () => "__Host-qt_session=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
+export const expiredCsrfCookie = () => "csrf_token=; Path=/; Secure; SameSite=Strict; Max-Age=0";
 
 export const currentUser = async (request, db) => {
   const cookie = request.headers.get("Cookie") || "";
