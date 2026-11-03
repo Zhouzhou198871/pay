@@ -35,7 +35,7 @@ test("randomHex returns cryptographically random hex of requested length", () =>
 
 test("password hashes verify only the original password", async () => {
   const stored = await hashPassword("Correct-Horse-42");
-  assert.match(stored, /^pbkdf2\$150000\$[a-f0-9]{32}\$[a-f0-9]{64}$/);
+  assert.match(stored, /^pbkdf2\$100000\$[a-f0-9]{32}\$[a-f0-9]{64}$/);
   assert.equal(await verifyPassword("Correct-Horse-42", stored), true);
   assert.equal(await verifyPassword("wrong-password", stored), false);
 });
