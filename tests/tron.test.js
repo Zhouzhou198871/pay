@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { findTransferEventIndex } from "../functions/_lib/tron.js";
+import { findTransferEventIndex, selectUniqueDepositCandidate } from "../functions/_lib/tron.js";
 
 test("resolves the exact confirmed Transfer event by token, recipient, sender and raw amount", () => {
   const events=[
@@ -22,4 +22,16 @@ test("identical Transfer events in one transaction receive distinct event indexe
   assert.equal(findTransferEventIndex(events,args),7);
   assert.equal(findTransferEventIndex(events,args),8);
   assert.equal(findTransferEventIndex(events,args),null);
+});
+
+test("late scanner can select one expired order whose quote matched the transfer block time", () => {
+  const order = { id: "order-1", status: "expired", created_at: 1000, expires_at: 8200, expected_micro: 1250000 };
+  assert.equal(selectUniqueDepositCandidate([order]), order);
+});
+
+test("ambiguous reused quote amounts are never assigned to an arbitrary user", () => {
+  const first = { id: "order-1", user_id: "user-1" };
+  const second = { id: "order-2", user_id: "user-2" };
+  assert.equal(selectUniqueDepositCandidate([first, second]), null);
+  assert.equal(selectUniqueDepositCandidate([]), null);
 });
