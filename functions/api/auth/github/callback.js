@@ -1,24 +1,24 @@
 import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
 
-const CANONICAL_ORIGIN = "https://pay.lynli.me";
 const clearState = "__Host-qt_oauth_state=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0";
 
-function redirect(path, cookie = clearState) {
-  const headers = new Headers({ Location: new URL(path, CANONICAL_ORIGIN).toString(), "Cache-Control": "no-store" });
+function redirect(path, origin, cookie = clearState) {
+  const headers = new Headers({ Location: new URL(path, origin).toString(), "Cache-Control": "no-store" });
   if (cookie) headers.append("Set-Cookie", cookie);
   return new Response(null, { status: 302, headers });
 }
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
+  const origin = url.origin;
   const cookies = request.headers.get("Cookie") || "";
   const expectedState = cookies.match(/(?:^|;\s*)__Host-qt_oauth_state=([^;]+)/)?.[1] || "";
   const state = url.searchParams.get("state") || "";
   const code = url.searchParams.get("code") || "";
 
-  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled");
+  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);
   if (!expectedState || !state || expectedState !== state || !code) {
-    return redirect("/?oauth=failed");
+    return redirect("/?oauth=failed", origin);
   }
   if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
     return new Response("GitHub OAuth 尚未完成配置。", {
@@ -28,7 +28,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   try {
-    const redirectUri = `${CANONICAL_ORIGIN}/api/auth/github/callback`;
+    const redirectUri = `${origin}/api/auth/github/callback`;
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -59,7 +59,7 @@ export async function onRequestGet({ request, env }) {
 
     const primary = emails.find((item) => item.primary === true && item.verified === true)
       || emails.find((item) => item.verified === true);
-    if (!primary?.email) return redirect("/?oauth=email-required");
+    if (!primary?.email) return redirect("/?oauth=email-required", origin);
 
     const now = Math.floor(Date.now() / 1000);
     const githubId = String(profile.id);
@@ -71,7 +71,7 @@ export async function onRequestGet({ request, env }) {
       user = await env.AUTH_DB.prepare("SELECT id, status FROM users WHERE email = ? LIMIT 1")
         .bind(email).first();
       if (user) {
-        if (user.status !== "active") return redirect("/?oauth=account-disabled");
+        if (user.status !== "active") return redirect("/?oauth=account-disabled", origin);
         await env.AUTH_DB.prepare("UPDATE users SET github_id = ?, display_name = ? WHERE id = ? AND github_id IS NULL")
           .bind(githubId, profile.name || profile.login || email.split("@")[0], user.id).run();
         const linked = await env.AUTH_DB.prepare("SELECT id, status, github_id FROM users WHERE id = ? LIMIT 1")
@@ -89,16 +89,20 @@ export async function onRequestGet({ request, env }) {
       }
     }
 
-    if (user.status !== "active") return redirect("/?oauth=account-disabled");
+    if (user.status !== "active") return redirect("/?oauth=account-disabled", origin);
     const session = await createSession(env.AUTH_DB, user.id);
     const responseHeaders = new Headers({
-      Location: `${CANONICAL_ORIGIN}/dashboard`,
+      Location: `${origin}/dashboard`,
       "Cache-Control": "no-store"
     });
     responseHeaders.append("Set-Cookie", clearState);
     responseHeaders.append("Set-Cookie", sessionCookie(session));
     return new Response(null, { status: 302, headers: responseHeaders });
-  } catch {
+  } catch (error) {
+    console.error("[auth/github/callback] failed", {
+      name: String(error?.name || "Error").slice(0, 80),
+      message: String(error?.message || "unknown").slice(0, 180)
+    });
     return new Response("GitHub 登录失败，请稍后重试。", {
       status: 502,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Set-Cookie": clearState }

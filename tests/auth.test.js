@@ -249,9 +249,10 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
 });
 
 
-test("GitHub OAuth initiation uses the production callback and sets a short-lived state cookie", async () => {
+test("GitHub OAuth initiation uses the request origin for the callback URL", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
-  const response = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
+  const request = new Request("https://pay.lynli.me/api/auth/github");
+  const response = await onRequestGet({ request, env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
   assert.equal(location.origin, "https://github.com");
@@ -268,9 +269,65 @@ test("GitHub OAuth initiation uses the production callback and sets a short-live
 
 test("GitHub OAuth initiation fails closed when the client secret or database is missing", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
-  const missingSecret = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", AUTH_DB: {} } });
+  const req = new Request("https://pay.lynli.me/api/auth/github");
+  const missingSecret = await onRequestGet({ request: req, env: { GITHUB_CLIENT_ID: "public-client-id", AUTH_DB: {} } });
   assert.equal(missingSecret.status, 503);
   assert.match(await missingSecret.text(), /Client Secret/);
-  const missingDatabase = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret" } });
+  const missingDatabase = await onRequestGet({ request: req, env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret" } });
   assert.equal(missingDatabase.status, 503);
+});
+
+
+test("GitHub OAuth initiation uses the preview deployment origin as callback", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github.js");
+  const previewUrl = "https://abc123.qingtian-pay.pages.dev/api/auth/github";
+  const request = new Request(previewUrl);
+  const response = await onRequestGet({ request, env: { GITHUB_CLIENT_ID: "preview-client-id", GITHUB_CLIENT_SECRET: "preview-secret", AUTH_DB: {} } });
+  assert.equal(response.status, 302);
+  const location = new URL(response.headers.get("Location"));
+  assert.equal(location.searchParams.get("client_id"), "preview-client-id");
+  assert.equal(location.searchParams.get("redirect_uri"), "https://abc123.qingtian-pay.pages.dev/api/auth/github/callback");
+});
+
+
+test("GitHub OAuth callback uses the preview origin for redirect after session creation", async () => {
+  const { onRequestGet } = await import("../functions/api/auth/github/callback.js");
+  const originalFetch = globalThis.fetch;
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          return {
+            first: async () => null,
+            run: async () => ({ meta: { changes: 1 } })
+          };
+        }
+      };
+    }
+  };
+  try {
+    globalThis.fetch = async (url) => {
+      if (String(url).includes("/login/oauth/access_token")) {
+        return new Response(JSON.stringify({ access_token: "mock-access-token" }), { status: 200 });
+      }
+      if (String(url).endsWith("/user")) {
+        return new Response(JSON.stringify({ id: 67890, login: "preview-user", name: "Preview User" }), { status: 200 });
+      }
+      if (String(url).endsWith("/user/emails")) {
+        return new Response(JSON.stringify([{ email: "preview@example.com", primary: true, verified: true }]), { status: 200 });
+      }
+      throw new Error("unexpected GitHub API URL");
+    };
+    const request = new Request("https://abc123.qingtian-pay.pages.dev/api/auth/github/callback?code=mock-code&state=valid-state", {
+      headers: { Cookie: "__Host-qt_oauth_state=valid-state" }
+    });
+    const response = await onRequestGet({
+      request,
+      env: { GITHUB_CLIENT_ID: "preview-client-id", GITHUB_CLIENT_SECRET: "mock-secret", AUTH_DB: db }
+    });
+    assert.equal(response.status, 302);
+    assert.equal(response.headers.get("Location"), "https://abc123.qingtian-pay.pages.dev/dashboard");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 });
