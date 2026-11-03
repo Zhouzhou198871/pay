@@ -15,8 +15,9 @@ export async function onRequestPost({ request, env }) {
     }
     const now = Math.floor(Date.now() / 1000);
     await env.AUTH_DB.prepare("UPDATE users SET terms_accepted_at = ?, terms_version = ?, privacy_version = ? WHERE id = ?").bind(now, "2026-11-02", "2026-11-02", user.id).run();
-    const token = await createSession(env.AUTH_DB, user.id);
-    return json({ success: true }, 200, { "Set-Cookie": sessionCookie(token) });
+    const sessionTtl = body.rememberMe === true ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+    const token = await createSession(env.AUTH_DB, user.id, sessionTtl);
+    return json({ success: true }, 200, { "Set-Cookie": sessionCookie(token, sessionTtl) });
   } catch (error) {
     return json({ error: "登录暂时失败，请稍后重试。" }, 500);
   }
