@@ -44,6 +44,11 @@ function shell(content) {
     </dialog>`;
 }
 
+function rememberedEmail() {
+  try { return localStorage.getItem("qt_remembered_email") || ""; }
+  catch { return ""; }
+}
+
 function authMarkup() {
   const registering = mode === "register";
   return shell(`
@@ -58,7 +63,7 @@ function authMarkup() {
     </div>
     <form id="auth-form" novalidate>
       <label class="field-label" for="email">邮箱地址</label>
-      <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
+      <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" value="${registering ? "" : escapeHtml(rememberedEmail())}" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
       <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，包含字母和数字" : "请输入登录密码"}" minlength="8" maxlength="128" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>${registering ? '<p class="password-hint">密码需为 8–128 位，并同时包含字母和数字；建议加入符号提高强度。</p>' : ""}
       <label class="field-label" id="captcha-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div><p class="captcha-hint" id="captcha-hint" aria-live="polite">请先完成人机验证，再获取邮箱验证码。</p>
@@ -66,7 +71,7 @@ function authMarkup() {
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
         <label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label>
-      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><label class="remember-me"><input type="checkbox" id="remember-me" /><span>记住我（30天内免登录）</span></label><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
+      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><label class="remember-me"><input type="checkbox" id="remember-me" checked /><span>记住我（30天内免登录）</span></label><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
       <button class="primary-button" type="submit"><span>${registering ? "创建账户" : "登录账户"}</span><b>→</b></button>
     </form>
     <div class="separator"><span>或使用以下方式</span></div>
@@ -348,9 +353,9 @@ async function submitAuth(event) {
   payload.password = String(payload.password || "");
   payload.consent = document.querySelector("#consent")?.checked === true;
   payload.captchaToken = window.__qtCaptchaToken || "";
-  payload.rememberMe = mode === "login" && document.querySelector("#remember-me")?.checked === true;
+  payload.remember_me = mode === "login" && document.querySelector("#remember-me")?.checked === true;
 
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(payload.email)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email)) {
     showToast("请输入有效的邮箱地址", "error");
     document.querySelector("#email")?.focus();
     return;
@@ -364,7 +369,7 @@ async function submitAuth(event) {
     document.querySelector("#password")?.focus();
     return;
   }
-  if (mode === "login" && (!payload.password || payload.password.length > 128)) {
+  if (mode === "login" && (payload.password.length < 8 || payload.password.length > 128)) {
     showToast("请输入有效的登录密码", "error");
     document.querySelector("#password")?.focus();
     return;
@@ -381,7 +386,7 @@ async function submitAuth(event) {
 
   button.disabled = true;
   button.classList.add("is-loading");
-  button.querySelector("span").textContent = mode === "register" ? "正在创建…" : "正在登录…";
+  button.querySelector("span").textContent = mode === "register" ? "创建中..." : "登录中...";
   try {
     const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login";
     const response = await fetch(endpoint, {
@@ -391,6 +396,12 @@ async function submitAuth(event) {
     resetCaptcha();
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "操作失败，请稍后重试");
+    if (mode === "login") {
+      try {
+        if (payload.remember_me) localStorage.setItem("qt_remembered_email", payload.email);
+        else localStorage.removeItem("qt_remembered_email");
+      } catch { /* Storage may be disabled; authentication still proceeds. */ }
+    }
     location.href = "/dashboard";
   } catch (error) {
     resetCaptcha();
