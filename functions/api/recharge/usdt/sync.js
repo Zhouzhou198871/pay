@@ -1,6 +1,6 @@
 import { json } from "../../../_lib/auth.js";
 import { creditWallet } from "../../../_lib/wallet.js";
-import { findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../../../_lib/tron.js";
+import { DEFAULT_USDT_TRC20_CONTRACT, findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../../../_lib/tron.js";
 
 export async function onRequestPost({request,env}) {
   const supplied=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
@@ -8,7 +8,7 @@ export async function onRequestPost({request,env}) {
   if(!expected||supplied.length!==expected.length) return json({error:"无权访问。"},403);
   let diff=0; for(let i=0;i<supplied.length;i++) diff|=supplied.charCodeAt(i)^expected.charCodeAt(i);
   if(diff!==0) return json({error:"无权访问。"},403);
-  const address=String(env.USDT_TRC20_ADDRESS||""), contract=String(env.USDT_TRC20_CONTRACT||"");
+  const address=String(env.USDT_TRC20_ADDRESS||""), contract=String(env.USDT_TRC20_CONTRACT||DEFAULT_USDT_TRC20_CONTRACT);
   if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)||!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(contract)) return json({error:"USDT TRC20 收款配置无效。"},503);
   const db=env.AUTH_DB, now=Math.floor(Date.now()/1000);
   await db.prepare("UPDATE recharge_orders SET status='expired' WHERE channel='usdt_trc20' AND status='pending' AND expires_at IS NOT NULL AND expires_at<?").bind(now).run();
