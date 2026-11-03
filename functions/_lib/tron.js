@@ -15,3 +15,11 @@ export const findTransferEventIndex = (events,{contract,from,to,value,used=new S
 // Only auto-match a chain transfer when exactly one order fits its amount and block time.
 export const selectUniqueDepositCandidate = (orders) =>
   Array.isArray(orders) && orders.length === 1 ? orders[0] : null;
+
+/** A transfer is valid only when its confirmed block time falls inside the order's inclusive validity window. */
+export const isTransferWithinOrderWindow = (order, transferTimestamp) =>
+  Number.isSafeInteger(transferTimestamp) &&
+  Number.isSafeInteger(Number(order?.created_at)) &&
+  Number.isSafeInteger(Number(order?.expires_at)) &&
+  transferTimestamp >= Number(order.created_at) &&
+  transferTimestamp <= Number(order.expires_at);
