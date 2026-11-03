@@ -1,4 +1,4 @@
-import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, sha256, validEmail } from "../../_lib/auth.js";
+import { hashPassword, hmac, json, normalizeEmail, randomHex, safeEqual, sessionCookie, csrfCookie, sha256, validEmail } from "../../_lib/auth.js";
 
 export async function onRequestPost({ request, env }) {
   let stage = "configuration";
@@ -49,7 +49,9 @@ export async function onRequestPost({ request, env }) {
     ]);
     if (!results[0]?.meta?.changes) return json({ error: "验证码已失效，请重新获取。" }, 400);
     if (!results[1]?.meta?.changes || !results[2]?.meta?.changes) throw new Error("registration transaction invariant failed");
-    return json({ success: true }, 201, { "Set-Cookie": sessionCookie(token) });
+    const response = json({ success: true }, 201, { "Set-Cookie": sessionCookie(token) });
+    response.headers.append("Set-Cookie", csrfCookie(randomHex(32)));
+    return response;
   } catch (error) {
     if (stage === "commit-registration" && env.AUTH_DB) {
       try {
