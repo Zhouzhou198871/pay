@@ -1,4 +1,4 @@
-import { createSession, hashPassword, sessionCookie } from "../../../_lib/auth.js";
+import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
 
 const CALLBACK_PATH = "/api/auth/github/callback";
 const ALLOWED_CALLBACK_HOSTS = new Set([
@@ -6,6 +6,7 @@ const ALLOWED_CALLBACK_HOSTS = new Set([
   "feat-unified-usdt-recharge.qingtian-pay.pages.dev",
   "qingtian-pay.pages.dev"
 ]);
+
 async function verifySignedState(state, secret) {
   const [nonce, supplied] = String(state || "").split(".");
   if (!nonce || !supplied || !/^[a-f0-9]{48}$/.test(nonce) || !/^[a-f0-9]{64}$/.test(supplied)) return false;
@@ -39,7 +40,12 @@ function getCallbackUrl(env) {
   return callback;
 }
 
-function redirect(path, origin) {\n  return new Response(null, { status: 302, headers: { Location: new URL(path, origin).toString(), "Cache-Control": "no-store" } });\n}
+function redirect(path, origin) {
+  return new Response(null, {
+    status: 302,
+    headers: { Location: new URL(path, origin).toString(), "Cache-Control": "no-store" }
+  });
+}
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
@@ -54,17 +60,23 @@ export async function onRequestGet({ request, env }) {
   }
 
   const origin = callback.origin;
-  const cookies = request.headers.get("Cookie") || "";
-  const expectedState = cookies.match(/(?:^|;\s*)__Host-qt_oauth_state=([^;]+)/)?.[1] || "";
-  const state = url.searchParams.get("state") || "";
-  const code = url.searchParams.get("code") || "";
+  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);
 
-  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);\n\n  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
+  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
     return new Response("GitHub OAuth 尚未完成配置。", {
       status: 503,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
-  }\n\n  if (!code || !await verifySignedState(url.searchParams.get("state") || "", env.GITHUB_CLIENT_SECRET)) return redirect("/?oauth=failed", origin);\n\n  try {\n    const redirectUri = env.GITHUB_CALLBACK_URL.trim();
+  }
+
+  const code = url.searchParams.get("code") || "";
+  const state = url.searchParams.get("state") || "";
+  if (!code || !await verifySignedState(state, env.GITHUB_CLIENT_SECRET)) {
+    return redirect("/?oauth=failed", origin);
+  }
+
+  try {
+    const redirectUri = env.GITHUB_CALLBACK_URL.trim();
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -128,7 +140,10 @@ export async function onRequestGet({ request, env }) {
 
     if (user.status !== "active") return redirect("/?oauth=account-disabled", origin);
     const session = await createSession(env.AUTH_DB, user.id);
-    const responseHeaders = new Headers({ Location: new URL("/dashboard", origin).toString(), "Cache-Control": "no-store" });
+    const responseHeaders = new Headers({
+      Location: new URL("/dashboard", origin).toString(),
+      "Cache-Control": "no-store"
+    });
     responseHeaders.append("Set-Cookie", sessionCookie(session));
     return new Response(null, { status: 302, headers: responseHeaders });
   } catch {
