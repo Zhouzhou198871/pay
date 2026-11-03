@@ -1,6 +1,20 @@
 import { randomHex } from "../../_lib/auth.js";
 
 const CALLBACK_PATH = "/api/auth/github/callback";
+
+async function createSignedState(secret) {
+  const nonce = randomHex(24);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(nonce)));
+  const encoded = Array.from(signature, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${nonce}.${encoded}`;
+}
 const ALLOWED_CALLBACK_HOSTS = new Set([
   "pay.lynli.me",
   "feat-unified-usdt-recharge.qingtian-pay.pages.dev",
@@ -52,11 +66,11 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  const state = randomHex(24);
+  const state = await createSignedState(env.GITHUB_CLIENT_SECRET);
   const redirect = new URL("https://github.com/login/oauth/authorize");
 
   redirect.searchParams.set("client_id", env.GITHUB_CLIENT_ID);
-  redirect.searchParams.set("redirect_uri", `${callback.origin}${CALLBACK_PATH}`);
+  redirect.searchParams.set("redirect_uri", env.GITHUB_CALLBACK_URL.trim());
   redirect.searchParams.set("scope", "read:user user:email");
   redirect.searchParams.set("state", state);
 
@@ -64,8 +78,7 @@ export async function onRequestGet({ request, env }) {
     status: 302,
     headers: {
       Location: redirect.toString(),
-      "Cache-Control": "no-store",
-      "Set-Cookie": `__Host-qt_oauth_state=${state}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`
+      "Cache-Control": "no-store"
     }
   });
 }
