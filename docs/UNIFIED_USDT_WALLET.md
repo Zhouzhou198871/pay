@@ -31,7 +31,7 @@ Configure in the target environment (Preview first; Production only after explic
 | `ALIPAY_PRIVATE_KEY` | Secret | Provider RSA private key |
 | `ALIPAY_NOTIFY_URL` | Text | Callback URL; keep Production set to `https://pay.lynli.me/api/v1/pay/notify` |
 | `USDT_TRC20_ADDRESS` | Secret | Operator-controlled TRON receiving address |
-| `USDT_TRC20_CONTRACT` | Secret | Official USDT TRC20 contract address on TRON; verify before enabling deposits |
+| `USDT_TRC20_CONTRACT` | Text (optional override) | Defaults to the official contract already used by the legacy listener: `TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t` |
 | `TRONGRID_API_KEY` | Secret | TronGrid API key (recommended for reliable rate limits) |
 | `TRONGRID_API_URL` | Text | Optional; defaults to `https://api.trongrid.io` |
 | `USDT_SCAN_SECRET` | Secret | Long random bearer secret shared only by the Pages endpoint and scheduled scanner |
