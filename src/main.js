@@ -105,11 +105,14 @@ function openLegal(kind) {
 async function renderDashboard() {
   disposeCaptcha();
   app.innerHTML = `
-    <main class="merchant-app">
-      <header class="merchant-topbar">
-        <button class="merchant-menu-toggle" id="open-merchant-menu" aria-label="打开菜单">☰</button>
-        <a class="merchant-brand" href="/"><img src="${LOGO}" alt="晴天支付 Logo"><span>晴天支付</span></a>
-        <div class="merchant-top-actions"><span class="merchant-secure">安全连接</span><button class="merchant-avatar" id="open-profile" aria-label="个人资料">♙</button><button class="merchant-logout-icon" id="top-logout" aria-label="退出登录">⇥</button></div>
+    <main class="merchant-app qt-dashboard">
+      <header class="merchant-topbar qt-dashboard-topbar">
+        <button class="merchant-menu-toggle" id="open-merchant-menu" aria-label="打开菜单"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <h1 class="qt-topbar-title">用户中心</h1>
+        <div class="merchant-top-actions qt-top-actions">
+          <button class="merchant-avatar" id="open-profile" aria-label="个人资料"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.6-3.5 3.1-5.5 7-5.5s6.4 2 7 5.5"/></svg></button>
+          <button class="merchant-logout-icon" id="top-logout" aria-label="退出登录"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg></button>
+        </div>
       </header>
       <div class="merchant-backdrop" id="merchant-backdrop"></div>
       <aside class="merchant-drawer" id="merchant-drawer" aria-label="商户导航">
@@ -131,128 +134,16 @@ async function renderDashboard() {
           <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan">▤</span><span>开发文档</span></button>
           <button class="drawer-link" data-section="support"><span class="drawer-icon cyan">♧</span><span>联系客服</span></button>
         </nav>
-        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">晴天商户</b><small id="drawer-user-email">正在读取账户…</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
+        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">Hr Amelia</b><small id="drawer-user-email">商户账户</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
       </aside>
-      <section class="merchant-content">
-        <div class="merchant-welcome"><div><span class="merchant-eyebrow">MERCHANT WORKSPACE</span><h1 id="merchant-greeting">用户中心</h1><p>欢迎使用晴天支付商户服务平台</p></div><span class="merchant-status"><i></i> 账户已登录</span></div>
-        <div class="merchant-summary">
-          <article class="merchant-balance"><div class="summary-label">账户余额</div><div class="summary-value">— <small>USDT</small></div><p>资金数据将在账户服务接通后显示</p></article>
-          <article class="merchant-stat"><span>今日收款</span><b>—</b><small>等待交易数据接入</small></article>
-          <article class="merchant-stat"><span>累计订单</span><b>—</b><small>等待订单服务接入</small></article>
-        </div>
-        <section class="merchant-panel"><div class="panel-heading"><div><h2 id="merchant-panel-title">账户概览</h2><p id="merchant-panel-subtitle">账户基础信息与服务入口</p></div><span class="panel-mark">QT</span></div>
-          <div id="merchant-panel-content"><div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b id="merchant-account-email">正在读取账户信息…</b><small>晴天支付账户</small></div><button id="edit-profile">个人资料</button></div><div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div></div>
-        </section>
+      <section class="merchant-content qt-dashboard-content">
+        <div class="qt-dashboard-heading"><div><span class="merchant-eyebrow">MERCHANT CENTER</span><h2 id="merchant-greeting">用户中心</h2></div><span class="merchant-status"><i></i>账户正常</span></div>
+        <div class="qt-dashboard-panel-heading"><div><h2 id="merchant-panel-title">商户工作台</h2><p id="merchant-panel-subtitle">账户数据与收款通道概览</p></div></div>
+        <div id="merchant-panel-content" class="qt-dashboard-stack"></div>
       </section>
+      <footer class="qt-dashboard-footer">哪吒支付平台 <span>商户服务 · 便捷收款</span></footer>
     </main>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>`;
-  const res = await fetch("/api/auth/me");
-  if (!res.ok) { location.href = "/"; return; }
-  const data = await res.json();
-  const email = data.user?.email || "已登录商户";
-  const displayName = data.user?.display_name || email.split("@")[0] || "晴天商户";
-  document.querySelector("#drawer-user-name").textContent = displayName;
-  document.querySelector("#drawer-user-email").textContent = email;
-  document.querySelector("#merchant-account-email").textContent = email;
-  const drawer = document.querySelector("#merchant-drawer");
-  const backdrop = document.querySelector("#merchant-backdrop");
-  const setDrawer = (open) => {
-    drawer.classList.toggle("open", open);
-    backdrop.classList.toggle("visible", open);
-    document.body.classList.toggle("merchant-menu-open", open);
-  };
-  document.querySelector("#open-merchant-menu").addEventListener("click", () => setDrawer(true));
-  document.querySelector("#close-merchant-menu").addEventListener("click", () => setDrawer(false));
-  backdrop.addEventListener("click", () => setDrawer(false));
-  const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    location.href = "/";
-  };
-  document.querySelector("#drawer-logout").addEventListener("click", logout);
-  document.querySelector("#top-logout").addEventListener("click", logout);
-  const labels = {
-    overview: ["用户中心", "账户概览", "账户基础信息与服务入口"],
-    profile: ["个人资料", "个人资料", "当前登录账户信息"],
-    orders: ["订单记录", "订单记录", "交易订单服务尚未接入"],
-    withdrawals: ["提现记录", "提现记录", "提现服务尚未接入"],
-    ledger: ["资金明细", "资金明细", "资金账目服务尚未接入"],
-    payments: ["聚合收款", "聚合收款", "收款通道服务尚未接入"],
-    docs: ["开发文档", "开发文档", "平台接口与接入文档"],
-    support: ["联系客服", "联系客服", "客服渠道尚未配置"]
-  };
-  const panel = document.querySelector("#merchant-panel-content");
-  const renderSection = (key) => {
-    if (key === "overview") {
-      panel.innerHTML = `<div class="merchant-profile-row"><span class="profile-symbol">♙</span><div><b>${escapeHtml(displayName)}</b><small>${escapeHtml(email)}</small></div><button id="edit-profile">个人资料</button></div><div class="merchant-shortcuts"><button data-section="orders"><span>▤</span>订单记录</button><button data-section="withdrawals"><span>▱</span>提现记录</button><button data-section="docs"><span>▤</span>开发文档</button></div>`;
-      panel.querySelector("#edit-profile").addEventListener("click", () => selectSection("profile"));
-      panel.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
-      return;
-    }
-    if (key === "profile") {
-      panel.innerHTML = `<div class="account-detail-list"><div class="account-detail"><span>账户名称</span><b>${escapeHtml(displayName)}</b></div><div class="account-detail"><span>登录邮箱</span><b>${escapeHtml(email)}</b></div><div class="account-detail"><span>账户状态</span><b class="account-active">正常</b></div></div><p class="section-note">资料修改功能尚未开放。为保护账户安全，当前仅展示已验证的账户资料。</p>`;
-      return;
-    }
-    const messages = {
-      orders: ["订单记录暂不可用", "订单查询接口尚未建立，当前没有可展示的真实订单数据。"],
-      withdrawals: ["提现记录暂不可用", "提现申请与审核接口尚未建立。"],
-      ledger: ["资金明细暂不可用", "账户账本接口尚未建立，当前不会展示虚构的余额或流水。"],
-      payments: ["聚合收款暂未开通", "支付渠道、商户进件及回调处理尚未接入。"],
-      docs: ["开发文档正在整理", "接口规范和商户接入流程完成后会在此提供正式文档。"],
-      support: ["客服渠道尚未配置", "目前尚未配置可验证的官方客服入口，请勿向非官方账号提供账户信息。"]
-    };
-    const message = messages[key] || messages.orders;
-    panel.innerHTML = `<div class="section-empty"><span class="section-empty-icon">⌁</span><h3>${message[0]}</h3><p>${message[1]}</p><span class="section-empty-tag">功能准备中</span></div>`;
-  };
-  const selectSection = (key) => {
-    const item = labels[key] || labels.overview;
-    document.querySelector("#merchant-greeting").textContent = item[0];
-    document.querySelector("#merchant-panel-title").textContent = item[1];
-    document.querySelector("#merchant-panel-subtitle").textContent = item[2];
-    document.querySelectorAll(".drawer-link").forEach((button) => button.classList.toggle("active", button.dataset.section === key));
-    renderSection(key);
-    setDrawer(false);
-  };
-  document.querySelectorAll("[data-section]").forEach((button) => button.addEventListener("click", () => selectSection(button.dataset.section)));
-  document.querySelector("#open-profile").addEventListener("click", () => selectSection("profile"));
-  document.querySelector("#edit-profile").addEventListener("click", () => selectSection("profile"));
-  const merchantEndpoints = { orders: "/api/merchant/orders", withdrawals: "/api/merchant/withdrawals", ledger: "/api/merchant/ledger", payments: "/api/merchant/channels" };
-  document.querySelectorAll(".drawer-link").forEach((button) => button.addEventListener("click", async () => {
-    const endpoint = merchantEndpoints[button.dataset.section];
-    if (!endpoint) return;
-    const panel = document.querySelector("#merchant-panel-content");
-    panel.innerHTML = '<div class="section-loading">正在读取真实商户数据…</div>';
-    try {
-      const response = await fetch(endpoint);
-      if (!response.ok) throw new Error(response.status === 401 ? "登录状态已失效，请重新登录。" : "数据读取失败，请稍后重试。");
-      const payload = await response.json();
-      const items = payload.items || [];
-      if (!items.length) { panel.innerHTML = '<div class="section-empty"><h3>暂无记录</h3><p>当前账户没有此类业务记录。</p></div>'; return; }
-      const list = document.createElement("div"); list.className = "merchant-record-list";
-      items.forEach((item) => {
-        const row = document.createElement("article"); row.className = "merchant-record";
-        const left = document.createElement("div"); const right = document.createElement("div"); right.className = "record-meta";
-        const title = document.createElement("b"); title.textContent = item.merchant_order_no || item.request_no || item.entry_no || item.channel_code || "记录";
-        const detail = document.createElement("small"); detail.textContent = item.subject || item.destination_masked || item.description || item.display_name || "—";
-        const value = document.createElement("b"); value.textContent = item.amount_micro === undefined ? (item.status || "—") : (Number(item.amount_micro) / 1000000).toFixed(6).replace(/0+$/, "").replace(/\\.$/, "") + " " + (item.currency || "USDT");
-        const meta = document.createElement("small"); meta.textContent = (item.status || item.direction || "—") + " · " + new Date(Number(item.created_at || item.requested_at || 0) * 1000).toLocaleString();
-        left.append(title, detail); right.append(value, meta); row.append(left, right); list.append(row);
-      });
-      panel.replaceChildren(list);
-      const note = document.createElement("p"); note.className = "section-note"; note.textContent = "共 " + Number(payload.pagination?.total || items.length) + " 条记录"; panel.append(note);
-    } catch (error) { panel.textContent = error.message || "数据读取失败"; }
-  }));
-  try {
-    const response = await fetch("/api/merchant/summary");
-    if (response.ok) {
-      const summary = await response.json();
-      const balance = document.querySelector(".summary-value");
-      if (balance) balance.textContent = summary.balance_micro === null ? "暂无账本余额" : (Number(summary.balance_micro) / 1000000).toFixed(6).replace(/0+$/, "") + " " + (summary.currency || "USDT");
-      const stats = document.querySelectorAll(".merchant-stat");
-      if (stats[0]) stats[0].querySelector("b").textContent = (Number(summary.today_paid_amount_micro || 0) / 1000000).toFixed(2) + " " + (summary.currency || "USDT");
-      if (stats[0]) stats[0].querySelector("small").textContent = Number(summary.today_paid_orders || 0) + " 笔已支付订单";
-      if (stats[1]) stats[1].querySelector("b").textContent = String(summary.total_orders || 0);
-    }
-  } catch (error) { console.warn("[merchant/summary]", error); }
 }
 function switchAuthMode(nextMode) {
   if (nextMode !== "login" && nextMode !== "register") return;
