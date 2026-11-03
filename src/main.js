@@ -1,4 +1,5 @@
 import "./style.css";
+import "./merchant-workspace.js";
 const app = document.querySelector("#app");
 const LOGO = "https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png";
 let mode = "login";
@@ -134,14 +135,14 @@ async function renderDashboard() {
           <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan">▤</span><span>开发文档</span></button>
           <button class="drawer-link" data-section="support"><span class="drawer-icon cyan">♧</span><span>联系客服</span></button>
         </nav>
-        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">Hr Amelia</b><small id="drawer-user-email">商户账户</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
+        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">当前商户</b><small id="drawer-user-email">商户账户</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
       </aside>
       <section class="merchant-content qt-dashboard-content">
         <div class="qt-dashboard-heading"><div><span class="merchant-eyebrow">MERCHANT CENTER</span><h2 id="merchant-greeting">用户中心</h2></div><span class="merchant-status"><i></i>账户正常</span></div>
         <div class="qt-dashboard-panel-heading"><div><h2 id="merchant-panel-title">商户工作台</h2><p id="merchant-panel-subtitle">账户数据与收款通道概览</p></div></div>
         <div id="merchant-panel-content" class="qt-dashboard-stack"></div>
       </section>
-      <footer class="qt-dashboard-footer">哪吒支付平台 <span>商户服务 · 便捷收款</span></footer>
+      <footer class="qt-dashboard-footer">晴天支付平台 <span>商户服务 · 便捷收款</span></footer>
     </main>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>`;
 }
