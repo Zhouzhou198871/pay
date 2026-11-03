@@ -53,25 +53,25 @@ function authMarkup() {
       <p>${registering ? "注册晴天支付，开启简单安心的收款体验。" : "登录晴天支付，继续管理您的业务。"}</p>
     </div>
     <div class="mode-switch" role="tablist" aria-label="登录或注册">
-      <button class="${!registering ? "active" : ""}" data-mode="login" role="tab" aria-selected="${!registering}">登录</button>
-      <button class="${registering ? "active" : ""}" data-mode="register" role="tab" aria-selected="${registering}">注册</button>
+      <button class="${!registering ? "active" : ""}" data-auth-mode="login" role="tab" aria-selected="${!registering}">登录</button>
+      <button class="${registering ? "active" : ""}" data-auth-mode="register" role="tab" aria-selected="${registering}">注册</button>
     </div>
     <form id="auth-form" novalidate>
       <label class="field-label" for="email">邮箱地址</label>
       <div class="input-wrap"><span class="input-icon">✉</span><input id="email" name="email" type="email" autocomplete="email" placeholder="请输入常用邮箱" required /></div>
       <label class="field-label" for="password">登录密码</label>
-      <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，建议包含字母和数字" : "请输入登录密码"}" minlength="8" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>
+      <div class="input-wrap"><span class="input-icon">⌑</span><input id="password" name="password" type="password" autocomplete="${registering ? "new-password" : "current-password"}" placeholder="${registering ? "至少 8 位，包含字母和数字" : "请输入登录密码"}" minlength="8" maxlength="128" required /><button class="password-toggle" type="button" id="toggle-password">显示</button></div>${registering ? '<p class="password-hint">密码需为 8–128 位，并同时包含字母和数字；建议加入符号提高强度。</p>' : ""}
       <label class="field-label" id="captcha-label">人机验证</label><div class="captcha-slot" id="captcha-slot" aria-live="polite"></div><p class="captcha-hint" id="captcha-hint" aria-live="polite">请先完成人机验证，再获取邮箱验证码。</p>
       ${registering ? `
         <label class="field-label" for="code">邮箱验证码</label>
         <div class="input-wrap code-wrap"><span class="input-icon">#</span><input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="输入 6 位验证码" required /><button class="send-code" type="button" id="send-code">获取验证码</button></div>
         <label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label>
-      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><span>使用邮箱与密码安全登录</span><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
+      ` : `<label class="consent"><input type="checkbox" id="consent" required /><span>我已阅读并同意 <button type="button" class="text-link" data-legal="terms">《用户协议》</button> 和 <button type="button" class="text-link" data-legal="privacy">《隐私政策》</button></span></label><div class="login-meta"><label class="remember-me"><input type="checkbox" id="remember-me" /><span>记住我（30天内免登录）</span></label><button type="button" class="text-link" id="forgot-password">忘记密码？</button></div>`}
       <button class="primary-button" type="submit"><span>${registering ? "创建账户" : "登录账户"}</span><b>→</b></button>
     </form>
     <div class="separator"><span>或使用以下方式</span></div>
     <a class="github-button" href="/api/auth/github"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.53v-2.06c-3.1.67-3.76-1.32-3.76-1.32-.5-1.28-1.24-1.62-1.24-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.7 2.62 1.21 3.26.93.1-.72.39-1.21.71-1.49-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.96 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.54.23 2.68.11 2.96.72.78 1.15 1.77 1.15 2.99 0 4.29-2.61 5.24-5.1 5.51.4.35.76 1.02.76 2.06V22c0 .29.2.63.77.52A11.1 11.1 0 0 0 12 .9Z"/></svg>使用 GitHub 继续</a>
-    <p class="form-foot">${registering ? "已经拥有账户？" : "还没有晴天支付账户？"} <button class="text-link" data-mode="${registering ? "login" : "register"}">${registering ? "立即登录" : "创建账户"}</button></p>
+    <p class="form-foot">${registering ? "已经拥有账户？" : "还没有晴天支付账户？"} <button class="text-link" data-auth-mode="${registering ? "login" : "register"}">${registering ? "立即登录" : "创建账户"}</button></p>
     <div class="privacy-note"><span>♢</span> 您的信息受到加密保护，我们不会出售您的个人数据。</div>
   `);
 }
@@ -249,14 +249,19 @@ async function renderDashboard() {
     }
   } catch (error) { console.warn("[merchant/summary]", error); }
 }
+function switchAuthMode(nextMode) {
+  if (nextMode !== "login" && nextMode !== "register") return;
+  disposeCaptcha();
+  clearInterval(timer);
+  countdown = 0;
+  mode = nextMode;
+  app.innerHTML = authMarkup();
+  bindAuthEvents();
+}
+
 function bindAuthEvents() {
-  document.querySelectorAll("[data-mode]").forEach((button) => button.addEventListener("click", () => {
-    disposeCaptcha();
-    mode = button.dataset.mode;
-    clearInterval(timer);
-    countdown = 0;
-    app.innerHTML = authMarkup();
-    bindAuthEvents();
+  document.querySelectorAll("[data-auth-mode]").forEach((button) => button.addEventListener("click", () => {
+    switchAuthMode(button.dataset.authMode);
   }));
   document.querySelectorAll("[data-legal]").forEach((button) => button.addEventListener("click", () => openLegal(button.dataset.legal)));
   document.querySelector("#close-legal")?.addEventListener("click", () => document.querySelector("#legal-dialog").close());
@@ -335,25 +340,47 @@ async function sendCode() {
 
 async function submitAuth(event) {
   event.preventDefault();
-  const form = new FormData(event.currentTarget);
-  const payload = Object.fromEntries(form.entries());
+  const button = event.currentTarget.querySelector(".primary-button");
+  if (!button || button.disabled) return;
+
+  const payload = Object.fromEntries(new FormData(event.currentTarget).entries());
+  payload.email = String(payload.email || "").trim();
+  payload.password = String(payload.password || "");
   payload.consent = document.querySelector("#consent")?.checked === true;
   payload.captchaToken = window.__qtCaptchaToken || "";
-  const button = event.currentTarget.querySelector(".primary-button");
+  payload.rememberMe = mode === "login" && document.querySelector("#remember-me")?.checked === true;
+
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(payload.email)) {
+    showToast("请输入有效的邮箱地址", "error");
+    document.querySelector("#email")?.focus();
+    return;
+  }
   if (!payload.consent) {
     showToast("请先阅读并同意用户协议与隐私政策", "error");
     return;
   }
-  if (mode === "register" && !/^\d{6}$/.test(payload.code || "")) {
+  if (mode === "register" && (payload.password.length < 8 || payload.password.length > 128 || !/[A-Za-z]/.test(payload.password) || !/\\d/.test(payload.password))) {
+    showToast("注册密码需为 8–128 位，并同时包含字母和数字", "error");
+    document.querySelector("#password")?.focus();
+    return;
+  }
+  if (mode === "login" && (!payload.password || payload.password.length > 128)) {
+    showToast("请输入有效的登录密码", "error");
+    document.querySelector("#password")?.focus();
+    return;
+  }
+  if (mode === "register" && !/^\\d{6}$/.test(payload.code || "")) {
     showToast("请输入 6 位邮箱验证码", "error");
+    document.querySelector("#code")?.focus();
     return;
   }
-  if (mode !== "register" && !payload.captchaToken) { showToast("请先完成人机验证", "error"); return; }
-  if ((payload.password || "").length < 8) {
-    showToast("密码至少需要 8 位", "error");
+  if (!payload.captchaToken) {
+    showToast("请先完成人机验证", "error");
     return;
   }
+
   button.disabled = true;
+  button.classList.add("is-loading");
   button.querySelector("span").textContent = mode === "register" ? "正在创建…" : "正在登录…";
   try {
     const endpoint = mode === "register" ? "/api/auth/register" : "/api/auth/login";
@@ -367,8 +394,9 @@ async function submitAuth(event) {
     location.href = "/dashboard";
   } catch (error) {
     resetCaptcha();
-    showToast(error.message, "error");
+    showToast(error.message || "操作失败，请稍后重试", "error");
     button.disabled = false;
+    button.classList.remove("is-loading");
     button.querySelector("span").textContent = mode === "register" ? "创建账户" : "登录账户";
   }
 }
