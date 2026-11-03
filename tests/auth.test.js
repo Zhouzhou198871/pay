@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  createSession,
   expiredSessionCookie,
   hashPassword,
   hmac,
@@ -40,12 +41,29 @@ test("password hashes verify only the original password", async () => {
   assert.equal(await verifyPassword("wrong-password", stored), false);
 });
 
-test("session cookies are HttpOnly, Secure and SameSite=Lax", () => {
+test("session cookies are HttpOnly, Secure and use the requested Max-Age", () => {
   const cookie = sessionCookie("test-token");
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /Secure/);
   assert.match(cookie, /SameSite=Lax/);
+  assert.match(cookie, /Max-Age=2592000/);
+  assert.match(sessionCookie("short-token", 86400), /Max-Age=86400/);
   assert.match(expiredSessionCookie(), /Max-Age=0/);
+});
+
+test("session database expiry follows the requested lifetime", async () => {
+  let values;
+  const db = {
+    prepare(sql) {
+      assert.match(sql, /INSERT INTO sessions/);
+      return { bind(...args) { values = args; return { run: async () => ({ meta: { changes: 1 } }) }; } };
+    }
+  };
+  const before = Math.floor(Date.now() / 1000);
+  const token = await createSession(db, "user-123", 86400);
+  const after = Math.floor(Date.now() / 1000);
+  assert.match(token, /^[a-f0-9]{64}$/);
+  assert.ok(values[2] >= before + 86400 && values[2] <= after + 86400);
 });
 
 test("Turnstile requires success, expected action, and exact hostname", async () => {
@@ -327,6 +345,58 @@ test("GitHub OAuth callback uses the preview origin for redirect after session c
     });
     assert.equal(response.status, 302);
     assert.equal(response.headers.get("Location"), "https://abc123.qingtian-pay.pages.dev/dashboard");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+
+
+test("login rememberMe controls both database session expiry and cookie lifetime", async () => {
+  const { onRequestPost } = await import("../functions/api/auth/login.js");
+  const originalFetch = globalThis.fetch;
+  const passwordHash = await hashPassword("Correct-Horse-42");
+  const issued = [];
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          return {
+            first: async () => sql.includes("SELECT id, password_hash")
+              ? { id: "user-123", password_hash: passwordHash, status: "active" }
+              : null,
+            run: async () => {
+              if (sql.includes("INSERT INTO sessions")) issued.push(values);
+              return { meta: { changes: 1 } };
+            }
+          };
+        }
+      };
+    }
+  };
+  try {
+    globalThis.fetch = async () => new Response(JSON.stringify({
+      success: true, action: "login", hostname: "pay.lynli.me"
+    }), { status: 200, headers: { "Content-Type": "application/json" } });
+    for (const rememberMe of [true, false]) {
+      const request = new Request("https://pay.lynli.me/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "user@example.com", password: "Correct-Horse-42",
+          consent: true, captchaToken: "valid-token", rememberMe
+        })
+      });
+      const before = Math.floor(Date.now() / 1000);
+      const response = await onRequestPost({ request, env: { AUTH_DB: db, TURNSTILE_SECRET_KEY: "turnstile-secret" } });
+      const after = Math.floor(Date.now() / 1000);
+      const ttl = rememberMe ? 30 * 86400 : 86400;
+      assert.equal(response.status, 200);
+      assert.match(response.headers.get("Set-Cookie"), new RegExp(`Max-Age=${ttl}`));
+      const session = issued.at(-1);
+      assert.ok(session[2] >= before + ttl && session[2] <= after + ttl);
+    }
+    assert.equal(issued.length, 2);
   } finally {
     globalThis.fetch = originalFetch;
   }
