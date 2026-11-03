@@ -1,10 +1,11 @@
 import { json, randomHex } from "../../../_lib/auth.js";
 import { userContext, parseUsdtMicro, formatUsdt } from "../../../_lib/wallet.js";
+import { DEFAULT_USDT_TRC20_CONTRACT } from "../../../_lib/tron.js";
 export async function onRequestPost({request,env}) {
   const ctx=await userContext(request,env); if(ctx.response) return ctx.response;
   const body=await request.json().catch(()=>({}));
   const requested=parseUsdtMicro(body.amount_usdt);
-  const address=String(env.USDT_TRC20_ADDRESS||""), contract=String(env.USDT_TRC20_CONTRACT||"");
+  const address=String(env.USDT_TRC20_ADDRESS||""), contract=String(env.USDT_TRC20_CONTRACT||DEFAULT_USDT_TRC20_CONTRACT);
   if(!requested) return json({error:"请输入有效的 USDT 金额（最多 6 位小数）。"},400);
   if(!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address)||!/^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(contract)) return json({error:"USDT TRC20 收款通道尚未配置。"},503);
   for(let attempt=0;attempt<60;attempt++) {
