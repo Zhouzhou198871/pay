@@ -300,7 +300,7 @@ test("GitHub OAuth initiation uses the request origin for the callback URL", asy
   assert.equal(location.searchParams.get("redirect_uri"), "https://pay.lynli.me/api/auth/github/callback");
   assert.equal(location.searchParams.get("scope"), "read:user user:email");
   const state = location.searchParams.get("state");
-  assert.match(state, /^[a-f0-9]{48}\\.[a-f0-9]{64}$/);
+  assert.match(state, /^[a-f0-9]{48}\.[a-f0-9]{64}$/);
   assert.equal(response.headers.get("Set-Cookie"), null);
 });
 
