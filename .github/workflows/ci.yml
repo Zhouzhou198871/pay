@@ -2,7 +2,7 @@ name: Build and auth checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/unified-usdt-recharge]
   pull_request:
 
 permissions:
