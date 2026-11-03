@@ -32,9 +32,9 @@ export const safeEqual = (a = "", b = "") => {
 export const hashPassword = async (password) => {
   const salt = randomHex(16);
   const key = await crypto.subtle.importKey("raw", encoder.encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: encoder.encode(salt), iterations: 150000, hash: "SHA-256" }, key, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt: encoder.encode(salt), iterations: 100000, hash: "SHA-256" }, key, 256);
   const digest = [...new Uint8Array(bits)].map((part) => part.toString(16).padStart(2, "0")).join("");
-  return `pbkdf2$150000$${salt}$${digest}`;
+  return `pbkdf2$100000$${salt}$${digest}`;
 };
 
 export const verifyPassword = async (password, stored) => {
