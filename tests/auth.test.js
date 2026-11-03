@@ -251,7 +251,8 @@ test("GitHub OAuth callback creates a session for a verified GitHub email", asyn
 
 test("GitHub OAuth initiation uses the production callback and sets a short-lived state cookie", async () => {
   const { onRequestGet } = await import("../functions/api/auth/github.js");
-  const response = await onRequestGet({ env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
+  const request = new Request("https://pay.lynli.me/api/auth/github");
+  const response = await onRequestGet({ request, env: { GITHUB_CLIENT_ID: "public-client-id", GITHUB_CLIENT_SECRET: "test-secret", AUTH_DB: {} } });
   assert.equal(response.status, 302);
   const location = new URL(response.headers.get("Location"));
   assert.equal(location.origin, "https://github.com");
