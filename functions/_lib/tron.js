@@ -11,3 +11,7 @@ export const findTransferEventIndex = (events,{contract,from,to,value,used=new S
   }
   return null;
 };
+
+// Only auto-match a chain transfer when exactly one order fits its amount and block time.
+export const selectUniqueDepositCandidate = (orders) =>
+  Array.isArray(orders) && orders.length === 1 ? orders[0] : null;
