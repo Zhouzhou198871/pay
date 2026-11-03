@@ -75,16 +75,24 @@ export async function onRequestPost({request,env}) {
         .bind(txHash,amountMicro).first();
       let eventIndex=deposit?Number(deposit.tx_event_index):null;
       if(!deposit) {
-        deposit=await db.prepare("SELECT * FROM recharge_orders WHERE channel='usdt_trc20' AND status='pending' AND expected_micro=? AND created_at<=? AND (expires_at IS NULL OR expires_at>=?) ORDER BY created_at LIMIT 1")
-          .bind(amountMicro,txTime,txTime).first();
-        if(!deposit){ignored++;continue;}
+        // Orders may already be marked expired by this scan (or by an earlier
+        // invocation). A transfer made inside the quoted window must still be
+        // credited when the scanner catches up later. Match by the on-chain
+        // block time, not the wall-clock time at which the scanner happens to run.
+        const matching=await db.prepare("SELECT * FROM recharge_orders WHERE channel='usdt_trc20' AND status IN ('pending','expired') AND expected_micro=? AND created_at<=? AND (expires_at IS NULL OR expires_at>=?) ORDER BY created_at LIMIT 2")
+          .bind(amountMicro,txTime,txTime).all();
+        const candidates=Array.isArray(matching?.results)?matching.results:[];
+        // Expired orders can reuse a quote amount. Never guess which user owns
+        // a transfer if more than one order fits the transfer timestamp.
+        if(candidates.length!==1){ignored++;continue;}
+        deposit=candidates[0];
         try { eventIndex=await resolveEventIndex(tx); }
         catch(error) {
           console.error("[usdt/sync] event index lookup failed",String(error?.message||error).slice(0,120));
           return json({error:"无法确认链上 Transfer 事件序号，扫描游标已保留。"},503);
         }
-        await db.prepare("UPDATE recharge_orders SET status='paid',tx_hash=?,tx_event_index=?,paid_at=? WHERE id=? AND status='pending' AND expected_micro=?")
-          .bind(txHash,eventIndex,txTime,deposit.id,amountMicro).run();
+        await db.prepare("UPDATE recharge_orders SET status='paid',tx_hash=?,tx_event_index=?,paid_at=? WHERE id=? AND status IN ('pending','expired') AND expected_micro=? AND created_at<=? AND (expires_at IS NULL OR expires_at>=?)")
+          .bind(txHash,eventIndex,txTime,deposit.id,amountMicro,txTime,txTime).run();
         deposit=await db.prepare("SELECT * FROM recharge_orders WHERE id=?").bind(deposit.id).first();
       }
       if(deposit?.status!=="paid"||deposit.tx_hash!==txHash||
