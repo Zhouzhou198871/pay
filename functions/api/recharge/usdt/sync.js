@@ -1,6 +1,6 @@
 import { json } from "../../../_lib/auth.js";
 import { creditWallet } from "../../../_lib/wallet.js";
-import { findTransferEventIndex, selectUniqueDepositCandidate } from "../../../_lib/tron.js";
+import { findTransferEventIndex, selectUniqueDepositCandidate, isTransferWithinOrderWindow } from "../../../_lib/tron.js";
 
 export async function onRequestPost({request,env}) {
   const supplied=(request.headers.get("Authorization")||"").replace(/^Bearer\s+/i,"");
@@ -75,15 +75,13 @@ export async function onRequestPost({request,env}) {
         .bind(txHash,amountMicro).first();
       let eventIndex=deposit?Number(deposit.tx_event_index):null;
       if(!deposit) {
-        // Orders may already be marked expired by this scan (or by an earlier
-        // invocation). A transfer made inside the quoted window must still be
-        // credited when the scanner catches up later. Match by the on-chain
-        // block time, not the wall-clock time at which the scanner happens to run.
+        // An order may be marked expired when the scanner catches up, but it is
+        // creditable only if the confirmed on-chain block timestamp is within
+        // its exact 600-second quote window. Transfers after expires_at are void.
         const matching=await db.prepare("SELECT * FROM recharge_orders WHERE channel='usdt_trc20' AND status IN ('pending','expired') AND expected_micro=? AND created_at<=? AND (expires_at IS NULL OR expires_at>=?) ORDER BY created_at LIMIT 2")
           .bind(amountMicro,txTime,txTime).all();
-        const candidates=Array.isArray(matching?.results)?matching.results:[];
-        // Expired orders can reuse a quote amount. Never guess which user owns
-        // a transfer if more than one order fits the transfer timestamp.
+        const candidates=(Array.isArray(matching?.results)?matching.results:[]).filter(order=>isTransferWithinOrderWindow(order,txTime));
+        // Never guess which user owns a transfer if a quote amount was reused.
         deposit=selectUniqueDepositCandidate(candidates);
         if(!deposit){ignored++;continue;}
         try { eventIndex=await resolveEventIndex(tx); }
