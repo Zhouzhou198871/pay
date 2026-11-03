@@ -68,8 +68,9 @@ export async function onRequestPost({request,env}) {
       try { raw=BigInt(String(tx.value||"0")); } catch { ignored++;continue; }
       if(raw<=0n||raw>9000000000000000n) {ignored++;continue;}
       const amountMicro=Number(raw), txHash=String(tx.transaction_id);
-      const txTime=Math.floor(Number(tx.block_timestamp)/1000);
-      if(!Number.isSafeInteger(txTime)||txTime<=0){ignored++;continue;}
+      const blockTimestampMs=Number(tx.block_timestamp);
+      if(!Number.isSafeInteger(blockTimestampMs)||blockTimestampMs<=0){ignored++;continue;}
+      const txTime=Math.floor(blockTimestampMs/1000);
 
       let deposit=await db.prepare("SELECT * FROM recharge_orders WHERE channel='usdt_trc20' AND tx_hash=? AND expected_micro=? LIMIT 1")
         .bind(txHash,amountMicro).first();
@@ -80,7 +81,7 @@ export async function onRequestPost({request,env}) {
         // its exact 600-second quote window. Transfers after expires_at are void.
         const matching=await db.prepare("SELECT * FROM recharge_orders WHERE channel='usdt_trc20' AND status IN ('pending','expired') AND expected_micro=? AND created_at<=? AND (expires_at IS NULL OR expires_at>=?) ORDER BY created_at LIMIT 2")
           .bind(amountMicro,txTime,txTime).all();
-        const candidates=(Array.isArray(matching?.results)?matching.results:[]).filter(order=>isTransferWithinOrderWindow(order,txTime));
+        const candidates=(Array.isArray(matching?.results)?matching.results:[]).filter(order=>isTransferWithinOrderWindow(order,blockTimestampMs));
         // Never guess which user owns a transfer if a quote amount was reused.
         deposit=selectUniqueDepositCandidate(candidates);
         if(!deposit){ignored++;continue;}
