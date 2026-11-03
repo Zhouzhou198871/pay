@@ -1,4 +1,4 @@
-import { createSession, hashPassword, randomHex, sessionCookie } from "../../../_lib/auth.js";
+import { createSession, hashPassword, sessionCookie } from "../../../_lib/auth.js";
 
 const CALLBACK_PATH = "/api/auth/github/callback";
 const ALLOWED_CALLBACK_HOSTS = new Set([
@@ -39,11 +39,7 @@ function getCallbackUrl(env) {
   return callback;
 }
 
-function redirect(path, origin, cookie = clearState) {
-  const headers = new Headers({ Location: new URL(path, origin).toString(), "Cache-Control": "no-store" });
-  if (cookie) headers.append("Set-Cookie", cookie);
-  return new Response(null, { status: 302, headers });
-}
+function redirect(path, origin) {\n  return new Response(null, { status: 302, headers: { Location: new URL(path, origin).toString(), "Cache-Control": "no-store" } });\n}
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
@@ -63,18 +59,12 @@ export async function onRequestGet({ request, env }) {
   const state = url.searchParams.get("state") || "";
   const code = url.searchParams.get("code") || "";
 
-  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);
-  if (!code || !await verifySignedState(state, env.GITHUB_CLIENT_SECRET || "")) return redirect("/?oauth=failed", origin);
-
-  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
+  if (url.searchParams.has("error")) return redirect("/?oauth=cancelled", origin);\n\n  if (!env.GITHUB_CLIENT_ID || !env.GITHUB_CLIENT_SECRET || !env.AUTH_DB) {
     return new Response("GitHub OAuth 尚未完成配置。", {
       status: 503,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Set-Cookie": clearState }
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
-  }
-
-  try {
-    const redirectUri = env.GITHUB_CALLBACK_URL.trim();
+  }\n\n  if (!code || !await verifySignedState(url.searchParams.get("state") || "", env.GITHUB_CLIENT_SECRET)) return redirect("/?oauth=failed", origin);\n\n  try {\n    const redirectUri = env.GITHUB_CALLBACK_URL.trim();
     const tokenResponse = await fetch("https://github.com/login/oauth/access_token", {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -144,7 +134,7 @@ export async function onRequestGet({ request, env }) {
   } catch {
     return new Response("GitHub 登录失败，请稍后重试。", {
       status: 502,
-      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Set-Cookie": clearState }
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" }
     });
   }
 }
