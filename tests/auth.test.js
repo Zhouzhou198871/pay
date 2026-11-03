@@ -62,6 +62,7 @@ test("session cookies are HttpOnly, Secure and use the requested Max-Age", () =>
   assert.match(sessionCookie("short-token", 86400), /Max-Age=86400/);
   assert.doesNotMatch(sessionCookie("session-token", null), /Max-Age=/);
   assert.match(csrfCookie("csrf-token", 2592000), /Max-Age=2592000/);
+  assert.match(csrfCookie("csrf-token", 2592000), /HttpOnly/);
   assert.doesNotMatch(csrfCookie("csrf-token", null), /Max-Age=/);
   assert.match(expiredSessionCookie(), /Max-Age=0/);
   assert.match(expiredCsrfCookie(), /Max-Age=0/);
