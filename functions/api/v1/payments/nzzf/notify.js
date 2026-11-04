@@ -106,9 +106,9 @@ async function processNotification({ request, env }) {
         "AND NOT EXISTS (SELECT 1 FROM merchant_ledger WHERE entry_no = ?)"
       ).bind(ledgerId, order.user_id, entryNo, creditMicro, order.user_id, creditMicro, description, order.id, now, order.id, order.id, entryNo),
       env.AUTH_DB.prepare(
-        "UPDATE payment_orders SET status = 'paid', provider_trade_no = ?, paid_at = ?, fee_cents = ?, credit_cents = ? " +
+        "UPDATE payment_orders SET status = 'paid', provider_trade_no = ?, paid_at = ?, fee_cents = ?, credit_cents = ?, actual_paid_cents = ? " +
         "WHERE id = ? AND status = 'pending' AND EXISTS (SELECT 1 FROM merchant_ledger WHERE user_id = ? AND related_type = 'payment_order' AND related_id = ?)"
-      ).bind(providerTradeNo, now, Math.round(feeMicro / 10000), Math.round(creditMicro / 10000), order.id, order.user_id, order.id)
+      ).bind(providerTradeNo, now, Math.round(feeMicro / 10000), Math.round(creditMicro / 10000), receivedCents, order.id, order.user_id, order.id)
     ]);
 
     const credited = Number(results?.[0]?.meta?.changes || 0);
