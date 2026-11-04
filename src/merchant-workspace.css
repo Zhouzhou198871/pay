@@ -493,3 +493,22 @@
 #qt-admin-ticket-feedback{color:#5c7185;font-size:11px}
 
 .qt-fiat-risk-note{margin:0;padding:11px 12px;border:1px solid #f0dfc4;border-radius:10px;background:#fff9ef;color:#8b6530;font-size:11px;line-height:1.7}
+
+
+/* Support compliance and private attachment presentation */
+.qt-developer-pledge{padding:12px;border:1px solid #e5d9bd;border-radius:11px;background:#fffaf0}
+.qt-developer-pledge>b{display:block;color:#73562c;font-size:12px}
+.qt-developer-pledge p{margin:7px 0;color:#786b56;font-size:10px;line-height:1.75}
+.qt-developer-pledge label{display:flex!important;align-items:center;gap:7px;color:#5e6f80!important;font-size:11px!important}
+.qt-developer-pledge input[type=checkbox]{width:16px!important;height:16px!important;flex:none}
+.qt-chat-permission input[type=file]{height:auto;padding:8px}
+.qt-chat-file-button{width:38px;height:42px;display:grid;place-items:center;flex:none;border:1px solid #dce6ef;border-radius:10px;background:#f5f9fc;color:#347bb6;font-size:20px;cursor:pointer}
+.qt-chat-file-button input{display:none}
+.qt-chat-compose{align-items:center}
+.qt-chat-compose input#qt-chat-input{min-width:0}
+.qt-chat-sender{display:block;margin-bottom:5px;color:#66839d;font-size:9px;font-weight:800}
+.qt-chat-message.is-ai{align-self:flex-start;border:1px solid #d8e9f7;border-top-left-radius:5px;background:#f0f8ff;color:#355d7c}
+.qt-chat-attachment{display:flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin-top:8px;padding:6px 8px;border:1px solid #dce7f0;border-radius:9px;background:#fff;color:#2673ad;font-size:10px;text-decoration:none;overflow-wrap:anywhere}
+.qt-chat-attachment img{display:block;width:86px;height:68px;object-fit:cover;border-radius:6px;background:#f1f5f9}
+.qt-chat-load-older{align-self:center;margin:0 auto 8px;padding:7px 12px;border:1px solid #d8e6f1;border-radius:20px;background:#fff;color:#5080a7;font-size:10px}
+.qt-admin-message.is-ai{align-self:flex-start;border-color:#d5e7f5;background:#f0f8ff}
