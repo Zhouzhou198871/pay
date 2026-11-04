@@ -163,21 +163,22 @@ function loadOverviewData() {
       if (channelRoot) {
         const channels = Array.isArray(data.channels) ? data.channels : [];
         const alipay = channels.find((channel) => ["alipay", "ali_pay", "支付宝"].includes(String(channel.channel_code || "").toLowerCase()) || String(channel.display_name || "").includes("支付宝"));
-        const today = alipay ? formatCents(alipay.today_amount_cents, alipay.currency || "CNY") : "¥ 0.00";
-        const yesterday = alipay ? formatCents(alipay.yesterday_amount_cents, alipay.currency || "CNY") : "¥ 0.00";
+        const yuan = (value) => (Number(value || 0) / 100).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "元";
+        const today = alipay ? yuan(alipay.today_amount_cents) : "0.00元";
+        const yesterday = alipay ? yuan(alipay.yesterday_amount_cents) : "0.00元";
         const successRate = alipay && alipay.success_rate !== null && alipay.success_rate !== undefined
           ? Number(alipay.success_rate).toFixed(2).replace(/\.?0+$/, "")
           : "100";
         channelRoot.innerHTML = `
-          <article class="qt-channel-row qt-channel-row-alipay">
-            <div class="qt-channel-heading">
-              <span class="qt-channel-mark qt-alipay-mark" aria-hidden="true">支</span>
+          <article class="qt-alipay-summary">
+            <div class="qt-alipay-summary__heading">
+              <span class="qt-alipay-summary__icon" aria-hidden="true">支</span>
               <strong>支付宝</strong>
             </div>
-            <div class="qt-channel-detail-row"><span>今日收入：</span><b>${today}</b></div>
-            <div class="qt-channel-detail-row"><span>昨日收入：</span><b>${yesterday}</b></div>
-            <div class="qt-channel-detail-row"><span>通道成功率：</span><b class="qt-success-text">${successRate}%</b></div>
-            <div class="qt-channel-detail-row"><span>支付宝费率：</span><b>10%</b></div>
+            <div class="qt-alipay-summary__row"><span>今日收入：</span><b>${today}</b></div>
+            <div class="qt-alipay-summary__row"><span>昨日收入：</span><b>${yesterday}</b></div>
+            <div class="qt-alipay-summary__row"><span>通道成功率：</span><b class="qt-success-text">${successRate}%</b></div>
+            <div class="qt-alipay-summary__row"><span>支付宝费率：</span><b>10%</b></div>
           </article>`;
       }
 
