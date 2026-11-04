@@ -1,0 +1,30 @@
+/* 晴天支付商户个人资料中心 */
+.qtpc-wrap{background:#fff;border:1px solid #e8eef3;border-radius:22px;box-shadow:0 7px 20px rgba(40,75,110,.06);overflow:hidden}
+.qtpc-tabs{display:flex;margin:0 24px;border-bottom:1px solid #e6edf2}
+.qtpc-tab{position:relative;flex:0 0 150px;padding:22px 18px 18px;border:0;background:none;color:#7b8995;font:inherit;font-size:16px;font-weight:650}
+.qtpc-tab.active{color:#188bc5}.qtpc-tab.active:after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:3px;background:#168bd0}
+.qtpc-pane{padding:28px 25px 32px}.qtpc-pane[hidden]{display:none!important}
+.qtpc-section{margin:0 0 27px}.qtpc-section:last-child{margin-bottom:0}
+.qtpc-section h3{margin:0 0 19px;color:#172536;font-size:20px;font-weight:750}
+.qtpc-section p.qtpc-desc{margin:-8px 0 20px;color:#8a98a4;font-size:13px;line-height:1.7}
+.qtpc-field{margin:0 0 19px}.qtpc-field label{display:block;margin-bottom:9px;color:#687c8e;font-size:14px;font-weight:600}
+.qtpc-input,.qtpc-select{width:100%;min-height:54px;padding:13px 15px;border:1px solid #dce5ed;border-radius:12px;background:#fff;color:#344456;font:inherit;font-size:15px;outline:none;box-sizing:border-box}
+.qtpc-input:focus,.qtpc-select:focus{border-color:#55a9d7;box-shadow:0 0 0 3px rgba(31,145,201,.1)}
+.qtpc-copy{display:flex;min-height:54px;border:1px solid #dce5ed;border-radius:12px;background:#f8fafc;overflow:hidden}
+.qtpc-copy code{flex:1;min-width:0;align-self:center;padding:13px 15px;color:#65798c;font:14px/1.55 ui-monospace,monospace;overflow-wrap:anywhere}
+.qtpc-copy button{flex:0 0 58px;border:0;border-left:1px solid #dce5ed;background:#e7f4fb;color:#1688c5;font-size:21px}
+.qtpc-btn{min-height:52px;padding:0 21px;border:0;border-radius:11px;background:#078bd0;color:#fff;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.qtpc-btn:disabled{opacity:.6;cursor:wait}.qtpc-btn.secondary{background:#e7f4fb;color:#1688c5}.qtpc-btn.danger{background:#fff0eb;color:#b66a58;border:1px solid #f2d9d1}
+.qtpc-btn.block{width:100%}.qtpc-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.qtpc-note{padding:16px 17px;border:1px solid #e2edf4;border-radius:13px;background:#f7fafc;color:#7f909e;font-size:12px;line-height:1.8}
+.qtpc-note strong{display:block;color:#2c536b;font-size:14px;margin-bottom:5px}
+.qtpc-divider{height:1px;border:0;background:#e9eef2;margin:26px 0}
+.qtpc-state{display:inline-flex;padding:5px 10px;border-radius:20px;background:#eaf7f1;color:#24966f;font-size:12px;font-weight:700}
+.qtpc-state.off{background:#eef3f7;color:#788998}
+.qtpc-help{margin:8px 0 0;color:#98a4ad;font-size:12px;line-height:1.65}
+.qtpc-error{margin:10px 0 0;color:#c45f51;font-size:13px;line-height:1.6}.qtpc-success{margin:10px 0 0;color:#23966f;font-size:13px}
+.qtpc-secret{font-family:ui-monospace,monospace;letter-spacing:.01em}
+.qtpc-password-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.qtpc-title-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.qtpc-title-row h3{margin-bottom:18px}
+@media(max-width:600px){.qtpc-wrap{border-radius:18px}.qtpc-tabs{margin:0 17px}.qtpc-tab{flex:1;min-width:0;padding:19px 8px 16px;font-size:14px}.qtpc-pane{padding:23px 17px 26px}.qtpc-section h3{font-size:18px}.qtpc-copy{min-height:51px}.qtpc-copy code{font-size:12px;padding:12px}.qtpc-copy button{flex-basis:49px}.qtpc-password-row{grid-template-columns:1fr}.qtpc-actions{flex-direction:column}.qtpc-actions .qtpc-btn{width:100%}}
