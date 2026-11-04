@@ -1,5 +1,6 @@
 import "./merchant-workspace.css";
 import { renderFinancePage } from "./finance-pages.js";
+import { renderAggregatePayments } from "./aggregate-payments.js";
 
 const ENDPOINTS = {
   dashboard: "/api/merchant/dashboard",
@@ -18,7 +19,7 @@ const LABELS = {
   orders: ["订单记录", "订单记录", "仅展示当前账户的真实订单"],
   withdrawals: ["提现记录", "提现记录", "仅展示当前账户的提现记录"],
   ledger: ["资金明细", "资金明细", "账本记录只读展示，不代表实时可提现余额"],
-  payments: ["聚合收款", "收款通道", "查看当前账户已配置的收款通道"],
+  payments: ["聚合收款", "聚合收款", "分享专属链接或生成固定金额收款码"],
   docs: ["开发文档", "开发文档", "晴天支付 API 接入说明"],
   support: ["联系客服", "联系客服", "官方客服入口尚未配置"],
   adminFinance: ["财务管理", "审核中心", "管理员专用：提现审核与全站支付订单"]
@@ -588,6 +589,7 @@ function renderAdminFinance() {
 function selectSection(key) {
   currentSection = key; currentPage = 1; requestSequence++;
   updateHeading(key);
+  if (key === "payments") return renderAggregatePayments($("#merchant-panel-content"));
   if (ENDPOINTS[key]) return loadRecords(key, 1);
   if (key === "overview") return renderOverview();
   if (key === "profile") return renderProfile();
