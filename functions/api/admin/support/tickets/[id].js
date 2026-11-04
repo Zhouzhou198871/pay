@@ -6,7 +6,10 @@ export async function onRequestGet({request,env,params}){
  try{
   const ticket=await c.db.prepare("SELECT t.*,u.email,pm.merchant_no,pm.site_name,pm.api_access_granted FROM support_tickets t JOIN users u ON u.id=t.user_id JOIN pay_merchants pm ON pm.id=t.merchant_id WHERE t.id=?").bind(id).first();
   if(!ticket)return json({error:"工单不存在。"},404);
-  const rows=await c.db.prepare("SELECT id,sender_role,message_type,content,metadata_json,created_at FROM chat_messages WHERE ticket_id=? ORDER BY created_at ASC,rowid ASC LIMIT 300").bind(id).all();
-  return json({ticket,messages:rows.results||[]});
+  const [rows,pending]=await Promise.all([
+   c.db.prepare("SELECT id,sender_role,message_type,content,metadata_json,created_at FROM chat_messages WHERE ticket_id=? ORDER BY created_at ASC,rowid ASC LIMIT 300").bind(id).all(),
+   c.db.prepare("SELECT id,app_type,app_name,website_url,created_at FROM api_access_requests WHERE ticket_id=? AND status='pending' ORDER BY created_at DESC LIMIT 1").bind(id).first()
+  ]);
+  return json({ticket,messages:rows.results||[],pending_permission_request:pending||null});
  }catch(error){console.error("[admin/support:detail]",String(error?.message||error).slice(0,150));return json({error:"工单详情读取失败。"},503)}
 }
