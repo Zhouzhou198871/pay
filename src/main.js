@@ -137,13 +137,11 @@ async function renderDashboard() {
             <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M15 14h2"/></svg></span><span>提现记录</span></button>
             <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span><span>资金明细</span></button>
           </nav>
-          <div class="drawer-section-label" id="qt-admin-finance-label" hidden>其他</div>
-          <nav class="drawer-nav" id="qt-admin-finance-nav" hidden><button class="drawer-link" data-section="adminFinance"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg></span><span>财务管理 / 审核中心</span></button></nav>
           <div class="drawer-section-label">其他</div>
           <nav class="drawer-nav">
             <button class="drawer-link" data-section="payments"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8v8H8zM4 10h16"/></svg></span><span>聚合收款</span><i>›</i></button>
             <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4M9 12h7M9 16h7"/></svg></span><span>开发文档</span></button>
-            <button class="drawer-link" data-section="support"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="2"/><rect x="17" y="12" width="4" height="7" rx="2"/><path d="M17 19c-1 2-3 2-5 2"/></svg></span><span>联系客服</span></button>
+            <button class="drawer-link" data-section="support"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="2"/><rect x="17" y="12" width="4" height="7" rx="2"/><path d="M17 19c-1 2-3 2-5 2"/></svg></span><span>联系在线客服</span></button>
           </nav>
         </div>
         <div class="drawer-user">
