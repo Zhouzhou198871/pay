@@ -7,7 +7,7 @@ function parseCny(value) {
   if (!/^\d{1,8}(?:\.\d{1,2})?$/.test(raw)) return null;
   const [whole, fraction = ""] = raw.split(".");
   const cents = Number(whole) * 100 + Number((fraction + "00").slice(0, 2));
-  return Number.isSafeInteger(cents) && cents >= 1 && cents <= 100000000 ? cents : null;
+  return Number.isSafeInteger(cents) && cents >= 1 && cents <= 100000 ? cents : null;
 }
 
 function sameOrigin(request) {
@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env }) {
   const merchantNo = String(body?.merchant_no || "").trim();
   const amountCents = parseCny(body?.amount);
   if (!/^\d{6}$/.test(merchantNo)) return json({ code: "INVALID_MERCHANT", message: "收款链接无效，请联系商户确认。" }, 400);
-  if (amountCents === null) return json({ code: "INVALID_AMOUNT", message: "请输入大于 0 且最多两位小数的人民币金额。" }, 400);
+  if (amountCents === null) return json({ code: "INVALID_AMOUNT", message: "请输入 0.01 至 1000.00 元，最多两位小数。" }, 400);
 
   try {
     const merchant = await env.AUTH_DB.prepare(
@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
     }
     const amountCny = (amountCents / 100).toFixed(2);
     const amountMicro = Math.round(amountCents / 100 / rate * 1000000);
-    if (!Number.isSafeInteger(amountMicro) || amountMicro <= 0) {
+    if (!Number.isSafeInteger(amountMicro) || amountMicro <= 0 || Math.round(amountMicro / 1000000 * rate * 100) !== amountCents) {
       return json({ code: "INVALID_AMOUNT", message: "金额超出当前收款范围。" }, 400);
     }
 
@@ -76,10 +76,14 @@ export async function onRequestPost({ request, env }) {
       return json({ code: "PAYMENT_UNAVAILABLE", message: "当前收款通道暂不可用，请稍后重试或联系商户。" }, 503);
     }
 
-    const checkoutUrl = useNzzf ? "/checkout/" + encodeURIComponent(tradeNo) : checkout.checkoutUrl;
-    const payInfo = useNzzf
-      ? { provider: "nzzf", amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate, qrcode_content: checkout.qrContent, provider_trade_no: checkout.providerTradeNo }
-      : { provider: "alipay", amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate };
+    const checkoutUrl = "/checkout/" + encodeURIComponent(tradeNo);
+    const payInfo = {
+      provider: useNzzf ? "nzzf" : "alipay",
+      amount_cny: amountCny,
+      usdt_cny_rate: rate,
+      qrcode_content: checkout.qrContent || checkout.checkoutUrl,
+      ...(checkout.providerTradeNo ? { provider_trade_no: checkout.providerTradeNo } : {})
+    };
 
     await env.AUTH_DB.prepare(
       "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', ?, ?, ?, ?, 'alipay', ?, ?)"
