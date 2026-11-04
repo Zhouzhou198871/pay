@@ -59,7 +59,7 @@ export async function onRequestPost({ request, env }) {
       if (!['wechat', 'alipay'].includes(method)) return json({ error: '请选择微信或支付宝收款方式。' }, 400);
       if (realName.length < 2 || realName.length > 40 || /[<>\r\n]/.test(realName)) return json({ error: '请填写 2 至 40 个字符的真实姓名。' }, 400);
       if (!validQr(qrImage)) return json({ error: '请上传有效的收款码图片（PNG、JPG 或 WebP，压缩后不超过约 230KB）。' }, 400);
-      const rate = Number(env.WITHDRAW_USDT_CNY_RATE || env.NZZF_USDT_CNY_RATE || 0);
+      const rate = Number(env.WITHDRAW_USDT_CNY_RATE || 0);
       if (!Number.isFinite(rate) || rate <= 0 || rate > 1000) return json({ error: '法币提现汇率尚未配置，请联系平台客服。' }, 503);
       feeMicro = Math.round(amountMicro * 600 / 10000);
       payoutMicro = amountMicro - feeMicro;
