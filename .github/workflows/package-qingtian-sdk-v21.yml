@@ -1,0 +1,40 @@
+name: Package Qingtian SDK V2.1
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sdk/qingtian-php/**"
+      - "sdk/qingtian-node/**"
+      - "sdk/qingtian-java/**"
+      - ".github/workflows/package-qingtian-sdk-v21.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build language SDK archives
+        run: |
+          set -euo pipefail
+          mkdir -p dist/php dist/node dist/java
+          cp -R sdk/qingtian-php/. dist/php/
+          cp -R sdk/qingtian-node/. dist/node/
+          cp -R sdk/qingtian-java/. dist/java/
+          printf '晴天支付 PHP-SDK\nVersion: V2.1\nAPI: https://pay.lynli.me/\n' > dist/php/SDK-VERSION.txt
+          printf '晴天支付 Node.js-SDK\nVersion: V2.1\nAPI: https://pay.lynli.me/\n' > dist/node/SDK-VERSION.txt
+          printf '晴天支付 Java-SDK\nVersion: V2.1\nAPI: https://pay.lynli.me/\n' > dist/java/SDK-VERSION.txt
+          (cd dist/php && zip -qr ../PHP-SDK.zip .)
+          (cd dist/node && zip -qr ../Node-SDK.zip .)
+          (cd dist/java && zip -qr ../Java-SDK.zip .)
+          sha256sum dist/*.zip > dist/SHA256SUMS.txt
+      - name: Publish V2.1 release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="qingtian-sdk-v2.1"
+          gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "${{ github.repository }}" --title "晴天支付 SDK V2.1" \
+              --notes "PHP-SDK、Node.js-SDK、Java-SDK；配置字段统一为 apiurl、pid、platform_public_key、merchant_private_key。请仅在服务端保存密钥。"
+          gh release upload "$TAG" dist/PHP-SDK.zip dist/Node-SDK.zip dist/Java-SDK.zip dist/SHA256SUMS.txt --repo "${{ github.repository }}" --clobber
