@@ -1,9 +1,9 @@
 import { nzzfPost } from './nzzf.js';
 
 export function amountToCents(value) {
-  const match = String(value ?? '').trim().match(/^(\\d{1,12})(?:\\.(\\d{1,2}))?$/);
+  const match = String(value ?? '').trim().match(/^([0-9]{1,12})([.]([0-9]{1,2}))?$/);
   if (!match) return null;
-  return Number(match[1]) * 100 + Number((match[2] || '').padEnd(2, '0'));
+  return Number(match[1]) * 100 + Number((match[3] || '').padEnd(2, '0'));
 }
 
 export function calculateNetCredit(amountMicro, feeRateBps) {
@@ -17,10 +17,7 @@ export async function createNzzfCheckout({ env, tradeNo, subject, amountMicro, n
   const amountCny = (Math.round((amountMicro / 1000000 * rate) * 100) / 100).toFixed(2);
   if (Number(amountCny) < 0.01) return { ok: false, code: 'NZZF_AMOUNT_INVALID', message: '折算后的人民币金额低于 0.01 元。' };
   try {
-    const data = await nzzfPost({
-      env, path: '/api/pay/create',
-      params: { type: 'alipay', out_trade_no: tradeNo, notify_url: notifyUrl, return_url: returnUrl, name: String(subject || tradeNo).slice(0, 100), money: amountCny, ...(clientIp ? { clientip: clientIp } : {}) }
-    });
+    const data = await nzzfPost({ env, path: '/api/pay/create', params: { type: 'alipay', out_trade_no: tradeNo, notify_url: notifyUrl, return_url: returnUrl, name: String(subject || tradeNo).slice(0, 100), money: amountCny, ...(clientIp ? { clientip: clientIp } : {}) } });
     if (Number(data?.code) !== 0 || !data?.trade_no) return { ok: false, code: 'NZZF_CREATE_FAILED', message: '上游未成功创建订单。' };
     const upstreamQr = String(data.qrcode || data.payurl || '').trim();
     let parsed;
