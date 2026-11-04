@@ -1,1 +1,5 @@
-# 晴天支付 Node.js SDK\n\nNode.js 18+。导入 `QingtianPayClient`，调用 `createOrderV1()` 或 `createOrderV2()`。\n\n```js\nimport { QingtianPayClient } from './index.js';\nimport { readFileSync } from 'node:fs';\nconst client = new QingtianPayClient({ merchantNo:'123456', v1Key:process.env.QT_V1_KEY, v2PrivateKey:readFileSync('/run/secrets/qt-v2-private.pem','utf8') });\nconst result = await client.createOrderV1({ out_trade_no:'ORDER-1001', amount:'12.50', pay_type:'alipay', notify_url:'https://merchant.example.com/notify' });\n```\n\nV2 请调用 `createOrderV2()`。密钥仅存放在后端环境变量或密钥管理服务。
+# Node.js-SDK（V2.1）
+
+下载后修改 `epay.config.js`，填入商户后台 API 信息页显示的值即可。配置字段与 PHP SDK 保持一致：`apiurl`、`pid`、`platform_public_key`、`merchant_private_key`。
+
+密钥仅能保存在 Node.js 服务端环境中，禁止打包进前端。调用示例见 `index.js`。
