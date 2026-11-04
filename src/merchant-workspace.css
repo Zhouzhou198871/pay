@@ -491,3 +491,5 @@
 #qt-admin-ticket-reply{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 #qt-admin-ticket-reply textarea{width:100%;padding:10px;border:1px solid #dce6ee;border-radius:10px;background:#fff;color:#334b62;font:inherit;font-size:12px;resize:vertical}
 #qt-admin-ticket-feedback{color:#5c7185;font-size:11px}
+
+.qt-fiat-risk-note{margin:0;padding:11px 12px;border:1px solid #f0dfc4;border-radius:10px;background:#fff9ef;color:#8b6530;font-size:11px;line-height:1.7}
