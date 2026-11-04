@@ -12,7 +12,7 @@ function safeFileName(value) {
   return String(value || "attachment").replace(/[\\/\\0-\\x1f]/g, "_").slice(0, 160) || "attachment";
 }
 function sensitiveRequest(value) {
-  return /(提现|打款|到账|不到账|出款|退款|权限|审批|审核|冻结|风控|资金|余额|赔付|司法|申诉|人工|投诉)/i.test(value);
+  return /(提现.{0,8}(进度|状态|到账|打款|失败|审核|处理)|打款|出款|到账|不到账|退款|审批结果|审批进度|审批状态|审核结果|审核进度|审核状态|是否通过|有没有通过|什么时候通过|权限审批|权限开通了吗|权限开通状态|申请进度|冻结|风控|资金.{0,6}(状态|去向|到账)|余额|赔付|司法|申诉|投诉)/i.test(value);
 }
 async function createAiReply(env, content) {
   if (!env.ZHIPU_API_KEY) return "已收到您的咨询。当前智能客服暂不可用，已为您保留消息；如涉及具体业务，请留言等待人工客服处理。";
