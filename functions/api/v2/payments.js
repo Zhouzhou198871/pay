@@ -42,9 +42,10 @@ export async function onRequestPost({ request, env }) {
   if (!PAY_TYPES.has(payType)) return json({ code: 'UNSUPPORTED_PAY_TYPE', message: '当前仅接受 alipay 或 alipay_h5。' }, 400);
   if (!validNotifyUrl(notifyUrl)) return json({ code: 'INVALID_NOTIFY_URL', message: '异步通知地址必须是有效的 HTTPS 公网地址。' }, 400);
   try {
-    const merchant = await env.AUTH_DB.prepare('SELECT id, user_id, merchant_no, v2_public_key, app_id FROM pay_merchants WHERE merchant_no = ? LIMIT 1').bind(merchantNo).first();
+    const merchant = await env.AUTH_DB.prepare('SELECT id, user_id, merchant_no, v2_public_key, app_id, api_access_granted FROM pay_merchants WHERE merchant_no = ? LIMIT 1').bind(merchantNo).first();
     if (!merchant || !merchant.v2_public_key) return json({ code: 'MERCHANT_NOT_FOUND', message: '商户不存在或尚未开通 V2 API。' }, 401);
     if (!(await verifyV2Signature(body, merchant.v2_public_key, String(body.sign)))) return json({ code: 'SIGNATURE_INVALID', message: 'RSA 签名验证失败。' }, 401);
+    if (!merchant.api_access_granted) return json({ code: 'API_ACCESS_PENDING', message: 'API 调用权限尚未审批通过，请在商户客服工单中提交申请。' }, 403);
     const now = Math.floor(Date.now() / 1000);
     const id = randomHex(16);
     const tradeNo = 'QT' + now.toString() + randomHex(8).toUpperCase();
