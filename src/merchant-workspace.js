@@ -10,7 +10,6 @@ const ENDPOINTS = {
   adminWithdrawals: "/api/admin/withdrawals",
   adminOrders: "/api/admin/orders",
   withdraw: "/api/merchant/withdraw",
-  profile: "/api/merchant/profile"
 };
 const LABELS = {
   overview: ["用户中心", "账户概览", "账户基础信息与服务入口"],
@@ -126,7 +125,7 @@ function renderOverview() {
     $("#qt-withdraw-address", panel).textContent = "正在读取提现地址…";
     withdrawDialog?.showModal();
     try {
-      const response = await fetch(ENDPOINTS.profile, { credentials: "same-origin", headers: { Accept: "application/json" } });
+      const response = await fetch("/api/merchant/profile", { credentials: "same-origin", headers: { Accept: "application/json" } });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || "无法读取提现资料");
       const m = payload.merchant || {};
@@ -364,13 +363,13 @@ fetch("${baseUrl}/api/merchant/dashboard", {
   panel.querySelector("#qt-payout-settings-form")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-payout-settings-feedback"); const button = form.querySelector('button[type="submit"]');
     button.disabled = true; feedback.textContent = "正在保存…";
-    try { const response = await fetch(ENDPOINTS.profile, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "payout", usdt_network: panel.querySelector("#qt-payout-network").value, usdt_address: panel.querySelector("#qt-payout-address").value.trim() }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "提现地址已保存"; }
+    try { const response = await fetch("/api/merchant/profile", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "payout", usdt_network: panel.querySelector("#qt-payout-network").value, usdt_address: panel.querySelector("#qt-payout-address").value.trim() }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "提现地址已保存"; }
     catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
   });
   panel.querySelector("#qt-withdraw-password-settings-form")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-withdraw-password-feedback"); const button = form.querySelector('button[type="submit"]');
     button.disabled = true; feedback.textContent = "正在保存…";
-    try { const response = await fetch(ENDPOINTS.profile, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "withdraw_password", current_withdraw_password: panel.querySelector("#qt-current-withdraw-password").value, withdraw_password: panel.querySelector("#qt-new-withdraw-password").value }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "支付密码已保存"; form.reset(); }
+    try { const response = await fetch("/api/merchant/profile", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "withdraw_password", current_withdraw_password: panel.querySelector("#qt-current-withdraw-password").value, withdraw_password: panel.querySelector("#qt-new-withdraw-password").value }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "支付密码已保存"; form.reset(); }
     catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
   });
   panel.querySelectorAll("[data-copy-value],[data-copy-target]").forEach((button) => {
@@ -398,7 +397,7 @@ fetch("${baseUrl}/api/merchant/dashboard", {
     code.textContent = visible ? "••••••••••••••••" : loadedApiKey;
     button.textContent = visible ? "显示" : "隐藏";
   });
-  fetch(ENDPOINTS.profile, { credentials: "same-origin", headers: { Accept: "application/json" } })
+  fetch("/api/merchant/profile", { credentials: "same-origin", headers: { Accept: "application/json" } })
     .then(async (response) => {
       if (response.status === 401) { location.href = "/"; return null; }
       const payload = await response.json().catch(() => ({}));
