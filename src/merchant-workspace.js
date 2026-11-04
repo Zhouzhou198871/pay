@@ -277,7 +277,7 @@ fetch("${baseUrl}/api/merchant/dashboard", {
         <section class="qt-profile-section">
           <h3>商户签名密钥</h3>
           <div class="qt-profile-notice"><strong>当前版本尚未开放商户密钥管理</strong><p>晴天支付目前没有可调用的 MD5 商户密钥、RSA 密钥对生成/重置接口，也没有对外支付下单签名协议。为避免误接入，这里不会展示虚构密钥或示例密钥。后续正式开放后，将在此显示真实凭据、签名算法、请求头和轮换入口。</p></div>
-          <a class="qt-profile-doc-link" href="/docs/API_REFERENCE.md" target="_blank" rel="noopener">查看 API 接口参考文档 <span>↗</span></a>
+          <a class="qt-profile-doc-link" href="https://github.com/Zhouzhou198871/pay/blob/main/docs/API_REFERENCE.md" target="_blank" rel="noopener">查看 API 接口参考文档 <span>↗</span></a>
         </section>
       </div>
       <div class="qt-profile-pane" data-profile-pane="settings" hidden>
