@@ -25,6 +25,8 @@ export async function onRequestPost({ request, env }) {
   try { body = await request.json(); } catch { return json({ error: '请求 JSON 格式不正确。' }, 400); }
   const amountMicro = parseAmountMicro(body?.amount);
   const password = String(body?.withdraw_password || '');
+  const feeMicro = amountMicro !== null && amountMicro < 100000000 ? 1000000 : 0;
+  const totalDebitMicro = amountMicro === null ? null : amountMicro + feeMicro;
   if (amountMicro === null) return json({ error: '提现金额必须大于 0，最多支持 6 位小数。' }, 400);
   if (password.length < 8 || password.length > 64) return json({ error: '请输入正确长度的支付密码。' }, 400);
   try {
@@ -37,13 +39,13 @@ export async function onRequestPost({ request, env }) {
     const ledgerId = randomHex(16), entryNo = 'WD' + now + randomHex(8).toUpperCase(), destination = maskAddress(merchant.usdt_address);
     const results = await context.db.batch([
       context.db.prepare("INSERT INTO merchant_withdrawals (id,user_id,request_no,amount_micro,fee_micro,currency,destination_masked,status,requested_at) SELECT ?,?,?,?,0,'USDT',?,'pending',? WHERE COALESCE((SELECT balance_after_micro FROM merchant_ledger WHERE user_id=? AND currency='USDT' ORDER BY created_at DESC,rowid DESC LIMIT 1),0) >= ?")
-        .bind(id, context.user.id, requestNo, amountMicro, destination, now, context.user.id, amountMicro),
+        .bind(id, context.user.id, requestNo, amountMicro, feeMicro, destination, now, context.user.id, totalDebitMicro),
       context.db.prepare("INSERT INTO merchant_ledger (id,user_id,entry_no,direction,amount_micro,balance_after_micro,currency,category,description,related_type,related_id,created_at) SELECT ?,?,?, 'debit', ?, COALESCE((SELECT balance_after_micro FROM merchant_ledger WHERE user_id=? AND currency='USDT' ORDER BY created_at DESC,rowid DESC LIMIT 1),0)-?, 'USDT','withdrawal_request',?,'merchant_withdrawal',?,? FROM merchant_withdrawals WHERE id=? AND user_id=? AND NOT EXISTS (SELECT 1 FROM merchant_ledger WHERE user_id=? AND related_type='merchant_withdrawal' AND related_id=?)")
-        .bind(ledgerId, context.user.id, entryNo, amountMicro, context.user.id, amountMicro, '提现申请 '+requestNo, id, now, id, context.user.id, context.user.id, id)
+        .bind(ledgerId, context.user.id, entryNo, totalDebitMicro, context.user.id, totalDebitMicro, '提现申请 '+requestNo+(feeMicro ? '（含 1 USDT 手续费）' : ''), id, now, id, context.user.id, context.user.id, id)
     ]);
     if (Number(results?.[0]?.meta?.changes || 0) !== 1) return json({ error: '可用余额不足，无法提交本次提现申请。' }, 400);
     if (Number(results?.[1]?.meta?.changes || 0) !== 1) return json({ error: '提现申请暂时未能完成，请刷新余额后重试。' }, 503);
-    return json({ success: true, message: '提现申请已提交，当前状态为待审核。', data: { request_no: requestNo, amount: (amountMicro / 1000000).toFixed(6).replace(/0+$/,'').replace(/\.$/,''), currency: 'USDT', destination_masked: destination, status: 'pending', requested_at: now } }, 201);
+    return json({ success: true, message: '提现申请已提交，当前状态为待审核。', data: { request_no: requestNo, amount: (amountMicro / 1000000).toFixed(6), fee: (feeMicro / 1000000).toFixed(6), total_debit: (totalDebitMicro / 1000000).toFixed(6), currency: 'USDT', destination_masked: destination, status: 'pending', requested_at: now } }, 201);
   } catch (error) {
     console.error('[merchant/withdraw]', String(error?.message || error).slice(0, 180));
     return json({ error: '提现申请失败，请稍后重试。' }, 500);
