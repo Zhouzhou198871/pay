@@ -1,8 +1,8 @@
 import { verifyAlipayNotify, amountToCents, calculateNetCredit } from '../../../../_lib/alipay-notify.js';
 const text = (value, status = 200) => new Response(value, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
-const failure = () => text('failure', 400);
+const failure = () => text('failure');
 export async function onRequestPost({ request, env }) {
-  if (!env.AUTH_DB || !env.ALIPAY_PUBLIC_KEY || !env.ALIPAY_APP_ID || !env.ALIPAY_SELLER_ID || env.ALIPAY_FEE_RATE_BPS === undefined) return failure();
+  if (!env.AUTH_DB || !env.ALIPAY_PUBLIC_KEY || !env.ALIPAY_APP_ID || !env.ALIPAY_SELLER_ID || !String(env.ALIPAY_FEE_RATE_BPS || '').trim()) return failure();
   if (!String(request.headers.get('content-type') || '').toLowerCase().includes('application/x-www-form-urlencoded')) return failure();
   let params;
   try {
@@ -30,7 +30,7 @@ export async function onRequestPost({ request, env }) {
     if (order.status === 'paid') return order.provider_trade_no === params.trade_no ? text('success') : failure();
     if (order.status !== 'pending') return failure();
     const feeRateBps = Number(env.ALIPAY_FEE_RATE_BPS);
-    if (!Number.isInteger(feeRateBps) || feeRateBps < 0 || feeRateBps > 10000) return failure();
+    if (!Number.isInteger(feeRateBps) || feeRateBps < 0 || feeRateBps > 9999) return failure();
     const { feeMicro, creditMicro } = calculateNetCredit(order.amount_micro, feeRateBps);
     if (!Number.isSafeInteger(creditMicro) || creditMicro <= 0) return failure();
     const now = Math.floor(Date.now() / 1000);
