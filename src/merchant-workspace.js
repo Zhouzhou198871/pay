@@ -543,7 +543,7 @@ function renderAdminFinance() {
         const tr = document.createElement("tr");
         const cells = tab === "withdrawals"
           ? [`${item.email || item.user_id} · ${item.request_no}`, moneyText(item.amount_micro, item.currency), `${item.payout_network || "USDT"} · ${item.payout_address || item.destination_masked || "地址未配置"}`, date(item.requested_at)]
-          : [`${item.merchant_name || item.merchant_id} · ${item.user_email || "—"}`, item.merchant_order_no || item.id, moneyText(item.amount_micro, item.currency), statusText(item.status), date(item.created_at)];
+          : [`${item.merchant_name || item.merchant_id} · ${item.user_email || "—"}`, item.merchant_order_no || item.id, moneyText(item.amount_micro, item.currency), (item.status === "pending" ? "未支付" : statusText(item.status)), date(item.created_at)];
         cells.forEach((value) => { const td = document.createElement("td"); td.textContent = String(value ?? "—"); tr.append(td); });
         if (tab === "withdrawals") {
           const td = document.createElement("td"); const button = document.createElement("button"); button.type = "button"; button.className = "qt-primary-button qt-small-button"; button.textContent = "确认已打款"; button.addEventListener("click", () => {
