@@ -26,7 +26,7 @@ export async function onRequestGet({ request, env }) {
     const order = await env.AUTH_DB.prepare(
       "SELECT po.id, po.trade_no, po.out_trade_no, po.amount_micro, po.currency, po.status, po.provider_trade_no, po.pay_info, pm.user_id FROM payment_orders po JOIN pay_merchants pm ON pm.id = po.merchant_id WHERE po.trade_no = ? LIMIT 1"
     ).bind(outTradeNo).first();
-    if (!order || order.currency !== 'USDT' || order.out_trade_no !== outTradeNo) return fail();
+    if (!order || order.currency !== 'USDT' || order.trade_no !== outTradeNo) return fail();
     let payInfo;
     try { payInfo = JSON.parse(order.pay_info || '{}'); } catch { return fail(); }
     if (payInfo.provider !== 'nzzf') return fail();
