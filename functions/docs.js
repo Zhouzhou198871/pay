@@ -39,6 +39,8 @@ footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-si
 .step-card .step-note{padding:9px 11px;border-radius:8px;background:#fff8ed;color:#a4773d}
 .step-card pre{margin-top:12px}
 @media(max-width:760px){.sdk-grid{grid-template-columns:1fr}.sdk-card{padding:15px}.step-card{padding:14px;gap:10px}.step-card>span{width:30px;height:30px}}
+
+.sdk-card h3{margin:0 0 10px;color:#203b5c;font-size:17px}.sdk-card h4{margin:18px 0 6px;color:#536981;font-size:11px}.sdk-card .sdk-download-link{display:inline-flex;justify-content:center;width:100%;padding:10px 12px;border-radius:9px;background:#edf5ff;border:1px solid #d9e9fb;color:#246bdb;font-weight:750}.sdk-card pre{margin:8px 0 12px;padding:14px 15px;font-size:11px}.sdk-card>p:last-child{font-size:11px;line-height:1.75;color:#7c8b9c}
 </style>
 </head>
 <body>
@@ -58,13 +60,24 @@ footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-si
 <div class="hero" id="overview"><div class="eyebrow">DEVELOPER DOCUMENTATION</div><h1>把支付接入，变得简单。</h1><p>通过清晰、稳定的 API，将晴天支付接入您的业务。本文覆盖商户凭据、V1 MD5 与 V2 RSA2 签名、统一下单、上游支付通知及错误处理。</p><div class="hero-meta"><span><i class="dot"></i> HTTPS only</span><span>API Base URL：pay.lynli.me</span><span>文档版本 1.0</span></div></div>
 <div class="callout warn"><strong>当前能力边界：</strong> V1/V2 下单接口已实现商户验签、时间戳校验、订单持久化与幂等检查。商户传入的 <code>notify_url</code> 当前仅随订单保存，平台尚未向商户主动投递支付结果通知；请勿将其视为已上线的 Webhook。支付宝及 NZZF 上游通知接收路由已实现，详见「异步通知与回调」。</div>
 
-<section id="sdk-download"><div class="section-kicker">SDK · DOWNLOAD CENTER</div><h2>SDK 下载</h2><p class="lead">官方示例 SDK 覆盖 PHP、Node.js 与 Java；按接口版本选择压缩包。下载后请先阅读包内 README，并在服务端配置密钥。</p>
+<section id="sdk-download"><div class="section-kicker">SDK · DOWNLOAD CENTER</div><h2>SDK 下载</h2><p class="lead">统一配置格式，选择对应语言的 V2.1 压缩包。配置值请从商户后台「个人资料 → API 信息」复制。</p>
 <div class="sdk-grid">
-  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">PHP</span><span class="sdk-version v1">V1 · MD5</span></div><p>PHP 8.1+ · cURL / OpenSSL</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-php-v1-md5.zip">下载 PHP V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-php-v2-rsa.zip">下载 PHP V2 ZIP ↗</a></article>
-  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">Node.js</span><span class="sdk-version v1">V1 · MD5</span></div><p>Node.js 18+ · 原生 crypto</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-node-v1-md5.zip">下载 Node.js V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-node-v2-rsa.zip">下载 Node.js V2 ZIP ↗</a></article>
-  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">Java</span><span class="sdk-version v1">V1 · MD5</span></div><p>JDK 17+ · 标准库</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-java-v1-md5.zip">下载 Java V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-java-v2-rsa.zip">下载 Java V2 ZIP ↗</a></article>
+  <article class="sdk-card"><h3 class="sdk-language">PHP-SDK</h3><p>SDK.zip <span class="sdk-version v2">版本：V2.1</span></p><a class="sdk-download-link" href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-sdk-v2.1/PHP-SDK.zip">下载 SDK.zip ↗</a><h4>配置示例 · lib/epay.config.php</h4><pre><code class="language-php">'apiurl' =&gt; 'https://pay.lynli.me/',
+'pid' =&gt; '商户ID',
+'platform_public_key' =&gt; '平台公钥',
+'merchant_private_key' =&gt; '商户私钥',</code></pre><p>下载后修改 lib/epay.config.php，填入商户后台 API 信息页显示的值即可。</p></article>
+  <article class="sdk-card"><h3 class="sdk-language">Node.js-SDK</h3><p>SDK.zip <span class="sdk-version v2">版本：V2.1</span></p><a class="sdk-download-link" href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-sdk-v2.1/Node-SDK.zip">下载 SDK.zip ↗</a><h4>配置示例 · epay.config.js</h4><pre><code class="language-javascript">export default {
+  apiurl: 'https://pay.lynli.me/',
+  pid: '商户ID',
+  platform_public_key: '平台公钥',
+  merchant_private_key: '商户私钥',
+};</code></pre><p>下载后修改 epay.config.js，填入商户后台 API 信息页显示的值即可。</p></article>
+  <article class="sdk-card"><h3 class="sdk-language">Java-SDK</h3><p>SDK.zip <span class="sdk-version v2">版本：V2.1</span></p><a class="sdk-download-link" href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-sdk-v2.1/Java-SDK.zip">下载 SDK.zip ↗</a><h4>配置示例 · epay.config.properties</h4><pre><code class="language-properties">apiurl=https://pay.lynli.me/
+pid=商户ID
+platform_public_key=平台公钥
+merchant_private_key=商户私钥</code></pre><p>下载后修改 epay.config.properties，填入商户后台 API 信息页显示的值即可。</p></article>
 </div>
-<div class="callout"><strong>安全提示：</strong> V1 API Key、V2 RSA 私钥只能保存在您自己的服务端环境变量或密钥管理系统。切勿写入网页、App、公开仓库或日志。SDK ZIP 发布后可通过同版本 Release 页面校验 SHA-256。</div>
+<div class="callout"><strong>密钥安全：</strong> 商户私钥仅保存在服务端配置或密钥管理系统中。平台公钥用于验签；切勿将商户私钥放进浏览器、移动端安装包或公开仓库。发布包提供 SHA-256 校验文件。</div>
 </section>
 <section id="integration-steps"><div class="section-kicker">02 · INTEGRATION WORKFLOW</div><h2>三步完成接入</h2><p class="lead">以下示例使用商户服务端调用；金额以 USDT 十进制字符串传递，所有订单号由商户系统保证唯一。</p>
 <div class="step-card"><span>01</span><div><h3>第一步：生成密钥</h3><p>登录商户工作台，打开「个人资料 → API 信息」。确认商户号和 V1 MD5 API Key；如使用 V2，在 V2 接口区域生成 RSA-2048 密钥对，并将 PKCS#8 私钥安全保存。平台仅使用您登记的公钥验证 V2 请求。</p><p class="step-note">不要把任何私钥或 API Key 发给前端，也不要将其提交到 Git 仓库。</p></div></div>
