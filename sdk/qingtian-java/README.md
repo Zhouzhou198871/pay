@@ -1,1 +1,5 @@
-# 晴天支付 Java SDK\n\nJDK 17+（使用标准库，无第三方依赖）。源码：`src/main/java/me/lynli/qingtian/QingtianPayClient.java`。签名方法支持 V1 MD5、V2 SHA256withRSA；`createOrderV1/V2` 接收完整 JSON 请求体并返回响应 JSON。\n\n```java\nvar client = new QingtianPayClient("123456", System.getenv("QT_V1_KEY"), Files.readString(Path.of("/run/secrets/qt-v2-private.pem")));\nString result = client.createOrderV1(Map.of(\n  "out_trade_no", "ORDER-1001", "amount", "12.50", "pay_type", "alipay",\n  "notify_url", "https://merchant.example.com/notify"\n));\n```\n\n请在商户服务端构造与签名完全一致的 JSON 参数，切勿将密钥嵌入客户端。
+# Java-SDK（V2.1）
+
+下载后修改 `epay.config.properties`，填入商户后台 API 信息页显示的值即可。配置字段与 PHP SDK 一致：`apiurl`、`pid`、`platform_public_key`、`merchant_private_key`。
+
+私钥请使用环境变量或密钥管理系统注入，勿将生产私钥提交到代码仓库。JDK 17+，源码见 `src/main/java/me/lynli/qingtian/QingtianPayClient.java`。
