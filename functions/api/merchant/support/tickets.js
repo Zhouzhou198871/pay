@@ -50,7 +50,9 @@ async function storeAttachments(db, ticketId, messageId, userId, files, now) {
   for (const file of files.slice(0, 5)) {
     if (!file || typeof file.arrayBuffer !== "function" || !file.size) continue;
     if (file.size > 768 * 1024) throw new Error("单个附件不能超过 768 KB。");
-    const mime = String(file.type || "application/octet-stream").toLowerCase();
+    const ext = String(file.name || "").toLowerCase().split(".").pop();
+    const inferred = ({jpg:"image/jpeg",jpeg:"image/jpeg",png:"image/png",webp:"image/webp",gif:"image/gif",pdf:"application/pdf",txt:"text/plain",doc:"application/msword",docx:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"})[ext] || "application/octet-stream";
+    const mime = String(file.type || inferred).toLowerCase();
     const allowed = ["image/jpeg","image/png","image/webp","image/gif","application/pdf","text/plain","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/msword"];
     if (!allowed.includes(mime)) throw new Error("附件仅支持 JPG、PNG、WEBP、GIF、PDF、TXT、DOC、DOCX。");
     const bytes = new Uint8Array(await file.arrayBuffer());
