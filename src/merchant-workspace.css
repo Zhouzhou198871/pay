@@ -447,3 +447,47 @@
 .qt-chat-compose input:focus{border-color:#6aa8d6;box-shadow:0 0 0 3px #6aa8d61c}
 .qt-chat-compose button{flex:none;min-width:62px;border:0;border-radius:11px;background:#1769e0;color:#fff;font:inherit;font-size:12px;font-weight:750}
 @media(max-width:600px){.qt-chat-widget{right:13px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.qt-chat-launcher{min-height:50px;padding:0 15px}.qt-chat-panel{bottom:62px;width:min(360px,calc(100vw - 26px));height:min(510px,calc(100dvh - 100px));border-radius:18px}}
+
+
+/* Persistent support tickets and permission review */
+.qt-chat-header-copy small{color:#74879a}
+.qt-chat-header-copy small:before{content:"";display:inline-block;width:6px;height:6px;margin-right:6px;border-radius:50%;background:#21a67a}
+.qt-chat-message time{display:block;margin-top:5px;color:#9aabba;font-size:9px;text-align:right}
+.qt-chat-message-meta{display:block;margin-top:6px;color:#3978aa;font-size:10px}
+.qt-chat-message.is-system{align-self:center;max-width:94%;background:#fff8e9;border:1px solid #f3e4c4;color:#866a35}
+.qt-chat-tools{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px 0;background:#fff}
+.qt-chat-tools button{border:1px solid #d6e8f6;border-radius:9px;background:#f1f8fd;color:#236a9f;padding:7px 10px;font:inherit;font-size:11px;font-weight:700}
+.qt-chat-tools span{color:#8a9baa;font-size:10px}
+.qt-chat-permission{padding:12px;background:#f5f9fc;border-top:1px solid #e5edf4}
+.qt-chat-permission[hidden]{display:none}
+.qt-chat-permission>strong{display:block;margin-bottom:9px;color:#2b4964;font-size:13px}
+.qt-chat-permission label{display:block;margin:8px 0;color:#62788c;font-size:11px}
+.qt-chat-permission input,.qt-chat-permission select{display:block;width:100%;height:36px;margin-top:4px;padding:0 9px;border:1px solid #d9e4ed;border-radius:8px;background:#fff;color:#344b61;font:inherit;font-size:12px}
+.qt-chat-permission>div{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.qt-chat-permission button{border:0;border-radius:8px;padding:8px 12px;background:#1769e0;color:#fff;font:inherit;font-size:11px;font-weight:700}
+.qt-chat-permission .qt-chat-permission-cancel{background:#e9eff5;color:#5c7185}
+.qt-admin-ticket-list{display:grid;gap:10px;margin-top:14px}
+.qt-admin-ticket-card{display:flex;flex-direction:column;gap:6px;width:100%;padding:14px;border:1px solid #e2eaf1;border-radius:13px;background:#fff;text-align:left;cursor:pointer}
+.qt-admin-ticket-card strong{color:#243e59;font-size:13px}
+.qt-admin-ticket-card span{color:#526a80;font-size:12px;overflow-wrap:anywhere}
+.qt-admin-ticket-card small{color:#8b9baa;font-size:10px}
+.qt-admin-ticket-detail{margin-top:18px;padding:14px;border:1px solid #e1eaf2;border-radius:14px;background:#f8fbfd}
+.qt-admin-ticket-detail[hidden]{display:none}
+.qt-admin-ticket-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.qt-admin-ticket-detail-head strong{display:block;color:#243e59;font-size:13px}
+.qt-admin-ticket-detail-head small{display:block;margin-top:4px;color:#8798a7;font-size:10px}
+.qt-admin-ticket-detail-head button{border:1px solid #dbe5ed;border-radius:8px;background:#fff;padding:7px 10px;color:#587086;font-size:11px}
+.qt-admin-ticket-messages{display:flex;flex-direction:column;gap:9px;max-height:420px;overflow:auto}
+.qt-admin-message{max-width:90%;padding:11px;border:1px solid #e3ebf2;border-radius:11px;background:#fff}
+.qt-admin-message.is-merchant{align-self:flex-start}
+.qt-admin-message.is-admin{align-self:flex-end;background:#eaf4ff}
+.qt-admin-message b{color:#31516e;font-size:10px}
+.qt-admin-message p{margin:5px 0;color:#4d6479;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.qt-admin-message small{display:block;color:#93a1ae;font-size:9px}
+.qt-admin-permission-meta{margin-top:7px;color:#2679b5!important}
+.qt-admin-ticket-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.qt-admin-ticket-actions button{font-size:11px;padding:9px 12px}
+.qt-access-granted{padding:8px 11px;border-radius:9px;background:#e7f7ef;color:#21815b;font-size:11px;font-weight:700}
+#qt-admin-ticket-reply{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+#qt-admin-ticket-reply textarea{width:100%;padding:10px;border:1px solid #dce6ee;border-radius:10px;background:#fff;color:#334b62;font:inherit;font-size:12px;resize:vertical}
+#qt-admin-ticket-feedback{color:#5c7185;font-size:11px}
