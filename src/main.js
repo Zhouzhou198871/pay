@@ -1,5 +1,6 @@
 import "./style.css";
 import "./merchant-workspace.js";
+import { renderPaypage } from "./paypage.js";
 const app = document.querySelector("#app");
 const LOGO = "https://raw.githubusercontent.com/Zhouzhou198871/pay/main/logo.png";
 let mode = "login";
@@ -477,7 +478,9 @@ function showOAuthFeedback() {
   history.replaceState(null, "", location.pathname + (query ? `?${query}` : "") + location.hash);
 }
 
-if (location.pathname === "/dashboard") {
+if (location.pathname === "/paypage") {
+  renderPaypage();
+} else if (location.pathname === "/dashboard") {
   renderDashboard();
 } else {
   app.innerHTML = authMarkup();
