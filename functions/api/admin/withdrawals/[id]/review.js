@@ -13,6 +13,7 @@ export async function onRequestPost({ request, env, params }) {
   const id = String(params?.id || "").trim();
   if (!/^[A-Za-z0-9_-]{8,64}$/.test(id)) return json({ error: "提现申请编号无效。" }, 400);
   if (!["approve", "reject"].includes(action)) return json({ error: "审核操作无效。" }, 400);
+  if (action === "reject" && note.length < 3) return json({ error: "拒绝提现必须填写至少 3 个字符的原因。" }, 400);
   const now = Math.floor(Date.now() / 1000);
   try {
     if (action === "approve") {
