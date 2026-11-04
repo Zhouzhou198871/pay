@@ -369,3 +369,6 @@
 .qt-aggregate-risk p{margin:7px 0 0;color:#a77c49;font-size:11px;line-height:1.75}
 .qt-aggregate-status-note{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:#fff7e9;color:#a97936;font-size:11px;line-height:1.6}
 @media(max-width:600px){.qt-aggregate-card{padding:17px;border-radius:17px}.qt-aggregate-card-head h3{font-size:15px}.qt-aggregate-qr-image{width:234px;height:234px}.qt-aggregate-qr-image img{width:214px;height:214px}}
+
+.qt-aggregate-qr-target{display:block;max-width:100%;overflow-wrap:anywhere;color:#8b9aaa;font-size:9px;line-height:1.6;user-select:all;text-align:center}
+@media(max-width:600px){.qt-aggregate-qr-target{font-size:9px}}
