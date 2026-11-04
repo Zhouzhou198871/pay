@@ -319,7 +319,7 @@ function initWorkspace() {
     if (!data) return;
     currentUser = data.user || null;
     const email = currentUser?.email || "已登录商户";
-    const name = currentUser?.display_name || email.split("@")[0] || "晴天商户";
+    const name = currentUser?.display_name || currentUser?.username || "";
     const drawerName = $("#drawer-user-name"); if (drawerName) drawerName.textContent = name;
     const drawerEmail = $("#drawer-user-email"); if (drawerEmail) drawerEmail.textContent = email;
     selectSection("overview");
