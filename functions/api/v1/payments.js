@@ -1,6 +1,7 @@
 import { json, randomHex, safeEqual } from "../../_lib/auth.js";
 import { signPaymentParams, isFreshTimestamp } from "../../_lib/md5.js";
 import { createAlipayCheckout } from "../../_lib/alipay.js";
+import { createNzzfCheckout } from "../../_lib/nzzf-provider.js";
 
 const PAY_TYPES = new Set(["alipay", "alipay_h5"]);
 const MAX_AMOUNT_MICRO = 1000000000000;
@@ -71,39 +72,28 @@ export async function onRequestPost({ request, env }) {
     const tradeNo = "QT" + now.toString() + randomHex(8).toUpperCase();
     // Persist the exact CNY amount so signed provider notifications can be reconciled.
     const amountCents = Math.max(1, Math.round(amountMicro / 10000));
-    const checkout = await createAlipayCheckout({ env, db: env.AUTH_DB, tradeNo, subject: outTradeNo, amountMicro, payType });
+    const useNzzf = Boolean(String(env.NZZF_PID || '').trim());
+    const provider = useNzzf ? 'nzzf' : 'alipay';
+    const notifyTarget = useNzzf
+      ? 'https://pay.lynli.me/api/v1/payments/nzzf/notify'
+      : String(env.ALIPAY_NOTIFY_URL || '');
+    const successTarget = 'https://pay.lynli.me/checkout/success?order_no=' + encodeURIComponent(tradeNo);
+    const checkout = useNzzf
+      ? await createNzzfCheckout({ env, tradeNo, subject: outTradeNo, amountMicro, notifyUrl: notifyTarget, returnUrl: successTarget, clientIp: request.headers.get('CF-Connecting-IP') || '' })
+      : await createAlipayCheckout({ env, db: env.AUTH_DB, tradeNo, subject: outTradeNo, amountMicro, payType });
     if (!checkout.ok) return json({ code: checkout.code, message: checkout.message, ...(checkout.missing ? { missing: checkout.missing } : {}) }, 503);
+    const checkoutUrl = useNzzf ? '/checkout/' + encodeURIComponent(tradeNo) : checkout.checkoutUrl;
+    const payInfo = useNzzf
+      ? { provider, amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate, qrcode_content: checkout.qrContent, provider_trade_no: checkout.providerTradeNo }
+      : { provider, amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate };
     try {
-      await env.AUTH_DB.prepare(
-        "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', ?, ?, ?, ?, ?, ?, ?)"
-      ).bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, outTradeNo, checkout.checkoutUrl, JSON.stringify({ provider: 'alipay', amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate }), notifyUrl, amountMicro, payType, Number(body.timestamp), now).run();
+      await env.AUTH_DB.prepare("INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)")
+        .bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, provider, outTradeNo, checkoutUrl, JSON.stringify(payInfo), notifyTarget, amountMicro, payType, Number(body.timestamp), now).run();
     } catch (error) {
-      const message = String(error?.message || error);
-      if (/UNIQUE constraint failed|constraint.*unique/i.test(message)) {
-        return json({ code: "ORDER_EXISTS", message: "该商户订单号已存在，请勿重复下单。" }, 409);
-      }
+      if (/UNIQUE constraint failed|constraint.*unique/i.test(String(error?.message || error))) return json({ code: 'ORDER_EXISTS', message: '该商户订单号已存在，请勿重复下单。' }, 409);
       throw error;
     }
-
-    return json({
-      code: "SUCCESS",
-      message: "订单创建成功。",
-      data: {
-        order_id: id,
-        trade_no: tradeNo,
-        merchant_no: merchantNo,
-        out_trade_no: outTradeNo,
-        amount: amountText(amountMicro),
-        currency: "USDT",
-        pay_type: payType,
-        status: "unpaid",
-        created_at: now,
-        expires_at: now + 900,
-        checkout_url: checkout.checkoutUrl,
-        payment_amount_cny: checkout.amountCny,
-        payment_currency: "CNY"
-      }
-    }, 201);
+    return json({ code: 'SUCCESS', message: '订单创建成功。', data: { order_id: id, trade_no: tradeNo, merchant_no: merchantNo, out_trade_no: outTradeNo, amount: amountText(amountMicro), currency: 'USDT', pay_type: payType, status: 'unpaid', created_at: now, expires_at: now + 900, checkout_url: checkoutUrl, payment_amount_cny: checkout.amountCny, payment_currency: 'CNY' } }, 201);
   } catch (error) {
     console.error("[v1/payments:create]", String(error?.message || error).slice(0, 200));
     return json({ code: "INTERNAL_ERROR", message: "订单创建失败，请稍后重试。" }, 500);
