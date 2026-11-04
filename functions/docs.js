@@ -21,6 +21,24 @@ pre{position:relative;margin:16px 0 23px;padding:19px 20px;overflow:auto;backgro
 footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-size:12px;color:#98a4b4}
 @media(max-width:980px){.sidebar{width:230px;padding-left:20px}.topbar{padding:0 20px}main{margin-left:230px;padding:100px 35px 70px}.hero h1{font-size:36px}}
 @media(max-width:720px){.topbar{height:60px;padding:0 15px}.toplinks a:not(.primary){display:none}.sidebar{position:sticky;top:60px;width:auto;height:auto;bottom:auto;border-right:0;border-bottom:1px solid var(--line);padding:8px 12px;display:flex;gap:5px;overflow:auto;white-space:nowrap}.side-caption,.side-sub,.sidebar-foot{display:none}.side-link{flex:0 0 auto;min-height:32px;font-size:11px;padding:5px 9px}.sidebar .side-link{margin:0}main{margin:0;padding:38px 18px 60px}.hero h1{font-size:32px}.hero p{font-size:14px}h2{font-size:23px}.grid2{grid-template-columns:1fr}table{display:block;overflow-x:auto;white-space:normal}pre{font-size:11px;padding:17px 14px}.copy{position:sticky;float:right;margin-bottom:-30px;z-index:2}}
+
+/* SDK download and integration guide */
+.sdk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:22px 0 20px}
+.sdk-card{min-width:0;padding:18px;border:1px solid #e7edf5;border-radius:15px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 8px 22px rgba(32,68,112,.045)}
+.sdk-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.sdk-language{font-size:16px;font-weight:800;color:#1e385c}
+.sdk-version{padding:5px 8px;border-radius:7px;font-size:10px;font-weight:800;white-space:nowrap}
+.sdk-version.v1{background:#f0ebff;color:#7b62bb}.sdk-version.v2{background:#e8f3ff;color:#2672c8}
+.sdk-card p{margin:0 0 13px;color:#8795a8;font-size:11px}
+.sdk-card a{display:flex;align-items:center;justify-content:space-between;padding:9px 10px;margin:6px 0;border:1px solid #e7edf5;border-radius:9px;background:#fff;color:#2b70c7;font-size:11px;font-weight:700}
+.sdk-card a:hover{background:#f2f7ff;text-decoration:none;border-color:#d4e5fa}
+.step-card{display:grid;grid-template-columns:38px minmax(0,1fr);gap:14px;margin:13px 0;padding:18px;border:1px solid #e8eef5;border-radius:14px;background:#fff;box-shadow:0 5px 16px rgba(33,65,102,.035)}
+.step-card>span{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:#eaf3ff;color:#2c73c8;font-size:12px;font-weight:850}
+.step-card h3{margin:2px 0 7px;font-size:15px;color:#213c60}
+.step-card p{font-size:12px;line-height:1.85}
+.step-card .step-note{padding:9px 11px;border-radius:8px;background:#fff8ed;color:#a4773d}
+.step-card pre{margin-top:12px}
+@media(max-width:760px){.sdk-grid{grid-template-columns:1fr}.sdk-card{padding:15px}.step-card{padding:14px;gap:10px}.step-card>span{width:30px;height:30px}}
 </style>
 </head>
 <body>
@@ -40,6 +58,38 @@ footer{margin-top:80px;padding-top:24px;border-top:1px solid var(--line);font-si
 <div class="hero" id="overview"><div class="eyebrow">DEVELOPER DOCUMENTATION</div><h1>把支付接入，变得简单。</h1><p>通过清晰、稳定的 API，将晴天支付接入您的业务。本文覆盖商户凭据、V1 MD5 与 V2 RSA2 签名、统一下单、上游支付通知及错误处理。</p><div class="hero-meta"><span><i class="dot"></i> HTTPS only</span><span>API Base URL：pay.lynli.me</span><span>文档版本 1.0</span></div></div>
 <div class="callout warn"><strong>当前能力边界：</strong> V1/V2 下单接口已实现商户验签、时间戳校验、订单持久化与幂等检查。商户传入的 <code>notify_url</code> 当前仅随订单保存，平台尚未向商户主动投递支付结果通知；请勿将其视为已上线的 Webhook。支付宝及 NZZF 上游通知接收路由已实现，详见「异步通知与回调」。</div>
 
+<section id="sdk-download"><div class="section-kicker">SDK · DOWNLOAD CENTER</div><h2>SDK 下载</h2><p class="lead">官方示例 SDK 覆盖 PHP、Node.js 与 Java；按接口版本选择压缩包。下载后请先阅读包内 README，并在服务端配置密钥。</p>
+<div class="sdk-grid">
+  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">PHP</span><span class="sdk-version v1">V1 · MD5</span></div><p>PHP 8.1+ · cURL / OpenSSL</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-php-v1-md5.zip">下载 PHP V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-php-v2-rsa.zip">下载 PHP V2 ZIP ↗</a></article>
+  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">Node.js</span><span class="sdk-version v1">V1 · MD5</span></div><p>Node.js 18+ · 原生 crypto</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-node-v1-md5.zip">下载 Node.js V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-node-v2-rsa.zip">下载 Node.js V2 ZIP ↗</a></article>
+  <article class="sdk-card"><div class="sdk-card-head"><span class="sdk-language">Java</span><span class="sdk-version v1">V1 · MD5</span></div><p>JDK 17+ · 标准库</p><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-java-v1-md5.zip">下载 Java V1 ZIP ↗</a><div class="sdk-card-head"><span class="sdk-version v2">V2 · RSA</span></div><a href="https://github.com/Zhouzhou198871/pay/releases/download/qingtian-merchant-sdk-v1.0.0/qingtian-java-v2-rsa.zip">下载 Java V2 ZIP ↗</a></article>
+</div>
+<div class="callout"><strong>安全提示：</strong> V1 API Key、V2 RSA 私钥只能保存在您自己的服务端环境变量或密钥管理系统。切勿写入网页、App、公开仓库或日志。SDK ZIP 发布后可通过同版本 Release 页面校验 SHA-256。</div>
+</section>
+<section id="integration-steps"><div class="section-kicker">02 · INTEGRATION WORKFLOW</div><h2>三步完成接入</h2><p class="lead">以下示例使用商户服务端调用；金额以 USDT 十进制字符串传递，所有订单号由商户系统保证唯一。</p>
+<div class="step-card"><span>01</span><div><h3>第一步：生成密钥</h3><p>登录商户工作台，打开「个人资料 → API 信息」。确认商户号和 V1 MD5 API Key；如使用 V2，在 V2 接口区域生成 RSA-2048 密钥对，并将 PKCS#8 私钥安全保存。平台仅使用您登记的公钥验证 V2 请求。</p><p class="step-note">不要把任何私钥或 API Key 发给前端，也不要将其提交到 Git 仓库。</p></div></div>
+<div class="step-card"><span>02</span><div><h3>第二步：拼装参数</h3><p>准备 <code>merchant_no</code>、<code>out_trade_no</code>、<code>amount</code>、<code>pay_type</code>、<code>notify_url</code>、<code>timestamp</code>。商户 SDK 会自动填充商户号和秒级时间戳并生成签名；<code>notify_url</code> 必须是 HTTPS 公网地址。</p><pre><code class="language-json">{
+  "out_trade_no": "ORDER202611040001",
+  "amount": "12.50",
+  "pay_type": "alipay",
+  "notify_url": "https://merchant.example.com/payment/notify"
+}</code></pre></div></div>
+<div class="step-card"><span>03</span><div><h3>第三步：发送请求</h3><p>调用 SDK 的 V1 或 V2 下单方法，请求会发送到对应版本接口。只有 HTTP 201 且响应 <code>code</code> 为 <code>SUCCESS</code> 才表示订单创建成功；订单创建不等同于用户已付款。请勿将当前尚未开放的商户异步通知当作已交付能力。</p><pre><code class="language-js">import { QingtianPayClient } from './index.js';
+
+const client = new QingtianPayClient({
+  merchantNo: process.env.QT_MERCHANT_NO,
+  v1Key: process.env.QT_V1_KEY,
+  v2PrivateKey: process.env.QT_V2_PRIVATE_KEY
+});
+
+const result = await client.createOrderV1({
+  out_trade_no: 'ORDER202611040001',
+  amount: '12.50',
+  pay_type: 'alipay',
+  notify_url: 'https://merchant.example.com/payment/notify'
+});
+console.log(result.data.trade_no);</code></pre></div></div>
+</section>
 <section id="quickstart"><div class="section-kicker">01 · GET STARTED</div><h2>接入指引</h2><p class="lead">完成商户身份初始化、保存密钥，并在服务端发起签名请求，即可接入下单接口。</p>
 <h3>获取商户号与 V1 MD5 密钥</h3><ol><li>登录晴天支付，进入「商户工作台 → 个人资料 → API 信息」。</li><li>首次读取商户资料时，平台会为当前账户初始化商户记录，并分配六位 <code>merchant_no</code> 与 40 位十六进制 <code>api_key</code>。</li><li>商户号用于标识商户；V1 MD5 密钥用于请求签名。请只在您自己的后端服务保存密钥。</li><li>如需轮换 V1 密钥，在商户资料接口执行 <code>rotate_api_key</code>；旧密钥立即失效。</li></ol>
 <div class="endpoint"><span class="method">GET</span><span class="path">/api/merchant/profile</span></div>
