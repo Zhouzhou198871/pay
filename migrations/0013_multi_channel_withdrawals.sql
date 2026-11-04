@@ -14,3 +14,7 @@ WHERE total_debit_micro = 0;
 
 CREATE INDEX IF NOT EXISTS idx_merchant_withdrawals_type_status_time
 ON merchant_withdrawals(withdraw_type, status, requested_at DESC);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_merchant_ledger_withdrawal_refund_once
+ON merchant_ledger(related_id)
+WHERE related_type = 'withdrawal_refund' AND related_id IS NOT NULL;
