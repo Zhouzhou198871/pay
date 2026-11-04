@@ -15,7 +15,7 @@ function makeDb() {
               if (sql.includes("SELECT users.id")) {
                 return { id: "merchant-user-1", email: "owner@example.com", display_name: "晴天商户", username: "晴天商户" };
               }
-              return { total_orders: 12, today_orders: 3 };
+              if (sql.includes("total_orders")) return { total_orders: 12, today_orders: 3 };\n              return { site_name: "测试商户", status: "active" };
             },
             all: async () => {
               if (sql.includes("WITH currencies AS")) return { results: [{ currency: "USDT", available_micro: 5000000, pending_micro: 2000000, total_micro: 7000000 }] };
@@ -48,7 +48,7 @@ test("dashboard endpoint returns user-scoped D1 summaries, balances, channels an
   assert.equal(response.status, 200);
   const payload = await response.json();
   assert.deepEqual(payload.user, { display_name: "晴天商户", username: "晴天商户" });
-  assert.deepEqual(payload.summary, { total_orders: 12, today_orders: 3 });
+  assert.deepEqual(payload.summary, { total_orders: 12, today_orders: 3 });\n  assert.deepEqual(payload.merchant, { site_name: "测试商户", status: "active" });
   assert.equal(payload.balances[0].total_micro, 7000000);
   assert.equal(payload.channels[0].fee_rate, 0.8);
   assert.equal(payload.trend.days.length, 7);
