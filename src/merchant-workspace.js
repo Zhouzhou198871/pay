@@ -155,8 +155,8 @@ function loadOverviewData() {
             const title = escapeText(channel.display_name || channel.channel_code || "收款通道");
             const code = escapeText(channel.channel_code || "");
             const status = escapeText(channel.status || "");
-            const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
-            const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
+            const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
+            const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
             return `
               <article class="qt-channel-row">
                 <span class="qt-channel-mark">${title.slice(0,1)}</span>
