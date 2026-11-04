@@ -84,7 +84,7 @@ function renderOverview() {
     </section>
     <section class="qt-balance-card"><span>账户余额</span><strong id="qt-total-balance">读取中</strong><small>以账本最新余额为准</small></section>
     <section class="qt-card qt-channel-card">
-      <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg></span><div><h3>通道统计</h3><p>已配置收款通道及其统计字段</p></div></div>
+      <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg></span><div><h3>通道统计</h3><p>收入、成功率与实际费率均按 D1 订单统计</p></div></div>
       <div id="qt-channel-list"><div class="qt-data-empty">正在读取通道信息…</div></div>
     </section>
     <section class="qt-card qt-trend-card">
@@ -166,7 +166,7 @@ function loadOverviewData() {
           channelRoot.innerHTML = channels.map((channel) => {
             const title = escapeText(channel.display_name || channel.channel_code || "收款通道");
             const code = escapeText(channel.channel_code || "");
-            const status = escapeText(channel.status || "");
+            const statusLabels = { active: "已启用", pending: "待审核", disabled: "已停用", rejected: "未通过", observed: "有订单记录" };\n            const status = escapeText(statusLabels[channel.status] || channel.status || "");
             const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
             const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
             return `
@@ -177,7 +177,7 @@ function loadOverviewData() {
                   <div><small>今日收入</small><b>${formatCents(channel.today_amount_cents, channel.currency || "CNY")}</b></div>
                   <div><small>昨日收入</small><b>${formatCents(channel.yesterday_amount_cents, channel.currency || "CNY")}</b></div>
                   <div><small>通道成功率</small><b class="qt-success-text">${rate}%</b></div>
-                  <div><small>通道费率</small><b>${feeRate}%</b></div>
+                  <div><small>实际费率</small><b>${feeRate}%</b></div>
                 </div>
               </article>`;
           }).join("");
