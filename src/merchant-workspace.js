@@ -277,7 +277,7 @@ function renderProfile() {
             <label>商户 ID</label>
             <div class="qt-copy-field"><code id="qt-profile-merchant-id">正在读取商户信息…</code><button type="button" data-copy-target="#qt-profile-merchant-id" aria-label="复制商户 ID">▢</button></div>
           </div>
-          <div class="qt-profile-field"><label>V1 API 密钥</label><div class="qt-copy-field"><code id="qt-profile-api-key">加载后可显示</code><button type="button" id="qt-toggle-api-key">显示</button><button type="button" data-copy-target="#qt-profile-api-key" aria-label="复制 API 密钥">▢</button></div><small>仅当前登录账户可查看，请勿发送给他人或放入公开代码仓库。</small></div>
+          <div class="qt-profile-field"><label>V1 API 密钥</label><div class="qt-copy-field"><code id="qt-profile-api-key">加载后可显示</code><button type="button" id="qt-toggle-api-key">显示</button><button type="button" id="qt-copy-api-key" aria-label="复制 API 密钥">▢</button></div><small>仅当前登录账户可查看，请勿发送给他人或放入公开代码仓库。</small></div>
           <div class="qt-profile-field">
             <label>认证方式</label>
             <div class="qt-copy-field"><code>同源 HttpOnly Session Cookie</code><span class="qt-profile-lock" aria-label="服务端安全管理">安全会话</span></div>
@@ -309,7 +309,7 @@ fetch("${baseUrl}/api/merchant/dashboard", {
         <hr class="qt-profile-divider">
         <section class="qt-profile-section">
           <h3>商户签名密钥</h3>
-          <div class="qt-profile-notice"><strong>当前版本尚未开放商户密钥管理</strong><p>晴天支付目前没有可调用的 MD5 商户密钥、RSA 密钥对生成/重置接口，也没有对外支付下单签名协议。为避免误接入，这里不会展示虚构密钥或示例密钥。后续正式开放后，将在此显示真实凭据、签名算法、请求头和轮换入口。</p></div>
+          <div class="qt-profile-notice"><strong>V1 API 密钥已在上方读取</strong><p>密钥仅在登录后的个人资料中按需显示。V1 下单签名字段和请求规范请以官方 API 文档为准；V2 RSA 密钥配置状态以当前商户资料返回值为准。</p></div>
           <a class="qt-profile-doc-link" href="https://github.com/Zhouzhou198871/pay/blob/main/docs/API_REFERENCE.md" target="_blank" rel="noopener">查看 API 接口参考文档 <span>↗</span></a>
         </section>
       </div>
@@ -323,17 +323,23 @@ fetch("${baseUrl}/api/merchant/dashboard", {
         </section>
         <hr class="qt-profile-divider">
         <section class="qt-profile-section">
-          <h3>收款与结算设置</h3>
-          <div class="qt-profile-field"><label>结算方式</label><div class="qt-profile-value">USDT 结算（以已开通商户配置为准）</div></div>
-          <div class="qt-profile-field"><label>USDT 提款地址</label><div class="qt-profile-value qt-profile-muted">当前账户暂无可读取的已绑定地址</div></div>
-          <div class="qt-profile-field"><label>USDT 网络</label><div class="qt-profile-value">待商户结算配置开放</div></div>
-          <div class="qt-profile-notice"><strong>结算资料管理暂未开放</strong><p>当前没有安全的地址绑定/修改、网络切换或提现申请 API。为避免资金误转，暂不接受在前端填写后却无法保存的地址。</p></div>
+          <h3>USDT 提现设置</h3>
+          <p class="qt-profile-description">提现地址和网络会用于后续提现申请，请务必核对后保存。</p>
+          <form id="qt-payout-settings-form" class="qt-profile-settings-form">
+            <label class="field-label" for="qt-payout-network">USDT 网络</label><select id="qt-payout-network" name="usdt_network"><option value="USDT-TRC20">TRC20</option><option value="USDT-ERC20">ERC20</option><option value="USDT-BEP20">BEP20</option></select>
+            <label class="field-label" for="qt-payout-address">USDT 提现地址</label><input id="qt-payout-address" name="usdt_address" autocomplete="off" placeholder="填写本人控制的 USDT 地址" required>
+            <p class="qt-dialog-feedback" id="qt-payout-settings-feedback" role="status"></p><button type="submit" class="qt-primary-button">保存提现地址</button>
+          </form>
         </section>
         <hr class="qt-profile-divider">
         <section class="qt-profile-section">
-          <h3>账户密码</h3>
-          <div class="qt-profile-notice"><strong>密码安全保护已启用</strong><p>登录密码使用 PBKDF2-SHA256 加盐哈希保存，不在前端展示或存储明文。当前提供邮箱验证码密码重置流程；支付密码功能尚未开放。</p></div>
-          <p class="qt-profile-description">如需重置登录密码，请退出账户后在登录页选择“忘记密码”。重置成功后需要重新登录。</p>
+          <h3>提现支付密码</h3>
+          <p class="qt-profile-description">设置后，提交提现申请时必须输入此密码。密码仅以 PBKDF2 哈希形式保存在服务端。</p>
+          <form id="qt-withdraw-password-settings-form" class="qt-profile-settings-form">
+            <div id="qt-current-withdraw-password-wrap"><label class="field-label" for="qt-current-withdraw-password">当前支付密码（已设置时必填）</label><input id="qt-current-withdraw-password" type="password" autocomplete="current-password" minlength="8" maxlength="64" placeholder="未设置过可留空"></div>
+            <label class="field-label" for="qt-new-withdraw-password">新支付密码</label><input id="qt-new-withdraw-password" type="password" autocomplete="new-password" minlength="8" maxlength="64" required placeholder="8 至 64 位">
+            <p class="qt-dialog-feedback" id="qt-withdraw-password-feedback" role="status"></p><button type="submit" class="qt-primary-button">保存支付密码</button>
+          </form>
         </section>
       </div>
     </section>`;
@@ -349,6 +355,23 @@ fetch("${baseUrl}/api/merchant/dashboard", {
         pane.hidden = pane.dataset.profilePane !== tab;
       });
     });
+  });
+  panel.querySelector("#qt-copy-api-key")?.addEventListener("click", async () => {
+    if (!loadedApiKey) return;
+    try { await navigator.clipboard.writeText(loadedApiKey); const button = panel.querySelector("#qt-copy-api-key"); button.textContent = "已复制"; }
+    catch { panel.querySelector("#qt-copy-api-key").textContent = "复制失败"; }
+  });
+  panel.querySelector("#qt-payout-settings-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-payout-settings-feedback"); const button = form.querySelector('button[type="submit"]');
+    button.disabled = true; feedback.textContent = "正在保存…";
+    try { const response = await fetch(ENDPOINTS.profile, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "payout", usdt_network: panel.querySelector("#qt-payout-network").value, usdt_address: panel.querySelector("#qt-payout-address").value.trim() }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "提现地址已保存"; }
+    catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
+  });
+  panel.querySelector("#qt-withdraw-password-settings-form")?.addEventListener("submit", async (event) => {
+    event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-withdraw-password-feedback"); const button = form.querySelector('button[type="submit"]');
+    button.disabled = true; feedback.textContent = "正在保存…";
+    try { const response = await fetch(ENDPOINTS.profile, { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "withdraw_password", current_withdraw_password: panel.querySelector("#qt-current-withdraw-password").value, withdraw_password: panel.querySelector("#qt-new-withdraw-password").value }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "支付密码已保存"; form.reset(); }
+    catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
   });
   panel.querySelectorAll("[data-copy-value],[data-copy-target]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -390,6 +413,9 @@ fetch("${baseUrl}/api/merchant/dashboard", {
       loadedApiKey = String(merchant.api_key || "");
       const keyNode = panel.querySelector("#qt-profile-api-key");
       if (keyNode) keyNode.textContent = loadedApiKey ? "••••••••••••••••" : "当前暂无可用密钥";
+      const addressNode = panel.querySelector("#qt-payout-address"); if (addressNode) addressNode.value = merchant.usdt_address || "";
+      const networkNode = panel.querySelector("#qt-payout-network"); if (networkNode) networkNode.value = merchant.usdt_network || "USDT-TRC20";
+      const currentPasswordWrap = panel.querySelector("#qt-current-withdraw-password-wrap"); if (currentPasswordWrap && !merchant.withdraw_password_set) currentPasswordWrap.hidden = true;
     })
     .catch(() => {
       const idNode = panel.querySelector("#qt-profile-merchant-id");
