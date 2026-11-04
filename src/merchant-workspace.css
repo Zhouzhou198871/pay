@@ -267,3 +267,72 @@
 @media(max-width:640px){.qt-admin-dialog form{padding:18px}.qt-admin-toolbar{align-items:flex-start}.qt-balance-actions{width:100%}.qt-balance-actions button{flex:1}.qt-admin-table{min-width:700px}.qt-admin-tabs button{flex:1;padding:10px 8px;font-size:13px}}
 
 .qt-profile-settings-form{display:grid;gap:10px;max-width:620px}.qt-profile-settings-form .field-label{margin:8px 0 0;color:#43576c;font-size:13px;font-weight:650}.qt-profile-settings-form input,.qt-profile-settings-form select{width:100%;box-sizing:border-box;min-height:44px;border:1px solid #d9e3ef;border-radius:10px;padding:11px 12px;background:#fff;color:#17324d;font:inherit}.qt-profile-settings-form input:focus,.qt-profile-settings-form select:focus{outline:0;border-color:#4487ed;box-shadow:0 0 0 3px #4487ed20}.qt-profile-settings-form .qt-primary-button{justify-self:start;min-width:140px}
+
+
+/* Finance records — mobile-first, shared by merchant and admin views */
+.qt-finance-page{display:flex;flex-direction:column;gap:16px;min-width:0}
+.qt-filter-card,.qt-data-card{padding:18px;border:1px solid #e8eef4;border-radius:20px;background:#fff;box-shadow:0 6px 18px rgba(42,77,112,.055);min-width:0}
+.qt-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.qt-filter-grid label,.qt-withdraw-page-form>label{display:flex;flex-direction:column;gap:7px;min-width:0;color:#617487;font-size:12px;font-weight:650}
+.qt-filter-grid .qt-filter-wide{grid-column:span 2}
+.qt-filter-grid input,.qt-filter-grid select,.qt-inline-filter select,.qt-withdraw-page-form input{box-sizing:border-box;width:100%;min-width:0;height:42px;border:1px solid #dfe7ef;border-radius:10px;background:#fbfdff;padding:0 11px;color:#263b50;font:inherit;font-size:13px}
+.qt-filter-grid input:focus,.qt-filter-grid select:focus,.qt-inline-filter select:focus,.qt-withdraw-page-form input:focus{outline:0;border-color:#69a8d7;box-shadow:0 0 0 3px rgba(64,148,202,.12)}
+.qt-filter-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:14px}
+.qt-filter-actions button,.qt-inline-filter button{min-width:86px;min-height:38px}
+.qt-data-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.qt-data-card-head h3{margin:0;color:#25384c;font-size:17px;font-weight:750}
+.qt-data-card-head p{margin:5px 0 0;color:#94a1ad;font-size:11px}
+.qt-data-count{flex:none;padding:6px 10px;border-radius:9px;background:#eef7fc;color:#2389bc;font-size:11px;font-weight:700}
+.qt-finance-table-wrap,.qt-admin-table-wrap{width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;scroll-behavior:smooth;border:1px solid #edf1f5;border-radius:12px}
+.qt-finance-table,.qt-admin-table{width:100%;min-width:920px;border-collapse:separate;border-spacing:0;background:#fff;font-size:12px}
+.qt-finance-table th,.qt-admin-table th{position:sticky;top:0;padding:13px 14px;background:#f6f9fc;color:#74879a;text-align:left;font-size:11px;font-weight:700;white-space:nowrap;border-bottom:1px solid #e9eff4}
+.qt-finance-table td,.qt-admin-table td{padding:14px;border-bottom:1px solid #eff3f6;color:#52677b;vertical-align:middle;white-space:nowrap;font-size:12px}
+.qt-finance-table tbody tr:last-child td,.qt-admin-table tbody tr:last-child td{border-bottom:0}
+.qt-finance-table tbody tr:hover,.qt-admin-table tbody tr:hover{background:#fbfdff}
+.qt-finance-table td strong,.qt-admin-table td strong{display:block;color:#273d52;font-size:12px;font-weight:750}
+.qt-finance-table td small,.qt-admin-table td small{display:block;margin-top:5px;color:#9aa7b2;font-size:10px}
+.qt-finance-table .qt-nowrap{max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qt-row-action{border:1px solid #dceaf4;border-radius:8px;background:#f3f9fd;color:#2588bd;padding:7px 12px;font-size:11px;font-weight:700}
+.qt-status-pill{display:inline-flex;align-items:center;justify-content:center;padding:5px 9px;border-radius:20px;background:#eef4f8;color:#65788a;font-size:10px;font-weight:700;white-space:nowrap}
+.qt-status-paid{background:#eaf8f1;color:#1b9467}.qt-status-pending{background:#fff6e7;color:#bd8327}.qt-status-failed,.qt-status-rejected{background:#fff0ef;color:#ce5c55}.qt-status-refunded{background:#f1edff;color:#8064bd}
+.qt-finance-empty{padding:34px 16px;text-align:center;color:#9aa7b2;font-size:12px}
+.qt-detail-dialog{width:min(560px,calc(100vw - 28px));max-width:560px;max-height:min(82vh,760px);overflow:auto;border:1px solid #e7edf3;border-radius:22px;padding:22px;background:#fff;color:#25384c;box-shadow:0 24px 80px rgba(21,42,63,.2)}
+.qt-detail-dialog::backdrop,.qt-admin-dialog::backdrop{background:rgba(19,37,56,.38);backdrop-filter:blur(3px)}
+.qt-detail-list{display:flex;flex-direction:column;margin:14px 0 18px}
+.qt-detail-row{display:grid;grid-template-columns:112px minmax(0,1fr);gap:12px;padding:11px 2px;border-bottom:1px solid #edf1f5;font-size:12px}
+.qt-detail-row span{color:#8b9aa7}.qt-detail-row b{color:#31485d;text-align:right;overflow-wrap:anywhere;font-weight:650}
+.qt-dialog-actions{display:flex;justify-content:flex-end;gap:10px}
+.qt-asset-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.qt-asset-grid article{min-width:0;min-height:105px;padding:17px 16px;border:1px solid #e9eff4;border-radius:17px;background:#fff;box-shadow:0 6px 17px rgba(42,77,112,.05);display:flex;flex-direction:column;justify-content:center;gap:9px}
+.qt-asset-grid span{color:#8997a4;font-size:12px}.qt-asset-grid strong{font-size:clamp(18px,5vw,25px);font-weight:800;letter-spacing:-.025em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#26384b}
+.qt-asset-grid article:nth-child(1) strong{color:#8866cb}.qt-asset-grid article:nth-child(2) strong{color:#26384b}.qt-asset-grid article:nth-child(3) strong{color:#268bc5}.qt-asset-grid article:nth-child(4) strong{color:#24956d}
+.qt-payout-bound{margin-bottom:15px;padding:12px 14px;border:1px solid #e3edf5;border-radius:11px;background:#f7fbfe;color:#526c81;font-size:12px;overflow-wrap:anywhere}
+.qt-withdraw-page-form{display:grid;gap:12px}
+.qt-withdraw-page-form input{height:46px}
+.qt-amount-input{display:flex;gap:8px;min-width:0}
+.qt-amount-input input{flex:1}
+.qt-amount-input button{flex:none;border:1px solid #d8e9f5;border-radius:10px;background:#f1f8fc;color:#2487b8;padding:0 13px;font-size:12px;font-weight:700}
+.qt-withdraw-page-form>small{color:#c08735;font-size:11px}
+.qt-withdraw-rule{margin:0;color:#8998a5;font-size:11px;line-height:1.7}
+.qt-withdraw-page-form>.qt-primary-button{min-height:44px}
+.qt-inline-filter{display:flex;align-items:flex-end;gap:9px;flex-wrap:wrap;margin:0 0 14px}
+.qt-inline-filter label{display:flex;flex-direction:column;gap:6px;color:#718496;font-size:11px;font-weight:650}
+.qt-inline-filter select{min-width:150px}
+.qt-money-in{color:#1b9a69!important;font-weight:800}.qt-money-out{color:#d85c58!important;font-weight:800}
+.qt-finance-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));z-index:1000;max-width:calc(100vw - 36px);transform:translate(-50%,14px);opacity:0;pointer-events:none;padding:12px 17px;border-radius:12px;background:#26384b;color:#fff;font-size:12px;box-shadow:0 8px 24px rgba(22,43,63,.2);transition:opacity .18s ease,transform .18s ease}
+.qt-finance-toast.is-visible{opacity:1;transform:translate(-50%,0)}.qt-finance-toast[data-type="success"]{background:#18835e}
+.qt-admin-table-wrap{scrollbar-width:thin;scrollbar-color:#c7d6e2 transparent}
+@media(max-width:680px){
+ .qt-filter-card,.qt-data-card{padding:14px;border-radius:17px}
+ .qt-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .qt-filter-grid .qt-filter-wide{grid-column:1/-1}
+ .qt-filter-actions{justify-content:stretch}.qt-filter-actions button{flex:1}
+ .qt-data-card-head h3{font-size:15px}
+ .qt-finance-table,.qt-admin-table{min-width:900px}
+ .qt-detail-dialog{padding:17px;border-radius:18px}
+ .qt-detail-row{grid-template-columns:96px minmax(0,1fr);padding:10px 0}
+ .qt-asset-grid{gap:10px}
+ .qt-asset-grid article{min-height:94px;padding:14px 12px;border-radius:15px}
+ .qt-asset-grid strong{font-size:clamp(17px,5.3vw,22px)}
+ .qt-inline-filter{align-items:stretch}.qt-inline-filter label{flex:1}.qt-inline-filter button{flex:1}
+}
