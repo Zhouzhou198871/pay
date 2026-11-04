@@ -132,8 +132,8 @@ async function loadAdmin(){
    const rows=[["用户",item.email||item.user_id],["申请金额",money(item.amount_micro,item.currency||"USDT")],["手续费",money(item.fee_amount??item.fee_micro,item.currency||"USDT")],["实际到账",item.withdraw_type==="fiat"?"¥ "+fmt(Number(item.payout_amount_cents||0)/100,2):money(item.payout_amount_micro??item.amount_micro)],["收款信息",item.withdraw_type==="fiat"?(String(bank.method||"")+"/"+String(bank.real_name||"")):(String(item.payout_network||"USDT")+" · "+String(item.payout_address||item.destination_masked||""))],["申请时间",date(item.requested_at)]];
    rows.forEach(([k,v])=>{const row=document.createElement("div"),label=document.createElement("span"),value=document.createElement("b");label.textContent=k;value.textContent=String(v??"—");row.append(label,value);details.append(row)});
    card.append(heading,details);
-   if(item.withdraw_type==="fiat"&&/^data:image\/(?:png|jpeg|webp);base64,/.test(bank.qr_image||"")){
-    const img=document.createElement("img");img.className="qt-withdraw-receipt-image";img.src=bank.qr_image;img.alt="商户提交的收款码（管理员可见）";card.append(img);
+   if(item.withdraw_type==="fiat"&&/^data:image\/(?:png|jpeg|webp);base64,/.test(bank.qr_image_url||"")){
+    const img=document.createElement("img");img.className="qt-withdraw-receipt-image";img.src=bank.qr_image_url;img.alt="商户提交的收款码（管理员可见）";card.append(img);
    }
    const actions=document.createElement("div");actions.className="qt-withdraw-review-actions";
    const approve=document.createElement("button");approve.type="button";approve.className="qt-primary-button";approve.textContent="审核通过";
