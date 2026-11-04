@@ -8,7 +8,7 @@
 - [API 接口参考](docs/API_REFERENCE.md)：已实现接口的路径、参数、响应字段、状态码和限制。\n- [Firebase / Firestore 接入规范](docs/FIREBASE_FIRESTORE_GUIDE.md)：官方文档索引、Cloudflare Workers REST 接入、安全边界与上线检查。
 - 生产 API Base URL：`https://pay.lynli.me`
 
-**接口状态说明：** 当前已提供账户认证 API 和商户工作台只读数据 API。支付下单、支付回调、退款、提现申请/审核、商户 API Key 与 Webhook 尚未开放。请勿把规划能力视为可调用接口。
+**接口状态说明：** 当前已实现账户认证、商户订单/资金明细查询、V1/V2 支付下单、NZZF RSA 回调验签与幂等入账、提现申请及受限管理员打款状态接口。退款、完整后台 UI 与自动链上打款仍未开放；请勿把未实现能力视为可调用接口。
 
 晴天支付的登录与注册基础工程，使用 Vite + Cloudflare Pages Functions + D1。
 
@@ -102,3 +102,29 @@ npm run build
 配置完成后重新部署。未配置这两个变量时，人机验证会拒绝通过，认证接口不会降级为无验证模式。
 
 登录、注册及密码找回均要求明确勾选《用户协议》和《隐私政策》。忘记密码通过邮箱验证码重置；重置成功后会撤销该账户的现有登录会话。
+
+## NZZF 支付与回调配置
+
+Cloudflare Pages Production 环境需配置：
+
+| 变量 | 类型 | 说明 |
+|---|---|---|
+| `NZZF_PID` | Text | NZZF 商户 PID |
+| `NZZF_MERCHANT_PRIVATE_KEY` | **Secret** | 商户 RSA 私钥，WebCrypto PKCS#8 PEM（`BEGIN PRIVATE KEY`） |
+| `NZZF_PLATFORM_PUBLIC_KEY` | Text | NZZF 平台 RSA 公钥（SPKI） |
+| `NZZF_USDT_CNY_RATE` | Text | USDT/CNY 折算汇率 |
+| `NZZF_FEE_RATE_BPS` | Text | 手续费基点，50 表示 0.50% |
+| `NZZF_API_URL` | Text | 可选，默认 `https://nzzf.org` |
+| `NZZF_TIMEOUT_MS` | Text | 可选，上游请求超时，默认 12000 |
+| `ADMIN_USER_IDS` | Text | 可选逗号分隔的后台管理员用户 ID，启用提现管理 API 必须配置 |
+
+不要将私钥粘贴到聊天、仓库、构建变量明文或日志中；只在 Cloudflare Production 的 Secret 类型中设置。私钥须为 PKCS#8 PEM，平台公钥须为 SPKI PEM 或其 Base64 主体。配置后重新部署。
+
+### 管理员提现处理
+
+当前没有独立后台管理页面，提供受 `ADMIN_USER_IDS` 白名单保护的管理 API：
+
+- `GET /api/admin/withdrawals?status=pending&page=1&page_size=50`：查看待处理提现。
+- `POST /api/admin/withdrawals/{id}/paid`：标记已打款，JSON 必须提供 `payout_reference`（链上交易哈希或外部打款凭证编号），可选 `note`。
+
+管理员 ID 可在 D1 中按商户登录邮箱查询：`SELECT id,email FROM users WHERE email = '你的登录邮箱';`。请只把实际受信任的管理员 ID 加入白名单。提现申请创建时已从可用余额扣除；标记已打款只推进状态并记录凭证，不会再次扣款。
