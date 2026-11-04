@@ -67,6 +67,7 @@ export async function onRequestPost({ request, env }) {
       return json({ code: "SIGNATURE_INVALID", message: "签名验证失败。" }, 401);
     }
 
+    if (merchant.status === "suspended") return json({ code: "MERCHANT_SUSPENDED", message: "商户账户当前已被冻结，请联系平台客服。" }, 403);
     if (!merchant.api_access_granted) return json({ code: "API_ACCESS_PENDING", message: "API 调用权限尚未审批通过，请在商户客服工单中提交申请。" }, 403);
 
     const now = Math.floor(Date.now() / 1000);
