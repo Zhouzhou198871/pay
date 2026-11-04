@@ -527,7 +527,7 @@ async function refreshSupportChat(){
   try{
     const data=await supportApi("/api/merchant/support/tickets?limit=50");
     const messages=root.querySelector("#qt-chat-messages");messages.replaceChildren();
-    if(data.has_more&&data.next_cursor){const older=document.createElement("button");older.type="button";older.className="qt-chat-load-older";older.textContent="加载更早消息";older.addEventListener("click",async()=>{older.disabled=true;try{const cursor=data.next_cursor;const prev=await supportApi("/api/merchant/support/tickets?limit=50&before_at="+encodeURIComponent(cursor.before_at)+"&before_id="+encodeURIComponent(cursor.before_id));const marker=messages.firstChild;prev.messages.forEach(item=>appendChatMessage(root,item,true));if(!prev.has_more)older.remove();else if(prev.next_cursor){data.next_cursor=prev.next_cursor;older.disabled=false;} }catch(e){older.disabled=false;older.textContent="加载失败，点击重试"}});messages.append(older);}
+    if(data.has_more&&data.next_cursor){const older=document.createElement("button");older.type="button";older.className="qt-chat-load-older";older.textContent="加载更早消息";older.addEventListener("click",async()=>{older.disabled=true;try{const cursor=data.next_cursor;const prev=await supportApi("/api/merchant/support/tickets?limit=50&before_at="+encodeURIComponent(cursor.before_at)+"&before_id="+encodeURIComponent(cursor.before_id));const marker=messages.firstChild;prev.messages.slice().reverse().forEach(item=>appendChatMessage(root,item,true));if(!prev.has_more)older.remove();else if(prev.next_cursor){data.next_cursor=prev.next_cursor;older.disabled=false;} }catch(e){older.disabled=false;older.textContent="加载失败，点击重试"}});messages.append(older);}
     if(!data.messages?.length){
       const welcome=document.createElement("div");welcome.className="qt-chat-message is-agent";welcome.textContent="您好，欢迎联系晴天支付客服。您可以发送咨询消息，或提交网站、机器人、APP 的 API 调用权限申请。";messages.append(welcome);
     }else data.messages.forEach(item=>appendChatMessage(root,item));
@@ -609,8 +609,9 @@ async function renderAdminSupportTickets(){
    detail.querySelector("small").textContent=data.ticket.email+" · "+date(data.ticket.updated_at);
    detail.querySelector("#qt-admin-ticket-back").onclick=()=>{detail.hidden=true;};
    const messages=detail.querySelector("#qt-admin-ticket-messages");
-   (data.messages||[]).forEach(item=>{const row=document.createElement("article");row.className="qt-admin-message "+(item.sender_role==="merchant"?"is-merchant":"is-admin");const who=document.createElement("b");who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="admin"?"管理员":"系统";const content=document.createElement("p");content.textContent=item.content;const time=document.createElement("small");time.textContent=date(item.created_at);row.append(who,content,time);
-    if(item.message_type==="permission_request"){let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}messages.append(row)});
+   (data.messages||[]).forEach(item=>{const row=document.createElement("article");row.className="qt-admin-message "+(item.sender_role==="merchant"?"is-merchant":item.sender_role==="ai"?"is-ai":"is-admin");const who=document.createElement("b");who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="admin"?"人工管理员":item.sender_role==="ai"?"晴天 AI 客服":"系统";const content=document.createElement("p");content.textContent=item.content;const time=document.createElement("small");time.textContent=date(item.created_at);row.append(who,content,time);let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}
+    if(item.message_type==="permission_request"){const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}
+    if(Array.isArray(m.attachments))m.attachments.forEach(file=>{const link=document.createElement("a");link.className="qt-chat-attachment";link.href="/api/admin/support/attachments/"+encodeURIComponent(file.attachment_id);link.target="_blank";link.rel="noopener";link.textContent=(String(file.mime_type||"").startsWith("image/")?"图片预览 · ":"下载附件 · ")+(file.file_name||"查看附件");if(String(file.mime_type||"").startsWith("image/")){const img=document.createElement("img");img.src=link.href;img.alt=file.file_name||"商户上传图片";link.prepend(img)}row.append(link)});messages.append(row)});
    const actions=detail.querySelector("#qt-admin-ticket-actions");
    if(data.pending_permission_request&&!data.ticket.api_access_granted){
     const approve=document.createElement("button");approve.type="button";approve.className="qt-primary-button";approve.textContent="同意并开通 API 权限";
@@ -623,6 +624,8 @@ async function renderAdminSupportTickets(){
   }catch(error){detail.textContent=error.message||"工单详情读取失败"}
  }
  panel.querySelector("#qt-admin-ticket-refresh").onclick=loadList;await loadList();
+ const heartbeat=()=>supportApi("/api/admin/support/presence",{method:"POST",body:JSON.stringify({})}).catch(()=>{});
+ heartbeat();const presenceTimer=setInterval(()=>{if(currentSection==="support-tickets")heartbeat();else clearInterval(presenceTimer)},30000);
  if(qtAdminTicketPoll)clearInterval(qtAdminTicketPoll);
  qtAdminTicketPoll=setInterval(()=>{if(currentSection==="support-tickets")loadList()},10000);
 }
