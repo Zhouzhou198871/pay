@@ -1,6 +1,7 @@
 import "./merchant-workspace.css";
 
-const ENDPOINTS = {\n  dashboard: "/api/merchant/dashboard",
+const ENDPOINTS = {
+  dashboard: "/api/merchant/dashboard",
   orders: "/api/merchant/orders",
   withdrawals: "/api/merchant/withdrawals",
   ledger: "/api/merchant/ledger",
