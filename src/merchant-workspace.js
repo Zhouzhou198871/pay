@@ -435,13 +435,37 @@ function selectSection(key) {
   if (key === "overview") return renderOverview();
   if (key === "profile") return renderProfile();
   if (key === "docs") {
-    const panel = $("#merchant-panel-content"); panel.innerHTML = "";
-    const box = document.createElement("div"); box.className = "section-empty";
-    const title = document.createElement("h3"); title.textContent = "开发者接入文档";
-    const desc = document.createElement("p"); desc.textContent = "查看 API 接入指南与接口字段说明。当前文档仅包含已开放的账户认证和商户只读查询接口。";
-    const a = document.createElement("a"); a.href = "/docs/DEVELOPER_GUIDE.md"; a.textContent = "打开开发者指南"; a.target = "_blank"; a.rel = "noopener";
-    const b = document.createElement("a"); b.href = "/docs/API_REFERENCE.md"; b.textContent = "打开 API 接口参考"; b.target = "_blank"; b.rel = "noopener";
-    box.append(title,desc,a,b); panel.append(box); return;
+    const panel = $("#merchant-panel-content");
+    panel.innerHTML = `
+      <section class="qt-docs-hub">
+        <button class="qt-docs-hero" id="qt-docs-open" type="button" aria-expanded="true">
+          <span class="qt-docs-hero-icon" aria-hidden="true">⌘</span>
+          <span class="qt-docs-hero-copy"><small>DEVELOPER CENTER</small><strong>开发者接入文档</strong><em>在当前工作台内阅读完整 API 文档，无需离开商户中心。</em></span>
+          <span class="qt-docs-hero-action">展开文档 <b>↗</b></span>
+        </button>
+        <div class="qt-docs-shortcuts" aria-label="文档快捷入口">
+          <button type="button" data-doc-anchor="quickstart"><span>01</span><b>接入指引</b><small>商户号 · MD5 · RSA 密钥</small><i>›</i></button>
+          <button type="button" data-doc-anchor="signature"><span>02</span><b>签名规范与 API 参考</b><small>V1 MD5 · V2 RSA2 · 下单接口</small><i>›</i></button>
+        </div>
+        <section class="qt-docs-viewer" id="qt-docs-viewer">
+          <div class="qt-docs-viewer-head"><div><i></i><strong>晴天支付 · API 文档中心</strong><small>官方接入规范</small></div><a href="/docs" target="_blank" rel="noopener">单独打开 ↗</a></div>
+          <iframe id="qt-docs-frame" title="晴天支付完整开发者文档" src="/docs" loading="eager" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+        </section>
+      </section>`;
+    const viewer = $("#qt-docs-viewer", panel);
+    const frame = $("#qt-docs-frame", panel);
+    const openDocs = (anchor = "") => {
+      viewer.classList.add("is-open");
+      const next = "/docs" + (anchor ? "#" + anchor : "");
+      if (frame.getAttribute("src") !== next) frame.setAttribute("src", next);
+      viewer.scrollIntoView({ behavior: "smooth", block: "start" });
+      $("#qt-docs-open", panel)?.setAttribute("aria-expanded", "true");
+    };
+    $("#qt-docs-open", panel)?.addEventListener("click", () => openDocs());
+    panel.querySelectorAll("[data-doc-anchor]").forEach((button) => {
+      button.addEventListener("click", () => openDocs(button.dataset.docAnchor));
+    });
+    return;
   }
   if (key === "support") return showEmpty("官方客服入口尚未配置", "请勿向非官方账号提供密码、验证码或 API 密钥。");
   showEmpty("此功能尚未开放", "当前版本不会展示模拟订单、虚构余额或未接通的支付能力。");
