@@ -1,0 +1,17 @@
+{
+  "name": "qingtian-pay/nzzf-php-sdk",
+  "description": "晴天支付 NZZF V2 RSA payment API compatible PHP SDK",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4",
+    "ext-curl": "*",
+    "ext-json": "*",
+    "ext-openssl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "QingtianPay\\Nzzf\\": "src/"
+    }
+  }
+}
