@@ -66,7 +66,7 @@ export const currentUser = async (request, db) => {
   if (!token) return null;
   const tokenHash = await sha256(token);
   const now = Math.floor(Date.now() / 1000);
-  const row = await db.prepare("SELECT users.id, users.email, users.display_name, COALESCE(NULLIF(users.display_name, ''), substr(users.email, 1, instr(users.email, '@') - 1)) AS username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.status = 'active' LIMIT 1")
+  const row = await db.prepare("SELECT users.id, users.email, users.display_name, users.status, COALESCE(NULLIF(users.display_name, ''), substr(users.email, 1, instr(users.email, '@') - 1)) AS username FROM sessions JOIN users ON users.id = sessions.user_id WHERE sessions.token_hash = ? AND sessions.expires_at > ? AND users.status = 'active' LIMIT 1")
     .bind(tokenHash, now).first();
   return row || null;
 };
