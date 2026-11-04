@@ -3,7 +3,7 @@ import { json, randomHex, verifyPassword } from '../../_lib/auth.js';
 
 function parseAmountMicro(value) {
   const raw = String(value ?? '').trim();
-  if (!/^\\d{1,10}(?:\\.\\d{1,6})?$/.test(raw)) return null;
+  if (!/^\d{1,10}(?:\.\d{1,6})?$/.test(raw)) return null;
   const [whole, fraction = ''] = raw.split('.');
   const amount = Number(whole) * 1000000 + Number((fraction + '000000').slice(0, 6));
   return Number.isSafeInteger(amount) && amount >= 10000 && amount <= 1000000000000 ? amount : null;
@@ -19,7 +19,7 @@ function maskAddress(value) {
 }
 function validQr(value) {
   return typeof value === 'string' &&
-    /^data:image\\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value) &&
+    /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(value) &&
     value.length <= 320000;
 }
 export async function onRequestPost({ request, env }) {
@@ -57,7 +57,7 @@ export async function onRequestPost({ request, env }) {
       const realName = String(body?.real_name || '').trim();
       const qrImage = body?.qr_image;
       if (!['wechat', 'alipay'].includes(method)) return json({ error: '请选择微信或支付宝收款方式。' }, 400);
-      if (realName.length < 2 || realName.length > 40 || /[<>\\r\\n]/.test(realName)) return json({ error: '请填写 2 至 40 个字符的真实姓名。' }, 400);
+      if (realName.length < 2 || realName.length > 40 || /[<>\r\n]/.test(realName)) return json({ error: '请填写 2 至 40 个字符的真实姓名。' }, 400);
       if (!validQr(qrImage)) return json({ error: '请上传有效的收款码图片（PNG、JPG 或 WebP，压缩后不超过约 230KB）。' }, 400);
       const rate = Number(env.WITHDRAW_USDT_CNY_RATE || env.NZZF_USDT_CNY_RATE || 0);
       if (!Number.isFinite(rate) || rate <= 0 || rate > 1000) return json({ error: '法币提现汇率尚未配置，请联系平台客服。' }, 503);
