@@ -166,7 +166,8 @@ function loadOverviewData() {
           channelRoot.innerHTML = channels.map((channel) => {
             const title = escapeText(channel.display_name || channel.channel_code || "收款通道");
             const code = escapeText(channel.channel_code || "");
-            const statusLabels = { active: "已启用", pending: "待审核", disabled: "已停用", rejected: "未通过", observed: "有订单记录" };\n            const status = escapeText(statusLabels[channel.status] || channel.status || "");
+            const statusLabels = { active: "已启用", pending: "待审核", disabled: "已停用", rejected: "未通过", observed: "有订单记录" };
+            const status = escapeText(statusLabels[channel.status] || channel.status || "");
             const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
             const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
             return `
