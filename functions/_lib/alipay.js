@@ -22,8 +22,9 @@ async function rsa2Sign(params, privatePem) {
 }
 function moneyCny(amountMicro, rate) {
   const amount = amountMicro / 1000000 * rate;
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error('ALIPAY_AMOUNT_INVALID');
-  return amount.toFixed(2);
+  const rounded = Math.round(amount * 100) / 100;
+  if (!Number.isFinite(rounded) || rounded < 0.01) throw new Error('ALIPAY_AMOUNT_INVALID');
+  return rounded.toFixed(2);
 }
 export async function createAlipayCheckout({ env, db, tradeNo, subject, amountMicro, payType }) {
   const registry = await db.prepare("SELECT enabled, gateway_url FROM payment_providers WHERE provider = 'alipay' LIMIT 1").first();
