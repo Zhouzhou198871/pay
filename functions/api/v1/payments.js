@@ -38,7 +38,7 @@ export async function onRequestPost({ request, env }) {
   catch { return json({ code: "INVALID_JSON", message: "请求 JSON 格式不正确。" }, 400); }
 
   const required = ["merchant_no", "out_trade_no", "amount", "pay_type", "notify_url", "timestamp", "sign"];
-  if (!body || typeof body !== "object" || required.some((key) => body[key] === undefined || body[key] === null || String(body[key]).trim() === "")) {
+  if (!body || typeof body !== "object" || Array.isArray(body) || required.some((key) => body[key] === undefined || body[key] === null || String(body[key]).trim() === "")) {
     return json({ code: "MISSING_PARAMETER", message: "缺少必要参数（timestamp 也必须参与签名）。" }, 400);
   }
   if (!isFreshTimestamp(body.timestamp)) return json({ code: "TIMESTAMP_EXPIRED", message: "时间戳无效或已超过 5 分钟，请重新发起请求。" }, 400);
@@ -49,14 +49,14 @@ export async function onRequestPost({ request, env }) {
   const amountMicro = parseAmount(body.amount);
   const notifyUrl = String(body.notify_url).trim();
   if (!/^\d{6}$/.test(merchantNo)) return json({ code: "INVALID_MERCHANT", message: "商户号格式不正确。" }, 400);
-  if (outTradeNo.length > 64 || !/^[A-Za-z0-9_.:-]{1,64}$/.test(outTradeNo)) return json({ code: "INVALID_OUT_TRADE_NO", message: "商户订单号仅允许 1 至 64 位字母、数字及 _ . : -。" }, 400);
+  if (!/^[A-Za-z0-9_.:-]{1,64}$/.test(outTradeNo)) return json({ code: "INVALID_OUT_TRADE_NO", message: "商户订单号仅允许 1 至 64 位字母、数字及 _ . : -。" }, 400);
   if (amountMicro === null) return json({ code: "INVALID_AMOUNT", message: "金额必须大于 0，最多 6 位小数。" }, 400);
   if (!PAY_TYPES.has(payType)) return json({ code: "UNSUPPORTED_PAY_TYPE", message: "当前仅接受 alipay 或 alipay_h5。" }, 400);
   if (!validNotifyUrl(notifyUrl)) return json({ code: "INVALID_NOTIFY_URL", message: "异步通知地址必须是有效的 HTTPS 公网地址。" }, 400);
 
   try {
     const merchant = await env.AUTH_DB.prepare(
-      "SELECT id, user_id, merchant_no, api_key, status FROM pay_merchants WHERE merchant_no = ? LIMIT 1"
+      "SELECT id, user_id, merchant_no, api_key, app_id, status FROM pay_merchants WHERE merchant_no = ? LIMIT 1"
     ).bind(merchantNo).first();
     if (!merchant || !merchant.api_key) return json({ code: "MERCHANT_NOT_FOUND", message: "商户不存在或尚未开通 V1 API。" }, 401);
 
@@ -67,10 +67,13 @@ export async function onRequestPost({ request, env }) {
 
     const now = Math.floor(Date.now() / 1000);
     const id = randomHex(16);
+    const tradeNo = "QT" + now.toString() + randomHex(8).toUpperCase();
+    // Keep the existing legacy Alipay columns populated while preserving exact V1 precision in amount_micro.
+    const amountCents = Math.max(1, Math.round(amountMicro / 10000));
     try {
       await env.AUTH_DB.prepare(
-        "INSERT INTO payment_orders (id, merchant_id, user_id, merchant_no, out_trade_no, amount_micro, currency, pay_type, notify_url, status, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', ?, ?, 'unpaid', ?, ?, ?)"
-      ).bind(id, merchant.id, merchant.user_id, merchantNo, outTradeNo, amountMicro, payType, notifyUrl, now, now, now + 900).run();
+        "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', '', '', ?, ?, ?, ?, ?)"
+      ).bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, outTradeNo, notifyUrl, amountMicro, payType, Number(body.timestamp), now).run();
     } catch (error) {
       const message = String(error?.message || error);
       if (/UNIQUE constraint failed|constraint.*unique/i.test(message)) {
@@ -84,6 +87,7 @@ export async function onRequestPost({ request, env }) {
       message: "订单创建成功。",
       data: {
         order_id: id,
+        trade_no: tradeNo,
         merchant_no: merchantNo,
         out_trade_no: outTradeNo,
         amount: amountText(amountMicro),
