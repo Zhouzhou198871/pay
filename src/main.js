@@ -1,4 +1,5 @@
 import "./style.css";
+import { renderAdmin } from "./admin.js";
 import "./merchant-workspace.js";
 import { renderPaypage } from "./paypage.js";
 const app = document.querySelector("#app");
@@ -488,7 +489,9 @@ function showOAuthFeedback() {
   history.replaceState(null, "", location.pathname + (query ? `?${query}` : "") + location.hash);
 }
 
-if (location.pathname === "/paypage") {
+if (location.pathname === "/admin") {
+  renderAdmin();
+} else if (location.pathname === "/paypage") {
   renderPaypage();
 } else if (location.pathname === "/dashboard") {
   renderDashboard();
