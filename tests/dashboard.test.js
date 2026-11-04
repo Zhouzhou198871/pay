@@ -20,8 +20,8 @@ function makeDb() {
             },
             all: async () => {
               if (sql.includes("WITH currencies AS")) return { results: [{ currency: "USDT", available_micro: 5000000, pending_micro: 2000000, total_micro: 7000000 }] };
-              if (sql.includes("channel_sources AS")) return { results: [{ channel_code: "alipay", display_name: "支付宝", status: "active", today_amount_cents: 1000, yesterday_amount_cents: 500, success_rate: 98.5, fee_rate: 0.8 }] };
-              if (sql.includes("WITH RECURSIVE days")) return { results: Array.from({ length: 7 }, (_, i) => ({ day: `2026-11-0${i+1}`, amount_cents: i * 100, orders: i })) };
+              if (sql.includes("channel_sources AS")) return { results: [{ channel_code: "alipay", display_name: "支付宝", status: "active", today_amount_micro: 10000000, yesterday_amount_micro: 5000000, success_rate: 98.5, fee_rate: 0.8 }] };
+              if (sql.includes("WITH RECURSIVE days")) return { results: Array.from({ length: 7 }, (_, i) => ({ day: `2026-11-0${i+1}`, amount_micro: i * 1000000, orders: i })) };
               return { results: [] };
             }
           };
@@ -54,7 +54,7 @@ test("dashboard endpoint returns user-scoped D1 summaries, balances, channels an
   assert.equal(payload.balances[0].total_micro, 7000000);
   assert.equal(payload.channels[0].fee_rate, 0.8);
   assert.equal(payload.trend.days.length, 7);
-  assert.equal(payload.trend.total_amount_cents, 2100);
+  assert.equal(payload.trend.total_amount_micro, 21000000);
   assert.equal(payload.trend.total_orders, 21);
   const scoped = calls.filter((call) => !call.sql.includes("SELECT users.id"));
   assert.ok(scoped.every((call) => call.values.every((value) => value === "merchant-user-1")));
