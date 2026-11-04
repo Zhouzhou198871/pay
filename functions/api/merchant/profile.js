@@ -1,4 +1,5 @@
-import { currentUser, hashPassword, json, randomHex, sha256, verifyPassword } from "../../_lib/auth.js";\nimport { ensurePlatformKeyPair } from "../../_lib/platform-signature.js";
+import { currentUser, hashPassword, json, randomHex, sha256, verifyPassword } from "../../_lib/auth.js";
+import { ensurePlatformKeyPair } from "../../_lib/platform-signature.js";
 
 const networks = new Set(["USDT-TRC20", "USDT-ERC20", "USDT-BEP20"]);
 const encoder = new TextEncoder();
