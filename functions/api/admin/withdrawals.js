@@ -6,13 +6,13 @@ export async function onRequestGet({ request, env }) {
   if (context.response) return context.response;
   const url = new URL(request.url);
   const status = String(url.searchParams.get("status") || "pending");
-  const allowed = new Set(["pending", "approved", "processing", "paid", "rejected", "cancelled", "all"]);
+  const allowed = new Set(["pending", "approved", "processing", "paid", "rejected", "cancelled", "actionable", "all"]);
   if (!allowed.has(status)) return json({ error: "提现状态筛选值无效。" }, 400);
   const page = Math.max(1, Math.min(100000, Number.parseInt(url.searchParams.get("page") || "1", 10) || 1));
   const pageSize = Math.max(1, Math.min(100, Number.parseInt(url.searchParams.get("page_size") || "50", 10) || 50));
   const offset = (page - 1) * pageSize;
-  const filter = status === "all" ? "" : " WHERE w.status = ?";
-  const binds = status === "all" ? [] : [status];
+  const filter = status === "all" ? "" : status === "actionable" ? " WHERE w.status IN ('pending','approved','processing')" : " WHERE w.status = ?";
+  const binds = status === "all" || status === "actionable" ? [] : [status];
   try {
     const [rows, count] = await Promise.all([
       context.db.prepare(
