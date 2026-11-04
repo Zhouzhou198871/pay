@@ -41,6 +41,15 @@ async function renderProfileCenter() {
         <div class="qtpc-actions"><a class="qtpc-btn" href="/docs/V1_MERCHANT_API.md" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">查看 V1 开发文档</a><button class="qtpc-btn danger" type="button" id="qtpc-rotate">重置商户 MD5 密钥</button></div>
       </section>
       <hr class="qtpc-divider">
+      <section class="qtpc-section" id="qtpc-v2-section">
+        <h3>V2 接口（RSA-2048 签名方式）</h3>
+        <p class="qtpc-help">使用 SHA256withRSA（RSASSA-PKCS1-v1_5）进行请求签名。商户私钥仅在生成或重置时展示一次；平台保存加密副本，平台使用对应商户公钥验签。</p>
+        <div class="qtpc-field"><label>商户公钥（平台验签用）</label><div class="qtpc-keyblock"><code id="qtpc-v2-public">${esc(merchant.v2_public_key||"尚未生成 RSA 密钥对")}</code><button type="button" data-copy-target="#qtpc-v2-public" ${merchant.v2_public_key?"":"disabled"}>复制公钥</button></div></div>
+        <div class="qtpc-field"><label>商户私钥（仅生成时展示一次）</label><div class="qtpc-note"><strong>${merchant.v2_key_configured?"私钥已加密保存，出于安全原因不再提供读取。":"尚未生成 V2 密钥对"}</strong>${merchant.v2_key_configured?"如未妥善保存私钥，请重置密钥对；重置后旧私钥立即失效。":"点击下方生成按钮后，请立即复制并安全保管私钥。不要发送给任何人或放入前端代码。"}</div><div id="qtpc-v2-private-wrap" hidden style="margin-top:10px"><textarea class="qtpc-input qtpc-secret" id="qtpc-v2-private" rows="8" readonly spellcheck="false"></textarea><button class="qtpc-btn secondary" type="button" id="qtpc-v2-copy-private" style="margin-top:8px">复制本次生成的私钥</button></div></div>
+        <div class="qtpc-actions"><button class="qtpc-btn" type="button" id="qtpc-v2-generate">${merchant.v2_key_configured?"重置 V2 RSA 密钥对":"生成 V2 RSA 密钥对"}</button><a class="qtpc-btn secondary" href="/docs/V2_MERCHANT_API.md" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">查看 V2 开发文档</a></div>
+        <p class="qtpc-help">V2 接口地址：<code>${esc(apiBase)}/api/v2/payments</code></p>
+      </section>
+      <hr class="qtpc-divider">
       <section class="qtpc-section"><h3>签名与安全说明</h3><div class="qtpc-note"><strong>商户凭据安全</strong>商户 ID 用于标识接入账户；MD5 密钥用于服务端请求签名校验。请仅在您自己的服务端保存密钥，不要写入网页、公开代码仓库或客户端应用。平台登录会话使用 HttpOnly Cookie，与商户 API 密钥相互独立。</div></section>
     </div>
     <div class="qtpc-pane" data-pane="settings" hidden>
@@ -110,6 +119,25 @@ async function renderProfileCenter() {
     try{await request("PATCH",{action:"withdraw_password",withdraw_password:password,current_withdraw_password:current});panel.querySelector("#qtpc-password-state").textContent="已设置";panel.querySelector("#qtpc-password-state").classList.remove("off");form.reset();toast("支付密码已安全保存",true);}
     catch(err){toast(err.message);}
     finally{button.disabled=false;button.textContent=merchant.withdraw_password_set?"修改支付密码":"设置支付密码";}
+  });
+  panel.querySelector("#qtpc-v2-generate")?.addEventListener("click",async()=>{
+    const configured=Boolean(merchant.v2_key_configured);
+    if(configured&&!confirm("重置后旧 V2 私钥立即失效，原私钥将无法继续签名。确认继续？"))return;
+    const button=panel.querySelector("#qtpc-v2-generate");button.disabled=true;button.textContent="生成中…";
+    try{
+      const result=await request("PATCH",{action:configured?"reset_v2_keys":"generate_v2_keys"});
+      panel.querySelector("#qtpc-v2-public").textContent=result.v2_public_key;
+      panel.querySelector("#qtpc-v2-public").parentElement.querySelector("button").disabled=false;
+      const wrap=panel.querySelector("#qtpc-v2-private-wrap");wrap.hidden=false;
+      panel.querySelector("#qtpc-v2-private").value=result.v2_private_key_once;
+      button.textContent="重置 V2 RSA 密钥对";
+      toast("V2 密钥对已生成。私钥仅展示本次，请立即复制保存。",true);
+    }catch(err){toast(err.message);button.textContent=configured?"重置 V2 RSA 密钥对":"生成 V2 RSA 密钥对";}
+    finally{button.disabled=false;}
+  });
+  panel.querySelector("#qtpc-v2-copy-private")?.addEventListener("click",async()=>{
+    try{await navigator.clipboard.writeText(panel.querySelector("#qtpc-v2-private").value);toast("V2 私钥已复制，请妥善保管。",true);}
+    catch{toast("复制失败，请手动选择私钥文本复制。");}
   });
   panel.querySelector("#qtpc-rotate")?.addEventListener("click",async()=>{
     if(!confirm("重置后旧 MD5 密钥立即失效，确认继续？"))return;
