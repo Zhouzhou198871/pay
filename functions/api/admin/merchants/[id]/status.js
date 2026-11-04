@@ -1,5 +1,5 @@
-import { adminContext, sameOrigin } from "../../../../../_lib/admin.js";
-import { json } from "../../../../../_lib/auth.js";
+import { adminContext, sameOrigin } from "../../../../_lib/admin.js";
+import { json } from "../../../../_lib/auth.js";
 export async function onRequestPost({request,env,params}){
  if(!sameOrigin(request))return json({error:"请求来源校验失败。"},403);
  const c=await adminContext(request,env);if(c.response)return c.response;
