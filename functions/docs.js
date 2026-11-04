@@ -83,6 +83,9 @@ const params = {
   timestamp: String(Math.floor(Date.now() / 1000))
 };
 params.sign = signV1(params, process.env.QT_V1_API_KEY);</code></pre>
+<h4>MD5 离线校验向量</h4><p>以下固定输入仅用于本地核对 MD5 实现，示例密钥不是有效商户密钥，也不要用于真实请求。</p>
+<pre><code class="language-text">canonical = amount=12.50&amp;merchant_no=123456&amp;notify_url=https://merchant.example.org/pay/notify&amp;out_trade_no=ORDER202611040001&amp;pay_type=alipay&amp;timestamp=1793750000&amp;key=0123456789abcdef0123456789abcdef01234567
+sign = 2ea8458537a2632feb51a2ec52819794</code></pre>
 <p><span class="pill">重要</span> 金额请作为字符串传递（例如 <code>"12.50"</code>），不要先转成二进制浮点数再格式化。当前 V1 代码的参数排序基于字段名比较，字段名均为 ASCII。</p></div>
 <div class="rule"></div>
 <div id="v2-sign"><h3>V2 · RSA2-SHA256 签名</h3><ol><li>取所有请求参数，排除 <code>sign</code>；其他标量参数均参与签名，包括空字符串。</li><li>按参数名 ASCII 字典序排序。</li><li>按 <code>key=value</code> 拼接，参数之间使用 <code>&amp;</code>；不做 URL 编码，不插入空格。</li><li>使用商户 PKCS#8 私钥执行 RSASSA-PKCS1-v1_5 + SHA-256。</li><li>将签名原始字节使用标准 Base64 编码，填入 <code>sign</code>。</li></ol>
