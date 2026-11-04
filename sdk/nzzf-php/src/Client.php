@@ -43,6 +43,28 @@ final class Client
         return $this->post('/api/merchant/orders', $params);
     }
 
+    /** Query available NZZF transfer balance. Read-only backend utility. */
+    public function transferBalance(): array
+    {
+        return $this->post('/api/transfer/balance', []);
+    }
+
+    /**
+     * Query a transfer by exactly one platform or merchant transfer number.
+     * This method only queries status; it never initiates a transfer.
+     */
+    public function transferQuery(?string $bizNo = null, ?string $outBizNo = null): array
+    {
+        $hasBizNo = $bizNo !== null && trim($bizNo) !== '';
+        $hasOutBizNo = $outBizNo !== null && trim($outBizNo) !== '';
+        if ($hasBizNo === $hasOutBizNo) {
+            throw new InvalidArgumentException('Provide exactly one of biz_no or out_biz_no');
+        }
+        return $this->post('/api/transfer/query', $hasBizNo
+            ? ['biz_no' => trim($bizNo)]
+            : ['out_biz_no' => trim((string) $outBizNo)]);
+    }
+
     /**
      * Close an unpaid order. Exactly one of trade_no or out_trade_no is required.
      * NZZF only permits closing orders that have not been paid.
