@@ -121,7 +121,7 @@ export async function onRequestPost({ request, env }) {
     content = "申请调用 API 权限：" + appName + (websiteUrl ? "（" + websiteUrl + "）" : "");
     metadata = { app_type: appType, app_name: appName, website_url: websiteUrl, compliance_accepted: true };
   } else if (type === "text") {
-    if (!content || content.length > 2000) return json({ error: "消息内容需为 1 至 2000 个字符。" }, 400);
+    if (content.length > 2000 || (!content && !files.length)) return json({ error: "请输入消息或选择附件（消息最多 2000 个字符）。" }, 400);
   } else return json({ error: "不支持的消息类型。" }, 400);
   if (files.length > 5) return json({ error: "每次最多上传 5 个附件。" }, 400);
   if (type === "text" && !content && !files.length) return json({ error: "请输入消息或选择附件。" }, 400);
@@ -134,7 +134,7 @@ export async function onRequestPost({ request, env }) {
     const messageId = randomHex(16), applicationId = type === "permission_request" ? randomHex(16) : "";
     if (applicationId) metadata.application_id = applicationId;
     const online = await db.prepare("SELECT 1 AS online FROM support_admin_presence WHERE last_seen_at>=? LIMIT 1").bind(now-90).first();
-    const aiEligible = type === "text" && !online && !sensitiveRequest(content);
+    const aiEligible = type === "text" && Boolean(content) && !online && !sensitiveRequest(content);
     const statements = [];
     if (created) statements.push(db.prepare("INSERT INTO support_tickets(id,user_id,merchant_id,subject,status,created_at,updated_at) VALUES(?,?,?,'商户客服咨询','open',?,?)").bind(ticket.id,user.id,merchant.id,now,now));
     else statements.push(db.prepare("UPDATE support_tickets SET updated_at=?,status='open' WHERE id=?").bind(now,ticket.id));
