@@ -80,7 +80,7 @@ function renderOverview() {
     </section>
     <section class="qt-card qt-merchant-card">
       <div class="qt-card-actions"><button class="qt-soft-button" data-section="docs"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/></svg>API 信息</button><button class="qt-soft-button" data-section="profile"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4z"/></svg>修改资料</button></div>
-      <div class="qt-merchant-identity"><div class="qt-wallet-orb"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h.01M7 6V4a2 2 0 0 1 2-2h9"/></svg></div><h2>你好，${escapeText(name)}</h2><span class="qt-merchant-state"><i></i>商户状态：正常</span></div>
+      <div class="qt-merchant-identity"><div class="qt-wallet-orb"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h.01M7 6V4a2 2 0 0 1 2-2h9"/></svg></div><h2>你好，${escapeText(name)}</h2><span class="qt-merchant-state" id="qt-merchant-status"><i></i>正在读取商户状态</span></div>
     </section>
     <section class="qt-balance-card"><span>账户余额</span><strong id="qt-total-balance">读取中</strong><small>以账本最新余额为准</small></section>
     <section class="qt-card qt-channel-card">
@@ -105,9 +105,9 @@ function renderOverview() {
       <div class="qt-info-block"><b>支持业务类型</b><div class="qt-tag-cloud"><span>支持范围以商户审核结果为准</span></div></div>
       <div class="qt-warning"><strong><svg viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/><path d="M12 9v5M12 18h.01"/></svg>禁止事项</strong><p>请勿开展违法违规、侵权、欺诈或违反支付通道规则的业务。具体限制以平台协议及通道审核要求为准。</p></div>
       <div class="qt-info-grid">
-        <article><span>充值范围</span><b>—</b><p>以账户实际配置为准</p></article>
-        <article><span>入款方式</span><b>—</b><p>以已启用通道为准</p></article>
-        <article><span>结算说明</span><b>—</b><p>以商户结算配置为准</p></article>
+        <article><span>充值范围</span><b id="qt-recharge-range">按商户配置</b><p>具体范围以已审核的商户配置为准</p></article>
+        <article><span>入款方式</span><b id="qt-deposit-method">按已开通通道</b><p>仅展示平台实际开通的收款方式</p></article>
+        <article><span>结算说明</span><b id="qt-settlement-note">按结算配置</b><p>以商户协议及实际账本记录为准</p></article>
       </div>
     </section>
   `;
@@ -133,6 +133,18 @@ function loadOverviewData() {
     .then((data) => {
       if (!data || currentSection !== "overview") return;
       const summary = data.summary || {};
+      const merchant = data.merchant || null;
+      const merchantStatus = document.getElementById("qt-merchant-status");
+      if (merchantStatus) {
+        const statusLabels = { active: "正常", pending: "审核中", rejected: "审核未通过", suspended: "已暂停", revoked: "已撤销" };
+        merchantStatus.innerHTML = "<i></i>" + (merchant ? "商户状态：" + (statusLabels[merchant.status] || merchant.status) : "商户状态：未开通");
+        merchantStatus.style.color = merchant?.status === "active" ? "#26966f" : "#8795a2";
+      }
+      if (!merchant) {
+        setText("qt-recharge-range", "未开通");
+        setText("qt-deposit-method", "未开通");
+        setText("qt-settlement-note", "未配置");
+      }
       setText("qt-order-count", Number(summary.total_orders || 0).toLocaleString("zh-CN"));
       setText("qt-today-orders", Number(summary.today_orders || 0).toLocaleString("zh-CN"));
 
