@@ -212,16 +212,144 @@ function loadOverviewData() {
     });
 }
 function renderProfile() {
-  const panel = $("#merchant-panel-content"); panel.innerHTML = "";
-  const list = document.createElement("div"); list.className = "account-detail-list";
-  [["账户名称", currentUser?.display_name || "未设置"],["登录邮箱",currentUser?.email || "—"],["账户状态","正常"]].forEach(([label,value]) => {
-    const item = document.createElement("div"); item.className = "account-detail";
-    const l = document.createElement("span"); l.textContent = label;
-    const v = document.createElement("b"); v.textContent = value;
-    item.append(l,v); list.append(item);
+  const panel = $("#merchant-panel-content");
+  const user = currentUser || {};
+  const displayName = user.display_name || user.username || "未设置";
+  const email = user.email || "未提供";
+  const accountStatus = user.status === "active" ? "正常" : (user.status || "待核验");
+  const baseUrl = location.origin;
+  const endpoints = [
+    { method: "GET", path: "/api/auth/me", desc: "读取当前登录账户" },
+    { method: "GET", path: "/api/merchant/dashboard", desc: "读取商户工作台汇总" },
+    { method: "GET", path: "/api/merchant/summary", desc: "读取余额与订单摘要" },
+    { method: "GET", path: "/api/merchant/orders?page=1&page_size=20", desc: "读取订单列表" },
+    { method: "GET", path: "/api/merchant/withdrawals?page=1&page_size=20", desc: "读取提现记录" },
+    { method: "GET", path: "/api/merchant/ledger?page=1&page_size=20", desc: "读取资金流水" },
+    { method: "GET", path: "/api/merchant/channels?page=1&page_size=20", desc: "读取收款通道" }
+  ];
+  panel.innerHTML = `
+    <section class="qt-profile-card">
+      <nav class="qt-profile-tabs" role="tablist" aria-label="个人资料分类">
+        <button type="button" class="active" role="tab" aria-selected="true" data-profile-tab="api">API 信息</button>
+        <button type="button" role="tab" aria-selected="false" data-profile-tab="settings">修改资料</button>
+      </nav>
+      <div class="qt-profile-pane" data-profile-pane="api">
+        <section class="qt-profile-section">
+          <h3>接口接入信息</h3>
+          <p class="qt-profile-description">以下地址和请求方式对应晴天支付当前已上线的真实接口。</p>
+          <div class="qt-profile-field">
+            <label>API 基础地址</label>
+            <div class="qt-copy-field"><code>${escapeText(baseUrl)}</code><button type="button" data-copy-value="${escapeText(baseUrl)}" aria-label="复制 API 基础地址">▢</button></div>
+          </div>
+          <div class="qt-profile-field">
+            <label>商户 ID</label>
+            <div class="qt-copy-field"><code id="qt-profile-merchant-id">正在读取商户信息…</code><button type="button" data-copy-target="#qt-profile-merchant-id" aria-label="复制商户 ID">▢</button></div>
+          </div>
+          <div class="qt-profile-field">
+            <label>认证方式</label>
+            <div class="qt-copy-field"><code>同源 HttpOnly Session Cookie</code><span class="qt-profile-lock" aria-label="服务端安全管理">安全会话</span></div>
+            <small>浏览器通过 credentials: "same-origin" 自动携带登录会话；Cookie 为 HttpOnly，前端脚本不可读取。当前不使用 Bearer Token。</small>
+          </div>
+        </section>
+        <hr class="qt-profile-divider">
+        <section class="qt-profile-section">
+          <h3>当前可调用接口</h3>
+          <p class="qt-profile-description">这些接口已在晴天支付后端实现，调用需要有效登录会话。</p>
+          <div class="qt-api-endpoint-list">
+            ${endpoints.map((item) => `<article class="qt-api-endpoint"><span class="qt-api-method">${item.method}</span><div><code>${item.path}</code><small>${item.desc}</small></div><button type="button" data-copy-value="${escapeText(baseUrl + item.path)}" aria-label="复制接口地址">▢</button></article>`).join("")}
+          </div>
+        </section>
+        <hr class="qt-profile-divider">
+        <section class="qt-profile-section">
+          <h3>请求头与调用示例</h3>
+          <p class="qt-profile-description">GET 请求使用以下请求配置；浏览器同源请求自动附带 HttpOnly 会话 Cookie。</p>
+          <div class="qt-code-panel"><pre>Accept: application/json
+
+fetch("${baseUrl}/api/merchant/dashboard", {
+  method: "GET",
+  credentials: "same-origin",
+  headers: {
+    "Accept": "application/json"
+  }
+});</pre><button type="button" data-copy-value='fetch("${baseUrl}/api/merchant/dashboard", { method: "GET", credentials: "same-origin", headers: { "Accept": "application/json" } });'>复制调用示例</button></div>
+        </section>
+        <hr class="qt-profile-divider">
+        <section class="qt-profile-section">
+          <h3>商户签名密钥</h3>
+          <div class="qt-profile-notice"><strong>当前版本尚未开放商户密钥管理</strong><p>晴天支付目前没有可调用的 MD5 商户密钥、RSA 密钥对生成/重置接口，也没有对外支付下单签名协议。为避免误接入，这里不会展示虚构密钥或示例密钥。后续正式开放后，将在此显示真实凭据、签名算法、请求头和轮换入口。</p></div>
+          <a class="qt-profile-doc-link" href="/docs/API_REFERENCE.md" target="_blank" rel="noopener">查看 API 接口参考文档 <span>↗</span></a>
+        </section>
+      </div>
+      <div class="qt-profile-pane" data-profile-pane="settings" hidden>
+        <section class="qt-profile-section">
+          <h3>账户资料</h3>
+          <div class="qt-profile-field"><label>账户名称</label><div class="qt-profile-value">${escapeText(displayName)}</div></div>
+          <div class="qt-profile-field"><label>登录邮箱</label><div class="qt-profile-value">${escapeText(email)}</div></div>
+          <div class="qt-profile-field"><label>账户状态</label><div class="qt-profile-value"><span class="qt-profile-state">${escapeText(accountStatus)}</span></div></div>
+          <div class="qt-profile-notice"><strong>资料修改暂未开放</strong><p>当前账户 API 仅支持读取个人资料，没有修改 display_name、邮箱或账户资料的写入接口。这里先展示已验证的账户信息，不会提供无法保存的假表单。</p></div>
+        </section>
+        <hr class="qt-profile-divider">
+        <section class="qt-profile-section">
+          <h3>收款与结算设置</h3>
+          <div class="qt-profile-field"><label>结算方式</label><div class="qt-profile-value">USDT 结算（以已开通商户配置为准）</div></div>
+          <div class="qt-profile-field"><label>USDT 提款地址</label><div class="qt-profile-value qt-profile-muted">当前账户暂无可读取的已绑定地址</div></div>
+          <div class="qt-profile-field"><label>USDT 网络</label><div class="qt-profile-value">待商户结算配置开放</div></div>
+          <div class="qt-profile-notice"><strong>结算资料管理暂未开放</strong><p>当前没有安全的地址绑定/修改、网络切换或提现申请 API。为避免资金误转，暂不接受在前端填写后却无法保存的地址。</p></div>
+        </section>
+        <hr class="qt-profile-divider">
+        <section class="qt-profile-section">
+          <h3>账户密码</h3>
+          <div class="qt-profile-notice"><strong>密码安全保护已启用</strong><p>登录密码使用 PBKDF2-SHA256 加盐哈希保存，不在前端展示或存储明文。当前提供邮箱验证码密码重置流程；支付密码功能尚未开放。</p></div>
+          <p class="qt-profile-description">如需重置登录密码，请退出账户后在登录页选择“忘记密码”。重置成功后需要重新登录。</p>
+        </section>
+      </div>
+    </section>`;
+  panel.querySelectorAll("[data-profile-tab]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const tab = button.dataset.profileTab;
+      panel.querySelectorAll("[data-profile-tab]").forEach((item) => {
+        const active = item === button;
+        item.classList.toggle("active", active);
+        item.setAttribute("aria-selected", String(active));
+      });
+      panel.querySelectorAll("[data-profile-pane]").forEach((pane) => {
+        pane.hidden = pane.dataset.profilePane !== tab;
+      });
+    });
   });
-  const note = document.createElement("p"); note.className = "section-note"; note.textContent = "资料修改功能尚未开放。此处仅展示当前登录账户资料。";
-  panel.append(list,note);
+  panel.querySelectorAll("[data-copy-value],[data-copy-target]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const target = button.dataset.copyTarget ? panel.querySelector(button.dataset.copyTarget) : null;
+      const value = button.dataset.copyValue || target?.textContent?.trim() || "";
+      if (!value || value.includes("正在读取")) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        const previous = button.textContent;
+        button.textContent = "已复制";
+        button.classList.add("copied");
+        window.setTimeout(() => { button.textContent = previous; button.classList.remove("copied"); }, 1600);
+      } catch {
+        button.textContent = "复制失败";
+      }
+    });
+  });
+  fetch(ENDPOINTS.dashboard, { credentials: "same-origin", headers: { Accept: "application/json" } })
+    .then(async (response) => {
+      if (response.status === 401) { location.href = "/"; return null; }
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || "商户信息读取失败");
+      return payload;
+    })
+    .then((data) => {
+      if (!data || currentSection !== "profile") return;
+      const id = data.merchant?.id || "当前账户尚未开通商户资料";
+      const idNode = panel.querySelector("#qt-profile-merchant-id");
+      if (idNode) idNode.textContent = id;
+    })
+    .catch(() => {
+      const idNode = panel.querySelector("#qt-profile-merchant-id");
+      if (idNode) idNode.textContent = "商户资料暂不可读取";
+    });
 }
 function fieldFor(item, section) {
   if (section === "orders") return {
