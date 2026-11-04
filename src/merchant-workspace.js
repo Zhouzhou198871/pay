@@ -487,38 +487,129 @@ async function loadRecords(key, page = 1) {
   }
 }
 let qtSupportChatRoot = null;
+let qtSupportPoll = null;
+let qtAdminTicketId = "";
+async function supportApi(url, options={}) {
+  const response=await fetch(url,{credentials:"same-origin",headers:{Accept:"application/json",...(options.body?{"Content-Type":"application/json"}:{})},...options});
+  const data=await response.json().catch(()=>({}));
+  if(response.status===401){location.href="/";throw new Error("登录状态已失效。")}
+  if(!response.ok)throw new Error(data.error||"客服服务暂不可用。");
+  return data;
+}
+function appendChatMessage(root,item){
+  const messages=root.querySelector("#qt-chat-messages");
+  const row=document.createElement("div");
+  row.className="qt-chat-message "+(item.sender_role==="merchant"?"is-user":"is-agent");
+  const content=document.createElement("div");content.textContent=item.content||"";
+  row.append(content);
+  if(item.message_type==="permission_request"){
+    let meta={};try{meta=JSON.parse(item.metadata_json||"{}")}catch{}
+    const tag=document.createElement("small");tag.className="qt-chat-message-meta";
+    tag.textContent="权限申请 · "+({website:"网站",bot:"机器人",app:"APP"}[meta.app_type]||"应用")+" · "+(meta.app_name||"");
+    row.append(tag);
+  }
+  if(item.message_type==="approval_result")row.classList.add("is-system");
+  const time=document.createElement("time");time.textContent=date(item.created_at);row.append(time);
+  messages.append(row);messages.scrollTop=messages.scrollHeight;
+}
+async function refreshSupportChat(){
+  const root=qtSupportChatRoot;if(!root||!root.isConnected)return;
+  try{
+    const data=await supportApi("/api/merchant/support/tickets");
+    const messages=root.querySelector("#qt-chat-messages");messages.replaceChildren();
+    if(!data.messages?.length){
+      const welcome=document.createElement("div");welcome.className="qt-chat-message is-agent";welcome.textContent="您好，欢迎联系晴天支付客服。您可以发送咨询消息，或提交网站、机器人、APP 的 API 调用权限申请。";messages.append(welcome);
+    }else data.messages.forEach(item=>appendChatMessage(root,item));
+    const state=root.querySelector("#qt-chat-status");state.textContent=data.api_access_granted?"API 权限已开通":"客服工单 · 在线提交";
+  }catch(error){const state=root.querySelector("#qt-chat-status");if(state)state.textContent=error.message||"消息同步失败"}
+}
 function mountSupportChat() {
-  if (qtSupportChatRoot && qtSupportChatRoot.isConnected) return qtSupportChatRoot;
-  const root = document.createElement("aside");
-  root.className = "qt-chat-widget";
-  root.innerHTML = `
+  if(qtSupportChatRoot&&qtSupportChatRoot.isConnected)return qtSupportChatRoot;
+  const root=document.createElement("aside");root.className="qt-chat-widget";
+  root.innerHTML=`
     <button type="button" class="qt-chat-launcher" id="qt-chat-launcher" aria-label="打开在线客服对话框" aria-expanded="false"><span class="qt-chat-launcher-icon">✦</span><span class="qt-chat-launcher-label">在线客服</span></button>
-    <section class="qt-chat-panel" id="qt-chat-panel" aria-label="晴天支付在线客服对话框" hidden>
-      <header class="qt-chat-header"><span class="qt-chat-avatar">晴</span><span class="qt-chat-header-copy"><strong>晴天支付在线客服</strong><small><i></i> 前端交互预览</small></span><button type="button" id="qt-chat-close" aria-label="关闭聊天窗口">×</button></header>
-      <div class="qt-chat-messages" id="qt-chat-messages" aria-live="polite"><div class="qt-chat-message is-agent">您好，欢迎联系晴天支付。请在下方输入您想咨询的问题。</div></div>
-      <p class="qt-chat-demo-note">当前为前端体验版，消息仅在本页面展示，尚未接入人工客服或实时消息服务。</p>
-      <form class="qt-chat-compose" id="qt-chat-form"><input id="qt-chat-input" maxlength="500" autocomplete="off" placeholder="请输入您的问题…" aria-label="输入客服消息" required><button type="submit" aria-label="发送消息">发送</button></form>
+    <section class="qt-chat-panel" id="qt-chat-panel" aria-label="晴天支付商户客服工单" hidden>
+      <header class="qt-chat-header"><span class="qt-chat-avatar">晴</span><span class="qt-chat-header-copy"><strong>晴天支付商户客服</strong><small id="qt-chat-status">正在连接工单服务…</small></span><button type="button" id="qt-chat-close" aria-label="关闭聊天窗口">×</button></header>
+      <div class="qt-chat-messages" id="qt-chat-messages" aria-live="polite"></div>
+      <form class="qt-chat-permission" id="qt-chat-permission" hidden>
+        <strong>申请调用 API 权限</strong>
+        <label>应用类型<select id="qt-chat-app-type"><option value="website">网站</option><option value="bot">机器人</option><option value="app">APP</option></select></label>
+        <label>网站 / 应用名称<input id="qt-chat-app-name" maxlength="100" required placeholder="请输入网站或应用名称"></label>
+        <label>网站网址（网站类型必填）<input id="qt-chat-app-url" maxlength="500" type="url" placeholder="https://example.com"></label>
+        <div><button type="button" class="qt-chat-permission-cancel" id="qt-chat-permission-cancel">取消</button><button type="submit">提交申请</button></div>
+      </form>
+      <div class="qt-chat-tools"><button type="button" id="qt-chat-permission-open">＋ 申请调用权限</button><span>网站 · 机器人 · APP</span></div>
+      <form class="qt-chat-compose" id="qt-chat-form"><input id="qt-chat-input" maxlength="2000" autocomplete="off" placeholder="输入消息，提交至客服工单…" aria-label="输入客服消息" required><button type="submit" aria-label="发送消息">发送</button></form>
     </section>`;
-  document.body.append(root);
-  const panel=root.querySelector("#qt-chat-panel"),launcher=root.querySelector("#qt-chat-launcher"),input=root.querySelector("#qt-chat-input"),messages=root.querySelector("#qt-chat-messages");
-  const open=()=>{panel.hidden=false;launcher.setAttribute("aria-expanded","true");window.setTimeout(()=>input.focus(),30)};
-  const close=()=>{panel.hidden=true;launcher.setAttribute("aria-expanded","false")};
+  document.body.append(root);qtSupportChatRoot=root;
+  const panel=root.querySelector("#qt-chat-panel"),launcher=root.querySelector("#qt-chat-launcher"),input=root.querySelector("#qt-chat-input");
+  const open=()=>{panel.hidden=false;launcher.setAttribute("aria-expanded","true");refreshSupportChat();if(qtSupportPoll)clearInterval(qtSupportPoll);qtSupportPoll=setInterval(refreshSupportChat,8000);window.setTimeout(()=>input.focus(),40)};
+  const close=()=>{panel.hidden=true;launcher.setAttribute("aria-expanded","false");if(qtSupportPoll){clearInterval(qtSupportPoll);qtSupportPoll=null}};
   launcher.addEventListener("click",()=>panel.hidden?open():close());
   root.querySelector("#qt-chat-close").addEventListener("click",close);
-  root.querySelector("#qt-chat-form").addEventListener("submit",event=>{
+  root.querySelector("#qt-chat-form").addEventListener("submit",async event=>{
     event.preventDefault();const value=input.value.trim();if(!value)return;
-    const user=document.createElement("div");user.className="qt-chat-message is-user";user.textContent=value;messages.append(user);
-    input.value="";
-    const reply=document.createElement("div");reply.className="qt-chat-message is-agent";reply.textContent="已收到您的消息内容（本地演示）。当前版本尚未连接客服消息服务器，因此不会实际发送给客服人员。";
-    messages.append(reply);messages.scrollTop=messages.scrollHeight;
+    const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
+    try{await supportApi("/api/merchant/support/tickets",{method:"POST",body:JSON.stringify({type:"text",content:value})});input.value="";await refreshSupportChat()}
+    catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"消息发送失败"}
+    finally{button.disabled=false}
   });
-  qtSupportChatRoot=root;return root;
+  const permission=root.querySelector("#qt-chat-permission");
+  root.querySelector("#qt-chat-permission-open").addEventListener("click",()=>{permission.hidden=!permission.hidden;});
+  root.querySelector("#qt-chat-permission-cancel").addEventListener("click",()=>{permission.hidden=true});
+  root.querySelector("#qt-chat-app-type").addEventListener("change",e=>{root.querySelector("#qt-chat-app-url").required=e.target.value==="website"});
+  root.querySelector("#qt-chat-permission").addEventListener("submit",async event=>{
+    event.preventDefault();const button=permission.querySelector('button[type="submit"]');button.disabled=true;
+    try{
+      await supportApi("/api/merchant/support/tickets",{method:"POST",body:JSON.stringify({type:"permission_request",app_type:root.querySelector("#qt-chat-app-type").value,app_name:root.querySelector("#qt-chat-app-name").value.trim(),website_url:root.querySelector("#qt-chat-app-url").value.trim()})});
+      permission.reset();permission.hidden=true;await refreshSupportChat();
+    }catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"申请提交失败"}
+    finally{button.disabled=false}
+  });
+  return root;
 }
-function openSupportChat() { const root=mountSupportChat();root.querySelector("#qt-chat-panel").hidden=false;root.querySelector("#qt-chat-launcher").setAttribute("aria-expanded","true");root.querySelector("#qt-chat-input").focus(); }
-function renderSupport() {
-  const panel = $("#merchant-panel-content");
-  panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2>晴天支付在线客服</h2><p class="qt-support-description">点击下方按钮或页面右下角悬浮球，打开网页内聊天窗口。可输入并发送消息进行界面体验。</p><button type="button" class="qt-primary-button qt-support-link" id="qt-support-open-chat">打开在线客服对话框</button><div class="qt-support-safe">当前是前端交互预览，消息仅在本页面展示，尚未接入人工客服或实时消息服务。客服不会向您索要登录密码、支付密码、短信验证码或完整私钥。</div></section>';
-  panel.querySelector("#qt-support-open-chat").addEventListener("click", openSupportChat);
+function openSupportChat(){const root=mountSupportChat();root.querySelector("#qt-chat-panel").hidden=false;root.querySelector("#qt-chat-launcher").setAttribute("aria-expanded","true");refreshSupportChat();if(qtSupportPoll)clearInterval(qtSupportPoll);qtSupportPoll=setInterval(refreshSupportChat,8000);root.querySelector("#qt-chat-input").focus()}
+function renderSupport(){const panel=$("#merchant-panel-content");panel.innerHTML='<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2>晴天支付商户客服</h2><p class="qt-support-description">消息会保存为真实客服工单。您可以咨询业务问题，或通过“申请调用权限”提交网站、机器人、APP 的 API 接入申请。</p><button type="button" class="qt-primary-button qt-support-link" id="qt-support-open-chat">打开客服工单对话框</button><div class="qt-support-safe">工单内容仅供平台客服与白名单管理员处理。请勿发送登录密码、支付密码、短信验证码或完整私钥。</div></section>';panel.querySelector("#qt-support-open-chat").addEventListener("click",openSupportChat)}
+async function renderAdminSupportTickets(){
+ const panel=$("#merchant-panel-content");
+ panel.innerHTML='<section class="qt-support-admin"><div class="qt-data-card-head"><div><h3>客服工单</h3><p>商户消息与 API 调用权限申请 · 仅白名单管理员可访问</p></div><button type="button" class="qt-outline-button" id="qt-admin-ticket-refresh">刷新</button></div><div id="qt-admin-ticket-list" class="qt-admin-ticket-list"><div class="section-loading">正在读取客服工单…</div></div><section id="qt-admin-ticket-detail" class="qt-admin-ticket-detail" hidden></section></section>';
+ const list=panel.querySelector("#qt-admin-ticket-list"),detail=panel.querySelector("#qt-admin-ticket-detail");
+ async function loadList(){
+  list.innerHTML='<div class="section-loading">正在读取客服工单…</div>';
+  try{const data=await supportApi("/api/admin/support/tickets?status=all&page=1&page_size=100");list.replaceChildren();
+   if(!data.items?.length){list.textContent="暂无客服工单";return}
+   data.items.forEach(item=>{
+    const card=document.createElement("button");card.type="button";card.className="qt-admin-ticket-card";
+    const title=document.createElement("strong");title.textContent=(item.site_name||item.email||"商户")+" · "+item.merchant_no;
+    const msg=document.createElement("span");msg.textContent=item.last_message||"暂无消息";
+    const meta=document.createElement("small");meta.textContent=(item.last_message_type==="permission_request"?"权限申请 · ":"")+item.email+" · "+date(item.last_message_at||item.updated_at);
+    card.append(title,msg,meta);card.addEventListener("click",()=>loadDetail(item.id));list.append(card);
+   });
+  }catch(error){list.textContent=error.message||"工单读取失败"}
+ }
+ async function loadDetail(id){
+  qtAdminTicketId=id;detail.hidden=false;detail.innerHTML='<div class="section-loading">正在读取工单详情…</div>';
+  try{
+   const data=await supportApi("/api/admin/support/tickets/"+encodeURIComponent(id));
+   detail.innerHTML='<div class="qt-admin-ticket-detail-head"><div><strong></strong><small></small></div><button type="button" id="qt-admin-ticket-back">返回列表</button></div><div class="qt-admin-ticket-messages" id="qt-admin-ticket-messages"></div><div class="qt-admin-ticket-actions" id="qt-admin-ticket-actions"></div><form id="qt-admin-ticket-reply"><textarea maxlength="2000" rows="3" placeholder="输入客服回复…" required></textarea><button class="qt-primary-button" type="submit">发送回复</button></form><p id="qt-admin-ticket-feedback" role="status"></p>';
+   detail.querySelector("strong").textContent=(data.ticket.site_name||data.ticket.email||"商户")+" · "+data.ticket.merchant_no;
+   detail.querySelector("small").textContent=data.ticket.email+" · "+date(data.ticket.updated_at);
+   detail.querySelector("#qt-admin-ticket-back").onclick=()=>{detail.hidden=true;};
+   const messages=detail.querySelector("#qt-admin-ticket-messages");let hasPermission=false;
+   (data.messages||[]).forEach(item=>{const row=document.createElement("article");row.className="qt-admin-message "+(item.sender_role==="merchant"?"is-merchant":"is-admin");const who=document.createElement("b");who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="admin"?"管理员":"系统";const content=document.createElement("p");content.textContent=item.content;const time=document.createElement("small");time.textContent=date(item.created_at);row.append(who,content,time);
+    if(item.message_type==="permission_request"){hasPermission=true;let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}messages.append(row)});
+   const actions=detail.querySelector("#qt-admin-ticket-actions");
+   if(hasPermission&&!data.ticket.api_access_granted){
+    const approve=document.createElement("button");approve.type="button";approve.className="qt-primary-button";approve.textContent="同意并开通 API 权限";
+    const reject=document.createElement("button");reject.type="button";reject.className="qt-outline-button";reject.textContent="拒绝申请";
+    approve.onclick=()=>review("approve","");reject.onclick=()=>{const note=window.prompt("请输入拒绝原因（至少 3 个字符）");if(note)review("reject",note)};
+    actions.append(approve,reject);
+   }else if(data.ticket.api_access_granted){const granted=document.createElement("span");granted.className="qt-access-granted";granted.textContent="该商户 API 权限已开通";actions.append(granted)}
+   detail.querySelector("#qt-admin-ticket-reply").onsubmit=async e=>{e.preventDefault();const textarea=e.currentTarget.querySelector("textarea"),button=e.currentTarget.querySelector("button");button.disabled=true;try{await supportApi("/api/admin/support/tickets",{method:"POST",body:JSON.stringify({ticket_id:id,message:textarea.value.trim()})});textarea.value="";detail.querySelector("#qt-admin-ticket-feedback").textContent="回复已发送";await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"发送失败"}finally{button.disabled=false}};
+   async function review(action,note){const buttons=actions.querySelectorAll("button");buttons.forEach(b=>b.disabled=true);try{const result=await supportApi("/api/admin/support/tickets/"+encodeURIComponent(id)+"/review",{method:"POST",body:JSON.stringify({action,note})});detail.querySelector("#qt-admin-ticket-feedback").textContent=result.message;await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"审批失败";buttons.forEach(b=>b.disabled=false)}}
+  }catch(error){detail.textContent=error.message||"工单详情读取失败"}
+ }
+ panel.querySelector("#qt-admin-ticket-refresh").onclick=loadList;await loadList();
 }
 function selectSection(key) {
   currentSection = key; currentPage = 1; requestSequence++;
@@ -561,6 +652,7 @@ function selectSection(key) {
     return;
   }
   if (key === "support") { mountSupportChat(); renderSupport(); openSupportChat(); return; }
+  if (key === "support-tickets") return renderAdminSupportTickets();
   showEmpty("此功能尚未开放", "当前版本不会展示模拟订单、虚构余额或未接通的支付能力。");
 }
 function initWorkspace() {
@@ -574,6 +666,15 @@ function initWorkspace() {
     if (!data) return;
     currentUser = data.user || null;
     mountSupportChat();
+    fetch("/api/admin/access",{credentials:"same-origin",headers:{Accept:"application/json"}}).then(r=>r.ok?r.json():null).then(access=>{
+      if(!access?.is_admin||document.querySelector('[data-section="support-tickets"]'))return;
+      const drawer=document.querySelector(".drawer-scroll");if(!drawer)return;
+      const section=document.createElement("div");section.className="drawer-section-label";section.textContent="平台管理";
+      const nav=document.createElement("nav");nav.className="drawer-nav";
+      const button=document.createElement("button");button.type="button";button.className="drawer-link";button.dataset.section="support-tickets";
+      const icon=document.createElement("span");icon.className="drawer-icon cyan";icon.textContent="工";
+      const label=document.createElement("span");label.textContent="客服工单";button.append(icon,label);nav.append(button);drawer.append(section,nav);
+    }).catch(()=>{});
     const email = currentUser?.email || "已登录商户";
     const name = currentUser?.display_name || currentUser?.username || "";
     const drawerName = $("#drawer-user-name"); if (drawerName) drawerName.textContent = name;
