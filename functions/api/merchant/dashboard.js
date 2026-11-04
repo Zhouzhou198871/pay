@@ -13,7 +13,7 @@ SELECT
    FROM payment_orders po
    JOIN pay_merchants pm ON pm.id = po.merchant_id
    WHERE pm.user_id = ? AND po.status = 'paid' AND po.currency = 'USDT'
-     AND DATE(po.created_at, 'unixepoch') = DATE('now')) AS today_orders
+     AND DATE(po.paid_at, 'unixepoch') = DATE('now')) AS today_orders
 `;
 
 const BALANCES_SQL = `
@@ -93,7 +93,7 @@ daily AS (
   GROUP BY DATE(po.paid_at, 'unixepoch')
 )
 SELECT days.day,
-       COALESCE(daily.amount_cents, 0) AS amount_cents,
+       COALESCE(daily.amount_micro, 0) AS amount_micro,
        COALESCE(daily.orders, 0) AS orders
 FROM days LEFT JOIN daily ON daily.day = days.day
 ORDER BY days.day
