@@ -27,7 +27,7 @@ function shell(content) {
         <div class="intro-panel">
           <div class="eyebrow"><span class="eyebrow-dot"></span> PAYMENT · TRUST · SIMPLE</div>
           <h1>让每一笔生意<br/><em>都安心抵达。</em></h1>
-          <p class="intro-copy">为开发者与商户打造的支付服务平台。接入简单，交易清晰，让收款回归简单。</p>
+          <p class="intro-copy">面向合规商户提供标准化支付接口接入、订单管理与交易查询服务。具体功能以账户权限及平台实际开放能力为准。</p>
           <div class="trust-row">
             <div class="trust-item"><span class="trust-icon">⌁</span><span><b>安全可靠</b><small>账户与交易数据加密保护</small></span></div>
             <div class="trust-item"><span class="trust-icon">↗</span><span><b>开发者友好</b><small>清晰的接入流程与服务支持</small></span></div>
@@ -117,7 +117,7 @@ async function renderDashboard() {
       </header>
       <div class="merchant-backdrop" id="merchant-backdrop"></div>
       <aside class="merchant-drawer" id="merchant-drawer" aria-label="商户导航">
-        <div class="drawer-head"><a class="drawer-brand" href="/"><img src="${LOGO}" alt=""><span><b>晴天支付</b><small>商户服务平台</small></span></a><button class="drawer-close" id="close-merchant-menu" aria-label="关闭菜单">×</button></div>
+        <div class="drawer-head"><a class="drawer-brand" href="/"><img src="${LOGO}" alt=""><span><b>晴天支付</b><small>商户支付接口平台</small></span></a><button class="drawer-close" id="close-merchant-menu" aria-label="关闭菜单">×</button></div>
         <div class="drawer-section-label">商户工作台</div>
         <nav class="drawer-nav">
           <button class="drawer-link active" data-section="overview"><span class="drawer-icon blue">▦</span><b>用户中心</b></button>
@@ -142,7 +142,7 @@ async function renderDashboard() {
         <div class="qt-dashboard-panel-heading"><div><h2 id="merchant-panel-title">商户工作台</h2><p id="merchant-panel-subtitle">账户数据与收款通道概览</p></div></div>
         <div id="merchant-panel-content" class="qt-dashboard-stack"></div>
       </section>
-      <footer class="qt-dashboard-footer">晴天支付平台 <span>商户服务 · 便捷收款</span></footer>
+      <footer class="qt-dashboard-footer">晴天支付平台 <span>商户支付接口 · 订单管理服务</span></footer>
     </main>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>`;
 }
