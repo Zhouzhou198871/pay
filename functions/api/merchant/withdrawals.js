@@ -36,7 +36,7 @@ export async function onRequestGet({ request, env }) {
         paid_micro: Number(summary?.paid_micro || 0)
       },
       payout: { address: profile?.usdt_address || "", network: profile?.usdt_network || "USDT-TRC20" },
-      withdrawal_config: { usdt_cny_rate: Number(env.WITHDRAW_USDT_CNY_RATE || env.NZZF_USDT_CNY_RATE || 0) },
+      withdrawal_config: { usdt_cny_rate: Number(env.WITHDRAW_USDT_CNY_RATE || 0) },
       pagination: { page, page_size: pageSize, total, pages: Math.ceil(total / pageSize) }
     });
   } catch (error) {
