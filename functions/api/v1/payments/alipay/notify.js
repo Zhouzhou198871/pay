@@ -1,4 +1,4 @@
-import { verifyAlipayNotify, amountToCents, calculateNetCredit } from '../../../_lib/alipay-notify.js';
+import { verifyAlipayNotify, amountToCents, calculateNetCredit } from '../../../../_lib/alipay-notify.js';
 const text = (value, status = 200) => new Response(value, { status, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
 const failure = () => text('failure', 400);
 export async function onRequestPost({ request, env }) {
