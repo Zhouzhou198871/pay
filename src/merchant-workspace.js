@@ -486,27 +486,39 @@ async function loadRecords(key, page = 1) {
     box.append(title,message,retry); panel.append(box);
   }
 }
-async function renderSupport() {
+let qtSupportChatRoot = null;
+function mountSupportChat() {
+  if (qtSupportChatRoot && qtSupportChatRoot.isConnected) return qtSupportChatRoot;
+  const root = document.createElement("aside");
+  root.className = "qt-chat-widget";
+  root.innerHTML = `
+    <button type="button" class="qt-chat-launcher" id="qt-chat-launcher" aria-label="打开在线客服对话框" aria-expanded="false"><span class="qt-chat-launcher-icon">✦</span><span class="qt-chat-launcher-label">在线客服</span></button>
+    <section class="qt-chat-panel" id="qt-chat-panel" aria-label="晴天支付在线客服对话框" hidden>
+      <header class="qt-chat-header"><span class="qt-chat-avatar">晴</span><span class="qt-chat-header-copy"><strong>晴天支付在线客服</strong><small><i></i> 前端交互预览</small></span><button type="button" id="qt-chat-close" aria-label="关闭聊天窗口">×</button></header>
+      <div class="qt-chat-messages" id="qt-chat-messages" aria-live="polite"><div class="qt-chat-message is-agent">您好，欢迎联系晴天支付。请在下方输入您想咨询的问题。</div></div>
+      <p class="qt-chat-demo-note">当前为前端体验版，消息仅在本页面展示，尚未接入人工客服或实时消息服务。</p>
+      <form class="qt-chat-compose" id="qt-chat-form"><input id="qt-chat-input" maxlength="500" autocomplete="off" placeholder="请输入您的问题…" aria-label="输入客服消息" required><button type="submit" aria-label="发送消息">发送</button></form>
+    </section>`;
+  document.body.append(root);
+  const panel=root.querySelector("#qt-chat-panel"),launcher=root.querySelector("#qt-chat-launcher"),input=root.querySelector("#qt-chat-input"),messages=root.querySelector("#qt-chat-messages");
+  const open=()=>{panel.hidden=false;launcher.setAttribute("aria-expanded","true");window.setTimeout(()=>input.focus(),30)};
+  const close=()=>{panel.hidden=true;launcher.setAttribute("aria-expanded","false")};
+  launcher.addEventListener("click",()=>panel.hidden?open():close());
+  root.querySelector("#qt-chat-close").addEventListener("click",close);
+  root.querySelector("#qt-chat-form").addEventListener("submit",event=>{
+    event.preventDefault();const value=input.value.trim();if(!value)return;
+    const user=document.createElement("div");user.className="qt-chat-message is-user";user.textContent=value;messages.append(user);
+    input.value="";
+    const reply=document.createElement("div");reply.className="qt-chat-message is-agent";reply.textContent="已收到您的消息内容（本地演示）。当前版本尚未连接客服消息服务器，因此不会实际发送给客服人员。";
+    messages.append(reply);messages.scrollTop=messages.scrollHeight;
+  });
+  qtSupportChatRoot=root;return root;
+}
+function openSupportChat() { const root=mountSupportChat();root.querySelector("#qt-chat-panel").hidden=false;root.querySelector("#qt-chat-launcher").setAttribute("aria-expanded","true");root.querySelector("#qt-chat-input").focus(); }
+function renderSupport() {
   const panel = $("#merchant-panel-content");
-  panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2>晴天支付在线客服</h2><p>正在读取官方客服入口…</p></section>';
-  try {
-    const response = await fetch("/api/support", { credentials: "same-origin", headers: { Accept: "application/json" } });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || "客服信息暂时无法读取");
-    panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2></h2><p class="qt-support-description">如需账户、提现或 API 接入协助，请通过以下官方渠道联系。</p><div class="qt-support-qr" id="qt-support-qr" hidden><img id="qt-support-qr-image" alt="晴天支付官方客服微信二维码"></div><p class="qt-support-hours" id="qt-support-hours"></p><a class="qt-primary-button qt-support-link" id="qt-support-link" hidden target="_blank" rel="noopener noreferrer">联系在线客服 ↗</a><div class="qt-support-safe">安全提醒：客服不会向您索要登录密码、支付密码、短信验证码或完整私钥。</div></section>';
-    panel.querySelector("h2").textContent = data.label || "晴天支付在线客服";
-    const qr = $("#qt-support-qr", panel), img = $("#qt-support-qr-image", panel);
-    if (data.wechat_qr_url) { img.src = data.wechat_qr_url; qr.hidden = false; }
-    const link = $("#qt-support-link", panel);
-    if (data.url) { link.href = data.url; link.hidden = false; }
-    $("#qt-support-hours", panel).textContent = data.hours || "";
-    if (!data.url && !data.wechat_qr_url) {
-      const p = panel.querySelector(".qt-support-description");
-      p.textContent = "官方客服二维码或第三方客服地址尚未配置。平台管理员配置 SUPPORT_WECHAT_QR_URL 或 SUPPORT_URL 后，这里会自动显示可用入口。";
-    }
-  } catch (error) {
-    showEmpty("客服入口暂不可用", error.message || "请稍后刷新重试。");
-  }
+  panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2>晴天支付在线客服</h2><p class="qt-support-description">点击下方按钮或页面右下角悬浮球，打开网页内聊天窗口。可输入并发送消息进行界面体验。</p><button type="button" class="qt-primary-button qt-support-link" id="qt-support-open-chat">打开在线客服对话框</button><div class="qt-support-safe">当前是前端交互预览，消息仅在本页面展示，尚未接入人工客服或实时消息服务。客服不会向您索要登录密码、支付密码、短信验证码或完整私钥。</div></section>';
+  panel.querySelector("#qt-support-open-chat").addEventListener("click", openSupportChat);
 }
 function selectSection(key) {
   currentSection = key; currentPage = 1; requestSequence++;
@@ -548,7 +560,7 @@ function selectSection(key) {
     });
     return;
   }
-  if (key === "support") return renderSupport();
+  if (key === "support") { mountSupportChat(); renderSupport(); openSupportChat(); return; }
   showEmpty("此功能尚未开放", "当前版本不会展示模拟订单、虚构余额或未接通的支付能力。");
 }
 function initWorkspace() {
@@ -561,6 +573,7 @@ function initWorkspace() {
   }).then((data) => {
     if (!data) return;
     currentUser = data.user || null;
+    mountSupportChat();
     const email = currentUser?.email || "已登录商户";
     const name = currentUser?.display_name || currentUser?.username || "";
     const drawerName = $("#drawer-user-name"); if (drawerName) drawerName.textContent = name;
