@@ -83,9 +83,28 @@ params.sign = signer.sign(privateKey, 'base64');
 // POST params as JSON to https://pay.lynli.me/api/v2/payments
 ```
 
-## 4. 响应
+## 4. 支付宝通道配置与下单
 
-成功时返回 HTTP `201`，订单内部状态为待支付，API 状态为 `unpaid`。当前支付宝上游尚未接通，`checkout_url` 暂为 `null`。
+V2 已接入支付宝开放平台标准 RSA2 网关请求组装。系统使用服务端 `ALIPAY_PRIVATE_KEY` 对 `alipay.trade.page.pay`（PC）或 `alipay.trade.wap.pay`（H5）请求签名，返回支付宝官方网关 URL；不会在浏览器端暴露应用私钥。
+
+Cloudflare Pages 生产环境需要配置以下变量：
+
+| 变量 | 说明 |
+|---|---|
+| `ALIPAY_APP_ID` | 支付宝开放平台应用 App ID |
+| `ALIPAY_PRIVATE_KEY` | 应用 RSA 私钥，PKCS#8 PEM |
+| `ALIPAY_NOTIFY_URL` | 平台支付宝异步通知接收地址（HTTPS） |
+| `ALIPAY_USDT_CNY_RATE` | 1 USDT 对应的 CNY 计价汇率 |
+| `ALIPAY_RETURN_URL` | 可选，同步跳转地址 |
+| `ALIPAY_GATEWAY_URL` | 可选，默认官方生产网关 |
+
+通道启用状态由 D1 的 `payment_providers` 表管理。支付宝订单以 USDT 记录；提交支付宝的 `total_amount` 使用 `amount × ALIPAY_USDT_CNY_RATE` 换算并四舍五入到分。未配置 App ID、私钥、通知地址或汇率时，接口返回 `ALIPAY_CONFIG_MISSING` 和缺少的变量清单，不会创建一个没有支付链接的假订单。开发联调可使用官方沙箱网关 `https://openapi.alipaydev.com/gateway.do`。
+
+注意：当前代码负责生成真实支付宝标准网关签名 URL；要完成资金到账闭环，还需配置真实应用密钥与回调地址，并接入支付宝异步通知验签、订单状态更新及平台签名通知投递。
+
+## 5. 响应
+
+成功时返回 HTTP `201`，订单内部状态为待支付，API 状态为 `unpaid`。已配置支付宝环境变量时返回真实支付宝官方网关签名 URL；未配置时返回 `ALIPAY_CONFIG_MISSING`，不会创建无链接订单。
 
 ```json
 {
@@ -109,7 +128,7 @@ params.sign = signer.sign(privateKey, 'base64');
 
 同一商户的 `out_trade_no` 唯一，重复下单返回 HTTP `409` / `ORDER_EXISTS`。时间戳超出 5 分钟返回 `TIMESTAMP_EXPIRED`，签名错误返回 `SIGNATURE_INVALID`。
 
-## 5. 平台异步通知签名与商户验签
+## 6. 平台异步通知签名与商户验签
 
 平台回调使用全局平台 RSA-2048 密钥对。商户中心「个人资料 → API 信息 → 平台回调验签公钥」展示平台公钥，所有商户共用此公钥。
 
@@ -133,10 +152,10 @@ if (!verifier.verify(platformPublicKey,callback.sign,'base64')) throw new Error(
 
 资料 GET 接口返回 `platform_public_key`；平台私钥绝不通过 API 返回。
 
-## 6. 关于平台响应签名
+## 7. 关于平台响应签名
 
 当前 V2 已实现商户私钥请求签名和平台使用商户公钥验签。若要让商户验证平台响应数据，还需要独立的平台 RSA 签名密钥对：平台私钥仅由平台保管，平台公钥公开给商户。商户私钥不能兼作平台响应签名私钥。平台响应签名将在独立的平台密钥配置完成后提供。
 
-## 7. 当前业务边界
+## 8. 当前业务边界
 
 V2 接口当前实现 RSA 验签、时间戳校验、商户订单号幂等和待支付订单创建。支付宝上游、支付链接、异步通知投递与支付宝支付状态回调尚未接通；平台回调 RSA 签名能力和商户验签规范已就绪，通知投递接入时调用服务端 `signPlatformCallback`。
