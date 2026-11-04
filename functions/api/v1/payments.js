@@ -58,7 +58,7 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const merchant = await env.AUTH_DB.prepare(
-      "SELECT id, user_id, merchant_no, api_key, app_id, status FROM pay_merchants WHERE merchant_no = ? LIMIT 1"
+      "SELECT id, user_id, merchant_no, api_key, app_id, status, api_access_granted FROM pay_merchants WHERE merchant_no = ? LIMIT 1"
     ).bind(merchantNo).first();
     if (!merchant || !merchant.api_key) return json({ code: "MERCHANT_NOT_FOUND", message: "商户不存在或尚未开通 V1 API。" }, 401);
 
@@ -66,6 +66,8 @@ export async function onRequestPost({ request, env }) {
     if (!safeEqual(String(body.sign).trim().toLowerCase(), expected)) {
       return json({ code: "SIGNATURE_INVALID", message: "签名验证失败。" }, 401);
     }
+
+    if (!merchant.api_access_granted) return json({ code: "API_ACCESS_PENDING", message: "API 调用权限尚未审批通过，请在商户客服工单中提交申请。" }, 403);
 
     const now = Math.floor(Date.now() / 1000);
     const id = randomHex(16);
