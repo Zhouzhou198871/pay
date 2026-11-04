@@ -597,9 +597,9 @@ async function renderAdminSupportTickets(){
    detail.querySelector("strong").textContent=(data.ticket.site_name||data.ticket.email||"商户")+" · "+data.ticket.merchant_no;
    detail.querySelector("small").textContent=data.ticket.email+" · "+date(data.ticket.updated_at);
    detail.querySelector("#qt-admin-ticket-back").onclick=()=>{detail.hidden=true;};
-   const messages=detail.querySelector("#qt-admin-ticket-messages");let hasPermission=false;
+   const messages=detail.querySelector("#qt-admin-ticket-messages");
    (data.messages||[]).forEach(item=>{const row=document.createElement("article");row.className="qt-admin-message "+(item.sender_role==="merchant"?"is-merchant":"is-admin");const who=document.createElement("b");who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="admin"?"管理员":"系统";const content=document.createElement("p");content.textContent=item.content;const time=document.createElement("small");time.textContent=date(item.created_at);row.append(who,content,time);
-    if(item.message_type==="permission_request"){hasPermission=true;let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}messages.append(row)});
+    if(item.message_type==="permission_request"){let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}messages.append(row)});
    const actions=detail.querySelector("#qt-admin-ticket-actions");
    if(data.pending_permission_request&&!data.ticket.api_access_granted){
     const approve=document.createElement("button");approve.type="button";approve.className="qt-primary-button";approve.textContent="同意并开通 API 权限";
