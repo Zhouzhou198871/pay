@@ -15,7 +15,7 @@ export async function onRequestGet({ request, env }) {
   const where = " WHERE " + filters.join(" AND ");
   try {
     const [rows, count, summary, profile] = await Promise.all([
-      context.db.prepare("SELECT w.id, w.request_no, w.amount_micro, w.fee_micro, w.currency, w.destination_masked, w.status, w.requested_at, w.reviewed_at, w.payout_reference, pm.usdt_network FROM merchant_withdrawals w LEFT JOIN pay_merchants pm ON pm.user_id = w.user_id " + where + " ORDER BY w.requested_at DESC, w.id DESC LIMIT ? OFFSET ?")
+      context.db.prepare("SELECT w.id, w.request_no, w.amount_micro, w.fee_micro, w.currency, w.destination_masked, w.status, w.requested_at, w.reviewed_at, w.payout_reference, w.withdraw_type, w.fee_amount, w.payout_amount_micro, w.payout_amount_cents, w.total_debit_micro, pm.usdt_network FROM merchant_withdrawals w LEFT JOIN pay_merchants pm ON pm.user_id = w.user_id " + where + " ORDER BY w.requested_at DESC, w.id DESC LIMIT ? OFFSET ?")
         .bind(...binds, pageSize, offset).all(),
       context.db.prepare("SELECT COUNT(*) AS total FROM merchant_withdrawals w" + where).bind(...binds).first(),
       context.db.prepare(`SELECT
