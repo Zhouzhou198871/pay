@@ -202,11 +202,11 @@ function loadOverviewData() {
       const channelRoot = document.getElementById("qt-channel-list");
       if (channelRoot) {
         const channels = Array.isArray(data.channels) ? data.channels : [];
-        const yuan = (value) => (Number(value || 0) / 100).toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " 元";
+        const usdt = (value) => money(Number(value || 0), "USDT");
         channelRoot.innerHTML = channels.length ? channels.map((channel) => {
           const label = escapeText(channel.display_name || channel.channel_code || "支付通道");
-          const today = yuan(channel.today_amount_cents);
-          const yesterday = yuan(channel.yesterday_amount_cents);
+          const today = usdt(channel.today_amount_micro);
+          const yesterday = usdt(channel.yesterday_amount_micro);
           const success = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
           const fee = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
           return `<article class="qt-alipay-summary"><div class="qt-alipay-summary__heading"><span class="qt-alipay-summary__icon" aria-hidden="true">支</span><strong>${label}</strong></div><div class="qt-alipay-summary__row"><span>今日收入：</span><b>${today}</b></div><div class="qt-alipay-summary__row"><span>昨日收入：</span><b>${yesterday}</b></div><div class="qt-alipay-summary__row"><span>通道成功率：</span><b class="qt-success-text">${success}%</b></div><div class="qt-alipay-summary__row"><span>实际费率：</span><b>${fee}%</b></div></article>`;
@@ -214,18 +214,18 @@ function loadOverviewData() {
       }
 
       const trend = data.trend || {};
-      setText("qt-seven-day-total", formatCents(trend.total_amount_cents || 0));
+      setText("qt-seven-day-total", money(trend.total_amount_micro || 0, "USDT"));
       setText("qt-seven-day-orders", Number(trend.total_orders || 0).toLocaleString("zh-CN") + " 单");
       const chart = document.querySelector(".qt-chart-columns");
       if (chart) {
         const days = Array.isArray(trend.days) ? trend.days : [];
-        const maxAmount = Math.max(0, ...days.map((day) => Number(day.amount_cents || 0)));
+        const maxAmount = Math.max(0, ...days.map((day) => Number(day.amount_micro || 0)));
         chart.innerHTML = days.map((day) => {
           const amount = Number(day.amount_cents || 0);
           const height = maxAmount > 0 ? Math.max(4, amount / maxAmount * 100) : 3;
           const dateLabel = String(day.day || "").slice(5).replace("-", "-");
           return `<div class="qt-chart-column">
-            <div class="qt-chart-value"><b>${formatCents(amount)}</b><small>${Number(day.orders || 0)} 单</small></div>
+            <div class="qt-chart-value"><b>${money(amount, "USDT")}</b><small>${Number(day.orders || 0)} 单</small></div>
             <div class="qt-chart-track"><i style="height:${height}%"></i></div>
             <span>${escapeText(dateLabel)}</span>
           </div>`;
