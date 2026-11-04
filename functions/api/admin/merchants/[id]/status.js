@@ -7,9 +7,15 @@ export async function onRequestPost({request,env,params}){
  const id=String(params?.id||""),action=String(body?.action||"");
  if(!/^[a-f0-9]{32}$/i.test(id)||!["freeze","unfreeze"].includes(action))return json({error:"商户状态参数无效。"},400);
  try{
-  const target=action==="freeze"?"suspended":"active",expected=action==="freeze"?"active":"suspended";
-  const result=await c.db.prepare("UPDATE pay_merchants SET status=? WHERE id=? AND status=?").bind(target,id,expected).run();
-  if(Number(result?.meta?.changes||0)!==1)return json({error:"商户不存在，或当前状态不允许该操作。"},409);
-  return json({success:true,status:target,message:action==="freeze"?"商户已冻结。":"商户已解冻。"});
+  const row=await c.db.prepare("SELECT status,suspended_previous_status FROM pay_merchants WHERE id=?").bind(id).first();
+  if(!row)return json({error:"商户不存在。"},404);
+  if(action==="freeze"){
+   if(row.status==="suspended")return json({success:true,idempotent:true,status:"suspended"});
+   await c.db.prepare("UPDATE pay_merchants SET suspended_previous_status=status,status='suspended' WHERE id=? AND status<>'suspended'").bind(id).run();
+   return json({success:true,status:"suspended",message:"商户已冻结。"});
+  }
+  if(row.status!=="suspended")return json({error:"该商户当前未冻结。"},409);
+  await c.db.prepare("UPDATE pay_merchants SET status=COALESCE(NULLIF(suspended_previous_status,''),'active'),suspended_previous_status=NULL WHERE id=? AND status='suspended'").bind(id).run();
+  return json({success:true,status:"restored",message:"商户已恢复冻结前状态。"});
  }catch(error){console.error("[admin:merchant-status]",String(error?.message||error).slice(0,140));return json({error:"商户状态更新失败。"},503)}
 }
