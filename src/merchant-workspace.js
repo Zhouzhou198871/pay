@@ -644,13 +644,18 @@ function initWorkspace() {
     const name = currentUser?.display_name || currentUser?.username || "";
     const drawerName = $("#drawer-user-name"); if (drawerName) drawerName.textContent = name;
     const drawerEmail = $("#drawer-user-email"); if (drawerEmail) drawerEmail.textContent = email;
+    const drawerAvatar = $("#drawer-user-avatar"); if (drawerAvatar) drawerAvatar.textContent = String(name || email || "晴").trim().slice(0, 1).toUpperCase();
+    fetch("/api/merchant/profile", { credentials: "same-origin", headers: { Accept: "application/json" } }).then((response) => response.ok ? response.json() : null).then((profile) => {
+      const merchantNo = profile?.merchant?.merchant_no;
+      const merchantLabel = $("#drawer-user-merchant");
+      if (merchantLabel) merchantLabel.textContent = merchantNo ? "商户号 · " + merchantNo : "商户资料待初始化";
+    }).catch(() => { const merchantLabel = $("#drawer-user-merchant"); if (merchantLabel) merchantLabel.textContent = "商户账户"; });
     fetch(ENDPOINTS.adminAccess, { credentials: "same-origin", headers: { Accept: "application/json" } }).then((response) => {
       if (!response.ok) return null;
       return response.json();
     }).then((access) => {
       if (access?.is_admin) {
         const nav = $("#qt-admin-finance-nav"); if (nav) nav.hidden = false;
-        const label = $("#qt-admin-finance-label"); if (label) label.hidden = false;
       }
     }).catch(() => {});
     selectSection("overview");
