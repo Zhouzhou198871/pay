@@ -8,9 +8,6 @@ const ENDPOINTS = {
   withdrawals: "/api/merchant/withdrawals",
   ledger: "/api/merchant/ledger",
   payments: "/api/merchant/channels",
-  adminAccess: "/api/admin/access",
-  adminWithdrawals: "/api/admin/withdrawals",
-  adminOrders: "/api/admin/orders",
   withdraw: "/api/merchant/withdraw",
 };
 const LABELS = {
@@ -21,8 +18,7 @@ const LABELS = {
   ledger: ["资金明细", "资金明细", "账本记录只读展示，不代表实时可提现余额"],
   payments: ["聚合收款", "聚合收款", "分享专属链接或生成固定金额收款码"],
   docs: ["开发文档", "开发文档", "晴天支付 API 接入说明"],
-  support: ["联系客服", "联系客服", "官方客服入口尚未配置"],
-  adminFinance: ["财务管理", "审核中心", "管理员专用：提现审核与全站支付订单"]
+  support: ["联系在线客服", "联系在线客服", "晴天支付官方客服入口"]
 };
 const STATUS = {
   pending: "处理中", paid: "已支付", failed: "失败", cancelled: "已取消",
@@ -490,101 +486,27 @@ async function loadRecords(key, page = 1) {
     box.append(title,message,retry); panel.append(box);
   }
 }
-function renderAdminFinance() {
+async function renderSupport() {
   const panel = $("#merchant-panel-content");
-  panel.innerHTML = `
-    <section class="qt-admin-finance">
-      <nav class="qt-admin-tabs" aria-label="财务管理分类"><button type="button" class="active" data-admin-tab="withdrawals">提现审核</button><button type="button" data-admin-tab="orders">全站订单</button></nav>
-      <div class="qt-admin-toolbar"><div><strong id="qt-admin-list-title">待审核提现</strong><small id="qt-admin-list-hint">仅显示 pending 状态的提现申请</small></div><button type="button" class="qt-outline-button" id="qt-admin-refresh">刷新</button></div>
-      <div id="qt-admin-list" class="qt-admin-list"><div class="section-loading">正在读取管理数据…</div></div>
-    </section>
-    <dialog class="qt-admin-dialog" id="qt-payout-dialog"><form id="qt-payout-form" method="dialog"><div class="qt-dialog-heading"><div><small>CONFIRM PAYOUT</small><h3>确认已打款</h3></div><button type="button" class="qt-dialog-close" data-close-payout>×</button></div><p class="qt-dialog-hint" id="qt-payout-target">请核对提现信息。</p><label for="qt-payout-reference">交易哈希 / 打款凭证</label><input id="qt-payout-reference" name="payout_reference" minlength="4" maxlength="128" required placeholder="粘贴链上交易哈希"><label for="qt-payout-note">审核备注（选填）</label><input id="qt-payout-note" name="note" maxlength="500" placeholder="备注"><p class="qt-dialog-feedback" id="qt-payout-feedback" role="status"></p><div class="qt-dialog-actions"><button type="button" class="qt-outline-button" data-close-payout>取消</button><button type="submit" class="qt-primary-button">确认已打款</button></div></form></dialog>`;
-  let activeTab = "withdrawals";
-  let activePage = 1;
-  let payoutId = "";
-  const list = $("#qt-admin-list", panel);
-  const dialog = $("#qt-payout-dialog", panel);
-  const moneyText = (value, currency = "USDT") => money(value, currency);
-  const renderPagination = (pagination, tab) => {
-    const page = Number(pagination.page || 1), pages = Math.max(1, Number(pagination.pages || 1));
-    const footer = document.createElement("div"); footer.className = "record-pagination";
-    const info = document.createElement("span"); info.textContent = `共 ${Number(pagination.total || 0)} 条 · 第 ${page} / ${pages} 页`;
-    const controls = document.createElement("div");
-    const prev = document.createElement("button"); prev.type = "button"; prev.textContent = "上一页"; prev.disabled = page <= 1; prev.addEventListener("click", () => loadTab(tab, page - 1));
-    const next = document.createElement("button"); next.type = "button"; next.textContent = "下一页"; next.disabled = page >= pages; next.addEventListener("click", () => loadTab(tab, page + 1));
-    controls.append(prev, next); footer.append(info, controls); list.append(footer);
-  };
-  async function loadTab(tab = activeTab, page = 1) {
-    activeTab = tab; activePage = page;
-    panel.querySelectorAll("[data-admin-tab]").forEach((button) => button.classList.toggle("active", button.dataset.adminTab === tab));
-    $("#qt-admin-list-title", panel).textContent = tab === "withdrawals" ? "待审核提现" : "全站支付订单";
-    $("#qt-admin-list-hint", panel).textContent = tab === "withdrawals" ? "展示待审核提现及完整 USDT 收款地址" : "展示全站真实支付订单，按创建时间倒序";
-    list.innerHTML = '<div class="section-loading">正在读取管理数据…</div>';
-    const endpoint = tab === "withdrawals" ? ENDPOINTS.adminWithdrawals + "?status=pending&page=" + page + "&page_size=20" : ENDPOINTS.adminOrders + "?page=" + page + "&page_size=20";
-    try {
-      const response = await fetch(endpoint, { credentials: "same-origin", headers: { Accept: "application/json" } });
-      const payload = await response.json().catch(() => ({}));
-      if (response.status === 401) { location.href = "/"; return; }
-      if (response.status === 403) throw new Error("当前账户不在 ADMIN_USER_IDS 白名单内，无法查看全站财务数据。");
-      if (!response.ok) throw new Error(payload.error || "读取失败");
-      const items = Array.isArray(payload.items) ? payload.items : [];
-      if (!items.length) {
-        const empty = document.createElement("div"); empty.className = "section-empty";
-        const h = document.createElement("h3"); h.textContent = tab === "withdrawals" ? "暂无待审核提现" : "暂无支付订单";
-        const p = document.createElement("p"); p.textContent = "此列表直接读取生产 D1 数据，没有模拟记录。";
-        empty.append(h, p); list.replaceChildren(empty); return;
-      }
-      const table = document.createElement("div"); table.className = "qt-admin-table-wrap";
-      const tableEl = document.createElement("table"); tableEl.className = "qt-admin-table";
-      const headers = tab === "withdrawals" ? ["用户 / 申请单", "金额", "USDT 地址", "申请时间", "操作"] : ["商户 / 用户", "订单号", "金额", "状态", "创建时间"];
-      const thead = document.createElement("thead"), trh = document.createElement("tr");
-      headers.forEach((label) => { const th = document.createElement("th"); th.textContent = label; trh.append(th); }); thead.append(trh);
-      const tbody = document.createElement("tbody");
-      items.forEach((item) => {
-        const tr = document.createElement("tr");
-        const cells = tab === "withdrawals"
-          ? [`${item.email || item.user_id} · ${item.request_no}`, moneyText(item.amount_micro, item.currency), `${item.payout_network || "USDT"} · ${item.payout_address || item.destination_masked || "地址未配置"}`, date(item.requested_at)]
-          : [`${item.merchant_name || item.merchant_id} · ${item.user_email || "—"}`, item.merchant_order_no || item.id, moneyText(item.amount_micro, item.currency), (item.status === "pending" ? "未支付" : statusText(item.status)), date(item.created_at)];
-        cells.forEach((value) => { const td = document.createElement("td"); td.textContent = String(value ?? "—"); tr.append(td); });
-        if (tab === "withdrawals") {
-          const td = document.createElement("td"); const button = document.createElement("button"); button.type = "button"; button.className = "qt-primary-button qt-small-button"; button.textContent = "确认已打款"; button.addEventListener("click", () => {
-            payoutId = String(item.id || "");
-            $("#qt-payout-target", panel).textContent = `${item.email || item.user_id} · ${item.request_no} · ${moneyText(item.amount_micro, item.currency)} · ${item.payout_address || item.destination_masked || "地址未配置"}`;
-            $("#qt-payout-reference", panel).value = ""; $("#qt-payout-note", panel).value = ""; $("#qt-payout-feedback", panel).textContent = "";
-            dialog.showModal();
-          }); td.append(button); tr.append(td);
-        }
-        tbody.append(tr);
-      });
-      tableEl.append(thead, tbody); table.append(tableEl); list.replaceChildren(table);
-      renderPagination(payload.pagination || {}, tab);
-    } catch (error) {
-      list.innerHTML = "";
-      const box = document.createElement("div"); box.className = "section-empty";
-      const h = document.createElement("h3"); h.textContent = "管理数据读取失败";
-      const p = document.createElement("p"); p.textContent = error.message || "请刷新重试";
-      const retry = document.createElement("button"); retry.type = "button"; retry.className = "record-retry"; retry.textContent = "点击重试"; retry.addEventListener("click", () => loadTab(tab, page));
-      box.append(h, p, retry); list.append(box);
+  panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2>晴天支付在线客服</h2><p>正在读取官方客服入口…</p></section>';
+  try {
+    const response = await fetch("/api/support", { credentials: "same-origin", headers: { Accept: "application/json" } });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "客服信息暂时无法读取");
+    panel.innerHTML = '<section class="qt-support-card"><div class="qt-support-mark">客服</div><h2></h2><p class="qt-support-description">如需账户、提现或 API 接入协助，请通过以下官方渠道联系。</p><div class="qt-support-qr" id="qt-support-qr" hidden><img id="qt-support-qr-image" alt="晴天支付官方客服微信二维码"></div><p class="qt-support-hours" id="qt-support-hours"></p><a class="qt-primary-button qt-support-link" id="qt-support-link" hidden target="_blank" rel="noopener noreferrer">联系在线客服 ↗</a><div class="qt-support-safe">安全提醒：客服不会向您索要登录密码、支付密码、短信验证码或完整私钥。</div></section>';
+    panel.querySelector("h2").textContent = data.label || "晴天支付在线客服";
+    const qr = $("#qt-support-qr", panel), img = $("#qt-support-qr-image", panel);
+    if (data.wechat_qr_url) { img.src = data.wechat_qr_url; qr.hidden = false; }
+    const link = $("#qt-support-link", panel);
+    if (data.url) { link.href = data.url; link.hidden = false; }
+    $("#qt-support-hours", panel).textContent = data.hours || "";
+    if (!data.url && !data.wechat_qr_url) {
+      const p = panel.querySelector(".qt-support-description");
+      p.textContent = "官方客服二维码或第三方客服地址尚未配置。平台管理员配置 SUPPORT_WECHAT_QR_URL 或 SUPPORT_URL 后，这里会自动显示可用入口。";
     }
+  } catch (error) {
+    showEmpty("客服入口暂不可用", error.message || "请稍后刷新重试。");
   }
-  panel.querySelectorAll("[data-admin-tab]").forEach((button) => button.addEventListener("click", () => loadTab(button.dataset.adminTab, 1)));
-  $("#qt-admin-refresh", panel)?.addEventListener("click", () => loadTab(activeTab, activePage));
-  panel.querySelectorAll("[data-close-payout]").forEach((button) => button.addEventListener("click", () => dialog.close()));
-  $("#qt-payout-form", panel)?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const submit = event.currentTarget.querySelector('button[type="submit"]');
-    const feedback = $("#qt-payout-feedback", panel);
-    submit.disabled = true; feedback.textContent = "正在提交…";
-    try {
-      const response = await fetch("/api/admin/withdrawals/" + encodeURIComponent(payoutId) + "/paid", { method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ payout_reference: $("#qt-payout-reference", panel).value.trim(), note: $("#qt-payout-note", panel).value.trim() }) });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "打款状态更新失败");
-      feedback.textContent = payload.message || "已更新为已打款";
-      window.setTimeout(() => { dialog.close(); loadTab("withdrawals", 1); }, 700);
-    } catch (error) { feedback.textContent = error.message || "网络异常，请重试"; }
-    finally { submit.disabled = false; }
-  });
-  loadTab("withdrawals", 1);
 }
 function selectSection(key) {
   currentSection = key; currentPage = 1; requestSequence++;
@@ -626,8 +548,7 @@ function selectSection(key) {
     });
     return;
   }
-  if (key === "adminFinance") return renderAdminFinance();
-  if (key === "support") return showEmpty("官方客服入口尚未配置", "请勿向非官方账号提供密码、验证码或 API 密钥。");
+  if (key === "support") return renderSupport();
   showEmpty("此功能尚未开放", "当前版本不会展示模拟订单、虚构余额或未接通的支付能力。");
 }
 function initWorkspace() {
@@ -650,14 +571,6 @@ function initWorkspace() {
       const merchantLabel = $("#drawer-user-merchant");
       if (merchantLabel) merchantLabel.textContent = merchantNo ? "商户号 · " + merchantNo : "商户资料待初始化";
     }).catch(() => { const merchantLabel = $("#drawer-user-merchant"); if (merchantLabel) merchantLabel.textContent = "商户账户"; });
-    fetch(ENDPOINTS.adminAccess, { credentials: "same-origin", headers: { Accept: "application/json" } }).then((response) => {
-      if (!response.ok) return null;
-      return response.json();
-    }).then((access) => {
-      if (access?.is_admin) {
-        const nav = $("#qt-admin-finance-nav"); if (nav) nav.hidden = false;
-      }
-    }).catch(() => {});
     selectSection("overview");
   }).catch((error) => showEmpty("账户信息读取失败", error.message || "请刷新页面重试。"));
 
