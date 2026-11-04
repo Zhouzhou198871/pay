@@ -1,5 +1,6 @@
 import { json, randomHex, safeEqual } from "../../_lib/auth.js";
 import { signPaymentParams, isFreshTimestamp } from "../../_lib/md5.js";
+import { createAlipayCheckout } from "../../_lib/alipay.js";
 
 const PAY_TYPES = new Set(["alipay", "alipay_h5"]);
 const MAX_AMOUNT_MICRO = 1000000000000;
@@ -68,12 +69,14 @@ export async function onRequestPost({ request, env }) {
     const now = Math.floor(Date.now() / 1000);
     const id = randomHex(16);
     const tradeNo = "QT" + now.toString() + randomHex(8).toUpperCase();
-    // Keep the existing legacy Alipay columns populated while preserving exact V1 precision in amount_micro.
+    // Persist the exact CNY amount so signed provider notifications can be reconciled.
     const amountCents = Math.max(1, Math.round(amountMicro / 10000));
+    const checkout = await createAlipayCheckout({ env, db: env.AUTH_DB, tradeNo, subject: outTradeNo, amountMicro, payType });
+    if (!checkout.ok) return json({ code: checkout.code, message: checkout.message, ...(checkout.missing ? { missing: checkout.missing } : {}) }, 503);
     try {
       await env.AUTH_DB.prepare(
-        "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', '', '', ?, ?, ?, ?, ?)"
-      ).bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, outTradeNo, notifyUrl, amountMicro, payType, Number(body.timestamp), now).run();
+        "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', ?, ?, ?, ?, ?, ?, ?)"
+      ).bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, outTradeNo, checkout.checkoutUrl, JSON.stringify({ provider: 'alipay', amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate }), notifyUrl, amountMicro, payType, Number(body.timestamp), now).run();
     } catch (error) {
       const message = String(error?.message || error);
       if (/UNIQUE constraint failed|constraint.*unique/i.test(message)) {
@@ -96,7 +99,9 @@ export async function onRequestPost({ request, env }) {
         status: "unpaid",
         created_at: now,
         expires_at: now + 900,
-        checkout_url: null
+        checkout_url: checkout.checkoutUrl,
+        payment_amount_cny: checkout.amountCny,
+        payment_currency: "CNY"
       }
     }, 201);
   } catch (error) {

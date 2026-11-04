@@ -159,3 +159,14 @@ if (!verifier.verify(platformPublicKey,callback.sign,'base64')) throw new Error(
 ## 8. 当前业务边界
 
 V2 接口当前实现 RSA 验签、时间戳校验、商户订单号幂等和待支付订单创建。支付宝上游、支付链接、异步通知投递与支付宝支付状态回调尚未接通；平台回调 RSA 签名能力和商户验签规范已就绪，通知投递接入时调用服务端 `signPlatformCallback`。
+
+## 支付宝异步通知与账本入账
+
+支付宝异步通知地址：\`POST https://pay.lynli.me/api/v1/payments/alipay/notify\`。
+
+Production 必须配置：\`ALIPAY_APP_ID\`、\`ALIPAY_PRIVATE_KEY\`、\`ALIPAY_PUBLIC_KEY\`、\`ALIPAY_SELLER_ID\`、\`ALIPAY_NOTIFY_URL\`、\`ALIPAY_USDT_CNY_RATE\`、\`ALIPAY_FEE_RATE_BPS\`。应用私钥仅用于平台请求签名；回调验签必须使用支付宝公钥。
+
+回调接收 \`application/x-www-form-urlencoded\`。平台排除 \`sign\` 与 \`sign_type\`，对表单解码后的其他非空参数按键名 ASCII 升序拼接，以 RSA2 / SHA-256 验签。验签后核对 App ID、Seller ID、本地订单、支付宝人民币实付金额和支付宝交易号。仅 \`TRADE_SUCCESS\` 与 \`TRADE_FINISHED\` 入账。重复通知不重复生成账本流水。处理成功（包括有效非成功状态及已处理重复通知）响应体严格为纯文本 \`success\`；校验失败返回 \`failure\`。
+
+手续费使用 \`ALIPAY_FEE_RATE_BPS\`，单位为基点（100 bps = 1%），例如 \`100\` 表示 1%，\`0\` 表示不收手续费。净入账金额 = 订单 USDT 金额 - 手续费。手续费率必须显式配置，允许值为 0–10000。
+
