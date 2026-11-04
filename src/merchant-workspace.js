@@ -438,7 +438,7 @@ function selectSection(key) {
     const panel = $("#merchant-panel-content");
     panel.innerHTML = `
       <section class="qt-docs-hub">
-        <button class="qt-docs-hero" id="qt-docs-open" type="button" aria-expanded="true">
+        <button class="qt-docs-hero" id="qt-docs-open" type="button" aria-expanded="false">
           <span class="qt-docs-hero-icon" aria-hidden="true">⌘</span>
           <span class="qt-docs-hero-copy"><small>DEVELOPER CENTER</small><strong>开发者接入文档</strong><em>在当前工作台内阅读完整 API 文档，无需离开商户中心。</em></span>
           <span class="qt-docs-hero-action">展开文档 <b>↗</b></span>
