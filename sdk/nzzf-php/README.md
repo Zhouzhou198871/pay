@@ -48,7 +48,7 @@ echo 'success';
 | \`orders($filters)\` | \`POST /api/merchant/orders\` | 查询订单列表 |
 | \`closeOrder($tradeNo, $outTradeNo)\` | \`POST /api/pay/close\` | 关闭未支付订单，订单号二选一 |
 
-订单列表筛选支持 \`offset\`、\`limit\`、\`status\`、\`out_trade_no\`。关闭订单仅允许尚未支付的订单。
+订单列表筛选支持 \`offset\`、\`limit\`、\`status\`、\`out_trade_no\`。关闭订单仅允许尚未支付的订单。代付模块目前仅封装余额和转账查询，不包含发起转账方法，不会触发自动打款。
 
 ## 支付结果通知
 
