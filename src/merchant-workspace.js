@@ -1,4 +1,5 @@
 import "./merchant-workspace.css";
+import { renderFinancePage } from "./finance-pages.js";
 
 const ENDPOINTS = {
   dashboard: "/api/merchant/dashboard",
@@ -36,8 +37,8 @@ const money = (micro, currency = "USDT") => {
   const negative = n < 0n;
   const abs = negative ? -n : n;
   const whole = abs / 1000000n;
-  const fraction = String(abs % 1000000n).padStart(6, "0").replace(/0+$/, "");
-  return (negative ? "-" : "") + whole.toLocaleString("en-US") + (fraction ? "." + fraction : "") + " " + currency;
+  const fraction = String(abs % 1000000n).padStart(6, "0");
+  return (negative ? "-" : "") + whole.toLocaleString("en-US") + "." + fraction + " " + currency;
 };
 const date = (seconds) => {
   const n = Number(seconds);
@@ -464,6 +465,7 @@ async function loadRecords(key, page = 1) {
   currentSection = key; currentPage = page;
   updateHeading(key);
   const panel = $("#merchant-panel-content");
+  if (["orders", "withdrawals", "ledger"].includes(key)) return renderFinancePage(key, panel);
   panel.innerHTML = '<div class="section-loading" role="status">正在读取账户记录…</div>';
   const seq = ++requestSequence;
   try {
