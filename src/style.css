@@ -281,3 +281,45 @@ body.merchant-menu-open{overflow:hidden}
   .qt-docs-viewer-head small{display:none}
   .qt-docs-viewer iframe{height:76vh;min-height:560px}
 }
+
+
+/* Precision drawer refinement */
+.merchant-drawer{width:min(356px,88vw);max-width:356px;padding:22px 18px 14px;gap:0;transform:translate3d(-105%,0,0);transition:transform .3s ease-in-out;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.merchant-drawer.open{transform:translate3d(0,0,0)}
+.drawer-head{flex:none;min-height:64px;margin:0 2px 22px;padding:0 2px 17px;border-bottom:1px solid #edf1f6}
+.drawer-brand{gap:11px;min-width:0}
+.drawer-brand img{width:48px;height:48px;border-radius:14px;object-fit:contain}
+.drawer-brand span{gap:3px;min-width:0}
+.drawer-brand b{font-size:18px;line-height:1.25;font-weight:800;letter-spacing:.01em;color:#172b4d}
+.drawer-brand small{font-size:11px;letter-spacing:0;color:#8795a5;white-space:nowrap}
+.drawer-close{width:36px;height:36px;flex:none;font-size:24px;background:#f4f7fb;color:#78899b;transition:background .18s ease,transform .18s ease}
+.drawer-close:active{transform:scale(.94);background:#e9f1fa}
+.drawer-scroll{min-height:0;flex:1;overflow-y:auto;overscroll-behavior:contain;padding:2px 1px 12px;scrollbar-width:thin;scrollbar-color:#dce6f0 transparent}
+.drawer-section-label{margin:16px 0 8px 7px;font-size:10px;font-weight:750;letter-spacing:.06em;color:#9aa6b4;line-height:1.4}
+.drawer-nav{gap:4px;margin:0 0 12px}
+.drawer-link{position:relative;gap:12px;min-height:50px;padding:7px 10px;border-radius:13px;color:#4d6075;font-size:13px;font-weight:600;transition:background .2s ease,color .2s ease,transform .2s ease,box-shadow .2s ease}
+.drawer-link:active{transform:scale(.985)}
+.drawer-link:hover{background:#f6f9fc}
+.drawer-link.active{background:#edf6ff;color:#1768ce;box-shadow:inset 0 0 0 1px rgba(48,126,218,.06);font-weight:750}
+.drawer-link.active:before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:3px;border-radius:0 3px 3px 0;background:#2f80e7}
+.drawer-link>span:not(.drawer-icon){white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-link i{margin-left:auto;font-size:19px;color:#4a8fe0}
+.drawer-icon{width:36px;height:36px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:17px;box-shadow:inset 0 1px 0 rgba(255,255,255,.65)}
+.drawer-icon svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.drawer-icon.blue{background:#1758bd;color:#fff;box-shadow:0 4px 9px rgba(23,88,189,.17)}
+.drawer-icon.blue-soft{background:#e8f3ff;color:#3d86d8}
+.drawer-icon.purple{background:#f0ebff;color:#8666cb}
+.drawer-icon.cyan{background:#e6f7fa;color:#2697ad}
+.drawer-link[data-section="payments"].active .drawer-icon{background:#dceeff;color:#176bd5;box-shadow:none}
+.drawer-link[data-section="payments"].active .drawer-icon svg{fill:currentColor;stroke:currentColor}
+.drawer-user{flex:none;height:68px;min-height:68px;max-height:68px;box-sizing:border-box;gap:10px;margin:10px 0 0;padding:9px 11px;border:1px solid #e9eff5;border-radius:15px;background:#f8fafc;overflow:hidden}
+.drawer-user-avatar{width:40px;height:40px;flex:none;border:1px solid #dceaf7;background:#e8f4ff;color:#2676ca;font-size:13px;font-weight:800}
+.drawer-user-copy{flex:1;min-width:0;gap:3px;overflow:hidden}
+.drawer-user-copy b{font-size:12px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-user-copy small{font-size:10px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+.drawer-user button{width:34px;height:34px;flex:none;margin:0;display:grid;place-items:center;border-radius:10px;background:#fff;color:#77889b;transition:background .18s ease,color .18s ease}
+.drawer-user button:active{background:#fff0f0;color:#d45b5b}
+.drawer-user button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.merchant-backdrop{transition:opacity .3s ease-in-out,visibility .3s ease-in-out}
+@media(max-width:600px){.merchant-drawer{width:min(340px,88vw);max-width:88vw;padding:18px 15px calc(12px + env(safe-area-inset-bottom))}.drawer-head{margin-bottom:17px}.drawer-link{min-height:48px}.drawer-user{margin-bottom:0}}
+@media(prefers-reduced-motion:reduce){.merchant-drawer,.merchant-backdrop,.drawer-link,.drawer-close{transition:none!important}}
