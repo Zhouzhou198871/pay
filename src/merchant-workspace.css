@@ -415,3 +415,35 @@
 .qt-support-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;margin:12px auto;padding:0 22px;text-decoration:none}
 .qt-support-safe{margin-top:18px;padding:11px 13px;border-radius:10px;background:#f6f9fc;color:#8a98a7;font-size:10px;line-height:1.7}
 @media(max-width:600px){.qt-withdraw-calculation{grid-template-columns:1fr 1fr;padding:12px}.qt-withdraw-review-details{grid-template-columns:1fr}.qt-support-card{padding:24px 17px}}
+
+
+/* Fiat withdrawal clarity */
+.qt-fiat-channel-heading{display:flex;flex-direction:column;gap:6px;margin:0 0 14px;padding:14px 15px;border:1px solid #dcecf7;border-radius:12px;background:#f2f9fd}
+.qt-fiat-channel-heading strong{color:#1d3d5b;font-size:15px;font-weight:800}
+.qt-fiat-channel-heading span{color:#1886bd;font-size:13px;font-weight:700}
+.qt-withdraw-page-form .qt-fiat-field-hint{display:block;margin-top:7px;color:#73879a;font-size:11px;font-weight:450;line-height:1.65}
+#qtw-fiat-fields input[type=file]{height:auto;min-height:44px;padding:9px;background:#f8fbfd}
+
+/* Global floating support chat */
+.qt-chat-widget{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:9998;font-family:inherit}
+.qt-chat-launcher{display:flex;align-items:center;gap:9px;min-height:54px;padding:0 18px;border:0;border-radius:30px;background:linear-gradient(135deg,#168bd0,#2563eb);color:#fff;box-shadow:0 8px 26px rgba(25,105,190,.3);font:inherit;font-size:14px;font-weight:750;cursor:pointer}
+.qt-chat-launcher-icon{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#ffffff30;font-size:18px}
+.qt-chat-panel{position:absolute;right:0;bottom:68px;width:min(360px,calc(100vw - 28px));height:min(520px,calc(100dvh - 115px));display:flex;flex-direction:column;overflow:hidden;border:1px solid #dfeaf3;border-radius:20px;background:#fff;box-shadow:0 18px 60px rgba(21,54,88,.2)}
+.qt-chat-panel[hidden]{display:none}
+.qt-chat-header{display:flex;align-items:center;gap:11px;padding:15px 16px;background:linear-gradient(120deg,#e8f6fc,#f4f8ff);border-bottom:1px solid #e7eef5}
+.qt-chat-avatar{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:#168bd0;color:#fff;font-size:17px;font-weight:800}
+.qt-chat-header-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:5px}
+.qt-chat-header-copy strong{color:#203b59;font-size:14px}
+.qt-chat-header-copy small{color:#8192a2;font-size:10px}
+.qt-chat-header-copy small i{display:inline-block;width:6px;height:6px;margin-right:5px;border-radius:50%;background:#e6a23c}
+.qt-chat-header>button{width:32px;height:32px;border:0;border-radius:50%;background:#ffffffb8;color:#64788b;font-size:22px;cursor:pointer}
+.qt-chat-messages{flex:1;min-height:0;display:flex;flex-direction:column;gap:11px;overflow:auto;padding:17px 14px;background:#f8fbfd}
+.qt-chat-message{max-width:86%;padding:11px 13px;border-radius:14px;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.qt-chat-message.is-agent{align-self:flex-start;border:1px solid #e7eef4;border-top-left-radius:5px;background:#fff;color:#536a7e}
+.qt-chat-message.is-user{align-self:flex-end;border-top-right-radius:5px;background:#e6f3ff;color:#1f5d9d}
+.qt-chat-demo-note{margin:0;padding:8px 13px;background:#fff8e9;color:#9b7b43;font-size:10px;line-height:1.5}
+.qt-chat-compose{display:flex;gap:8px;padding:11px;border-top:1px solid #eaf0f5;background:#fff}
+.qt-chat-compose input{min-width:0;flex:1;height:42px;padding:0 12px;border:1px solid #dce6ef;border-radius:11px;outline:0;color:#334b62;font:inherit;font-size:12px}
+.qt-chat-compose input:focus{border-color:#6aa8d6;box-shadow:0 0 0 3px #6aa8d61c}
+.qt-chat-compose button{flex:none;min-width:62px;border:0;border-radius:11px;background:#1769e0;color:#fff;font:inherit;font-size:12px;font-weight:750}
+@media(max-width:600px){.qt-chat-widget{right:13px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}.qt-chat-launcher{min-height:50px;padding:0 15px}.qt-chat-panel{bottom:62px;width:min(360px,calc(100vw - 26px));height:min(510px,calc(100dvh - 100px));border-radius:18px}}
