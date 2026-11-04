@@ -102,13 +102,13 @@ function renderOverview() {
       </div>
     </section>
     <section class="qt-card qt-channel-info">
-      <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h3>交易说明</h3><p>请根据平台实际开放的通道与业务规则进行接入</p></div></div>
-      <div class="qt-info-block"><b>支持业务类型</b><div class="qt-tag-cloud"><span>支持范围以商户审核结果为准</span></div></div>
-      <div class="qt-warning"><strong><svg viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/><path d="M12 9v5M12 18h.01"/></svg>禁止事项</strong><p>请勿开展违法违规、侵权、欺诈或违反支付通道规则的业务。具体限制以平台协议及通道审核要求为准。</p></div>
+      <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><div><h3>商户支付接入说明</h3><p>面向合规经营商户，提供标准化支付接口接入与订单管理服务</p></div></div>
+      <div class="qt-info-block"><b>支持业务类型</b><div class="qt-tag-cloud"><span>企业服务</span><span>数字产品</span><span>软件服务</span><span>在线教育</span><span>内容服务</span><span>生活服务</span></div><p>以上为常见合规业务场景示例，具体接入范围以商户资质审核结果及已开通支付渠道规则为准。</p></div>
+      <div class="qt-warning"><strong><svg viewBox="0 0 24 24"><path d="m12 3 10 18H2z"/><path d="M12 9v5M12 18h.01"/></svg>合规经营要求</strong><p>仅限合法合规的商品与服务。禁止开展欺诈、洗钱、赌博、侵权及其他违法违规交易，禁止销售法律法规或支付机构规则明确限制的商品与服务。平台将依据商户协议、适用法律及支付渠道规则进行审核与风险管理。</p></div>
       <div class="qt-info-grid">
-        <article><span>充值范围</span><b id="qt-recharge-range">按商户配置</b><p>具体范围以已审核的商户配置为准</p></article>
-        <article><span>入款方式</span><b id="qt-deposit-method">按已开通通道</b><p>仅展示平台实际开通的收款方式</p></article>
-        <article><span>结算说明</span><b id="qt-settlement-note">按结算配置</b><p>以商户协议及实际账本记录为准</p></article>
+        <article><span>交易金额范围</span><b id="qt-recharge-range">以商户配置为准</b><p>单笔限额及可交易范围以审核通过后的商户配置为准</p></article>
+        <article><span>支付方式</span><b id="qt-deposit-method">以已开通渠道为准</b><p>仅支持使用商户账户已开通的支付渠道</p></article>
+        <article><span>结算说明</span><b id="qt-settlement-note">以商户协议为准</b><p>结算周期、手续费及到账状态以商户协议和账务记录为准</p></article>
       </div>
     </section>
   `;
@@ -142,9 +142,9 @@ function loadOverviewData() {
         merchantStatus.style.color = merchant?.status === "active" ? "#26966f" : "#8795a2";
       }
       if (!merchant) {
-        setText("qt-recharge-range", "未开通");
-        setText("qt-deposit-method", "未开通");
-        setText("qt-settlement-note", "未配置");
+        setText("qt-recharge-range", "待完成商户审核");
+        setText("qt-deposit-method", "待开通支付渠道");
+        setText("qt-settlement-note", "以商户协议为准");
       }
       setText("qt-order-count", Number(summary.total_orders || 0).toLocaleString("zh-CN"));
       setText("qt-today-orders", Number(summary.today_orders || 0).toLocaleString("zh-CN"));
