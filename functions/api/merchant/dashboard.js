@@ -1,6 +1,8 @@
 import { merchantContext } from "../../_lib/merchant.js";
 import { json } from "../../_lib/auth.js";
 
+const MERCHANT_SQL = `SELECT site_name, status FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
+
 const SUMMARY_SQL = `
 SELECT
   (SELECT COUNT(*)
@@ -103,7 +105,8 @@ export async function onRequestGet({ request, env }) {
   const userId = context.user.id;
 
   try {
-    const [summary, balances, channels, trend] = await Promise.all([
+    const [merchant, summary, balances, channels, trend] = await Promise.all([
+      context.db.prepare(MERCHANT_SQL).bind(userId).first(),
       context.db.prepare(SUMMARY_SQL).bind(userId, userId).first(),
       context.db.prepare(BALANCES_SQL).bind(userId, userId, userId, userId).all(),
       context.db.prepare(CHANNELS_SQL).bind(userId, userId, userId).all(),
@@ -119,6 +122,7 @@ export async function onRequestGet({ request, env }) {
         display_name: context.user.display_name || null,
         username: context.user.username || null
       },
+      merchant: merchant || null,
       summary: {
         total_orders: Number(summary?.total_orders || 0),
         today_orders: Number(summary?.today_orders || 0)
