@@ -1,0 +1,6 @@
+export default {
+  apiurl: 'https://pay.lynli.me/',
+  pid: '商户ID',
+  platform_public_key: '平台公钥',
+  merchant_private_key: '商户私钥',
+};
