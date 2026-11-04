@@ -28,9 +28,9 @@ jobs:
 
       - name: Publish downloadable SDK
         env:
-          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create nzzf-sdk-v2.1.0 dist/nzzf-php-sdk-v2.1.0.zip dist/SHA256SUMS.txt \
-            --repo "\${{ github.repository }}" \
+            --repo "${{ github.repository }}" \
             --title "晴天支付 NZZF PHP SDK v2.1.0" \
             --notes "基于已提供的 NZZF V2 SHA256WithRSA 协议制作的兼容 PHP SDK。非 NZZF 官方原版；支付下单和代付接口待完整文档后补充。"
