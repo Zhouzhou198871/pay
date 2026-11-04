@@ -38,7 +38,7 @@ async function renderProfileCenter() {
       <section class="qtpc-section">
         <h3>V1 接口（MD5 签名方式）</h3>
         <div class="qtpc-field"><label>商户 MD5 密钥（40 位）</label><div class="qtpc-copy"><code id="qtpc-api-key" class="qtpc-secret">${esc(merchant.api_key||"")}</code><button type="button" data-copy-target="#qtpc-api-key">▢</button></div><p class="qtpc-help">密钥仅对当前登录商户展示。重置后旧密钥立即失效，请同步更新调用方配置。</p></div>
-        <div class="qtpc-actions"><a class="qtpc-btn" href="/docs/API_REFERENCE.md" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">查看 V1 开发文档</a><button class="qtpc-btn danger" type="button" id="qtpc-rotate">重置商户 MD5 密钥</button></div>
+        <div class="qtpc-actions"><a class="qtpc-btn" href="/docs/V1_MERCHANT_API.md" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;text-decoration:none">查看 V1 开发文档</a><button class="qtpc-btn danger" type="button" id="qtpc-rotate">重置商户 MD5 密钥</button></div>
       </section>
       <hr class="qtpc-divider">
       <section class="qtpc-section"><h3>签名与安全说明</h3><div class="qtpc-note"><strong>商户凭据安全</strong>商户 ID 用于标识接入账户；MD5 密钥用于服务端请求签名校验。请仅在您自己的服务端保存密钥，不要写入网页、公开代码仓库或客户端应用。平台登录会话使用 HttpOnly Cookie，与商户 API 密钥相互独立。</div></section>
