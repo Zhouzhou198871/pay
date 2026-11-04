@@ -133,7 +133,7 @@ function loadOverviewData() {
     })
     .then((data) => {
       if (!data || currentSection !== "overview") return;
-      const summary = data.summary || {};
+      const summary = data.summary;
       const merchant = data.merchant || null;
       const merchantStatus = document.getElementById("qt-merchant-status");
       if (merchantStatus) {
@@ -150,8 +150,9 @@ function loadOverviewData() {
       setText("qt-today-orders", Number(summary.today_orders || 0).toLocaleString("zh-CN"));
 
       const balances = Array.isArray(data.balances) ? data.balances : [];
-      const balance = balances.find((item) => item.currency === "USDT") || balances[0] || { currency: "USDT", available_micro: 0, pending_micro: 0, total_micro: 0 };
-      const currency = balance.currency || "USDT";
+      const balance = balances.find((item) => item.currency === "USDT") || balances[0];
+      if (!balance) throw new Error("账户余额汇总缺失");
+      const currency = balance.currency;
       setText("qt-withdrawable", formatYuanMicro(balance.available_micro || 0, currency));
       setText("qt-pending", formatYuanMicro(balance.pending_micro || 0, currency));
       setText("qt-total-balance", formatYuanMicro(balance.total_micro || 0, currency));
