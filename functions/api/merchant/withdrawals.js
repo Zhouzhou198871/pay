@@ -20,9 +20,9 @@ export async function onRequestGet({ request, env }) {
       context.db.prepare("SELECT COUNT(*) AS total FROM merchant_withdrawals w" + where).bind(...binds).first(),
       context.db.prepare(`SELECT
         COALESCE((SELECT balance_after_micro FROM merchant_ledger WHERE user_id = ? AND currency = 'USDT' ORDER BY created_at DESC, rowid DESC LIMIT 1), 0) AS available_micro,
-        COALESCE(SUM(CASE WHEN status = 'pending' THEN amount_micro + fee_micro ELSE 0 END), 0) AS pending_micro,
-        COALESCE(SUM(CASE WHEN status IN ('approved','processing') THEN amount_micro + fee_micro ELSE 0 END), 0) AS reviewing_micro,
-        COALESCE(SUM(CASE WHEN status = 'paid' THEN amount_micro ELSE 0 END), 0) AS paid_micro
+        COALESCE(SUM(CASE WHEN status = 'pending' THEN COALESCE(NULLIF(total_debit_micro,0),amount_micro+fee_micro) ELSE 0 END), 0) AS pending_micro,
+        COALESCE(SUM(CASE WHEN status IN ('approved','processing') THEN COALESCE(NULLIF(total_debit_micro,0),amount_micro+fee_micro) ELSE 0 END), 0) AS reviewing_micro,
+        COALESCE(SUM(CASE WHEN status = 'paid' THEN COALESCE(NULLIF(payout_amount_micro,0),amount_micro) ELSE 0 END), 0) AS paid_micro
         FROM merchant_withdrawals WHERE user_id = ? AND currency = 'USDT'`).bind(context.user.id, context.user.id).first(),
       context.db.prepare("SELECT usdt_address, usdt_network FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1").bind(context.user.id).first()
     ]);
@@ -35,7 +35,7 @@ export async function onRequestGet({ request, env }) {
         reviewing_micro: Number(summary?.reviewing_micro || 0),
         paid_micro: Number(summary?.paid_micro || 0)
       },
-      payout: { address: profile?.usdt_address || "", network: profile?.usdt_network || "USDT-TRC20" },
+      payout: { address: profile?.usdt_address || "", network: profile?.usdt_network || "USDT-TRC20" },\n      withdrawal_config: { usdt_cny_rate: Number(env.WITHDRAW_USDT_CNY_RATE || env.NZZF_USDT_CNY_RATE || 0) },
       pagination: { page, page_size: pageSize, total, pages: Math.ceil(total / pageSize) }
     });
   } catch (error) {
