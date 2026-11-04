@@ -18,6 +18,7 @@ export async function onRequestGet({ request, env }) {
         String(params.sign_type || '').toUpperCase() !== 'RSA' ||
         !isFreshNzzfTimestamp(params.timestamp) ||
         !(await verifyNzzfParams(params, env.NZZF_PLATFORM_PUBLIC_KEY))) return fail();
+    if (String(params.type || '') !== 'alipay') return fail();
     if (String(params.trade_status || '') !== 'TRADE_SUCCESS') return reply('success');
     const outTradeNo = String(params.out_trade_no || '');
     const providerTradeNo = String(params.trade_no || '');
