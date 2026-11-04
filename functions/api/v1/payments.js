@@ -88,7 +88,7 @@ export async function onRequestPost({ request, env }) {
       : { provider, amount_cny: checkout.amountCny, usdt_cny_rate: checkout.rate };
     try {
       await env.AUTH_DB.prepare("INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?)")
-        .bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, provider, outTradeNo, checkoutUrl, JSON.stringify(payInfo), notifyTarget, amountMicro, payType, Number(body.timestamp), now).run();
+        .bind(id, tradeNo, merchant.id, merchant.app_id, outTradeNo, amountCents, 'alipay', outTradeNo, checkoutUrl, JSON.stringify(payInfo), notifyTarget, amountMicro, payType, Number(body.timestamp), now).run();
     } catch (error) {
       if (/UNIQUE constraint failed|constraint.*unique/i.test(String(error?.message || error))) return json({ code: 'ORDER_EXISTS', message: '该商户订单号已存在，请勿重复下单。' }, 409);
       throw error;
