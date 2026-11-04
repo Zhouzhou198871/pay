@@ -121,18 +121,7 @@ function renderOverview() {
   `;
   const withdrawDialog = $("#qt-withdraw-dialog", panel);
   const withdrawForm = $("#qt-withdraw-form", panel);
-  $("#qt-open-withdraw", panel)?.addEventListener("click", async () => {
-    $("#qt-withdraw-feedback", panel).textContent = "";
-    $("#qt-withdraw-address", panel).textContent = "正在读取提现地址…";
-    withdrawDialog?.showModal();
-    try {
-      const response = await fetch("/api/merchant/profile", { credentials: "same-origin", headers: { Accept: "application/json" } });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload.error || "无法读取提现资料");
-      const m = payload.merchant || {};
-      $("#qt-withdraw-address", panel).textContent = m.usdt_address ? (m.usdt_network || "USDT") + " · " + m.usdt_address : "尚未绑定 USDT 提现地址，请先到个人资料设置。";
-    } catch (error) { $("#qt-withdraw-address", panel).textContent = error.message || "提现地址读取失败"; }
-  });
+  $("#qt-open-withdraw", panel)?.addEventListener("click", () => selectSection("withdrawals"));
   panel.querySelectorAll("[data-close-withdraw]").forEach((button) => button.addEventListener("click", () => withdrawDialog?.close()));
   withdrawForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
