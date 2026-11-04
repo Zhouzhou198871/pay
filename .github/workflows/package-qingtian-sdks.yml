@@ -1,0 +1,46 @@
+name: Package Qingtian merchant SDKs
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sdk/qingtian-php/**"
+      - "sdk/qingtian-node/**"
+      - "sdk/qingtian-java/**"
+      - ".github/workflows/package-qingtian-sdks.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build V1 and V2 archives
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          for lang in php node java; do
+            for version in v1-md5 v2-rsa; do
+              stage="dist/qingtian-${lang}-${version}"
+              mkdir -p "$stage"
+              cp -R "sdk/qingtian-${lang}/." "$stage/"
+              cat > "$stage/SDK-VERSION.txt" <<EOF
+          晴天支付商户 SDK
+          Language: ${lang}
+          API: ${version}
+          API Base: https://pay.lynli.me
+          Endpoints: /api/v1/payments or /api/v2/payments
+          EOF
+              (cd dist && zip -qr "qingtian-${lang}-${version}.zip" "qingtian-${lang}-${version}")
+            done
+          done
+          sha256sum dist/*.zip > dist/SHA256SUMS.txt
+      - name: Publish release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="qingtian-merchant-sdk-v1.0.0"
+          gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1 || \
+            gh release create "$TAG" --repo "${{ github.repository }}" --title "晴天支付商户 SDK V1.0.0" \
+              --notes "包含 PHP、Node.js、Java 三种语言的 V1 MD5 与 V2 RSA 接入 SDK。密钥必须仅保存在商户服务端。"
+          gh release upload "$TAG" dist/*.zip dist/SHA256SUMS.txt --repo "${{ github.repository }}" --clobber
