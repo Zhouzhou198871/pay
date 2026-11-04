@@ -203,3 +203,60 @@
 #qt-channel-list .qt-alipay-summary__row>b{display:block!important;flex:0 0 auto!important;width:auto!important;margin:0!important;color:#526578!important;font-size:14px!important;font-weight:650!important;font-variant-numeric:tabular-nums!important;white-space:nowrap!important;word-break:keep-all!important}
 #qt-channel-list .qt-alipay-summary__row>.qt-success-text{color:#25966f!important}
 @media(max-width:480px){#qt-channel-list .qt-alipay-summary{padding:0 20px!important}#qt-channel-list .qt-alipay-summary__heading{min-height:58px!important}#qt-channel-list .qt-alipay-summary__row{min-height:53px!important;font-size:13px!important}#qt-channel-list .qt-alipay-summary__row>span,#qt-channel-list .qt-alipay-summary__row>b{font-size:13px!important}}
+
+/* Personal profile workspace — responsive white-card layout */
+.qt-profile-card{padding:0;border:1px solid #e9eff4;border-radius:22px;background:#fff;box-shadow:0 7px 19px rgba(42,77,112,.065);overflow:hidden}
+.qt-profile-tabs{display:flex;align-items:stretch;gap:0;margin:0 25px;border-bottom:1px solid #e5ebf0}
+.qt-profile-tabs button{position:relative;min-width:132px;padding:22px 24px 19px;border:0;background:transparent;color:#7d8993;font:inherit;font-size:15px;font-weight:650}
+.qt-profile-tabs button.active{color:#208bc3}
+.qt-profile-tabs button.active:after{position:absolute;right:0;bottom:-1px;left:0;height:3px;background:#168bd0;content:""}
+.qt-profile-pane{padding:28px 25px 32px}
+.qt-profile-pane[hidden]{display:none!important}
+.qt-profile-section h3{margin:0 0 20px;color:#172536;font-size:20px;line-height:1.4;font-weight:750}
+.qt-profile-description{margin:-8px 0 22px;color:#8b98a3;font-size:13px;line-height:1.75}
+.qt-profile-field{margin:0 0 22px}
+.qt-profile-field>label{display:block;margin:0 0 10px;color:#687b8d;font-size:14px;font-weight:600}
+.qt-copy-field,.qt-profile-value{min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #dce5ed;border-radius:12px;background:#f8fafc;overflow:hidden}
+.qt-copy-field code{min-width:0;padding:14px 16px;color:#667b8f;font:14px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;overflow-wrap:anywhere;word-break:break-all}
+.qt-copy-field button{align-self:stretch;flex:0 0 58px;display:grid;place-items:center;border:0;border-left:1px solid #dce5ed;background:#e7f4fb;color:#1688c5;font-size:23px;font-weight:700}
+.qt-copy-field button.copied{font-size:12px;color:#21966f}
+.qt-profile-lock{flex:none;margin-right:14px;padding:7px 10px;border-radius:8px;background:#e8f5fb;color:#2688b8;font-size:11px;font-weight:650}
+.qt-profile-field>small{display:block;margin-top:8px;color:#98a4ad;font-size:12px;line-height:1.7}
+.qt-profile-divider{height:1px;margin:28px 0;border:0;background:#e9eef2}
+.qt-api-endpoint-list{display:flex;flex-direction:column;border:1px solid #e7edf2;border-radius:13px;overflow:hidden}
+.qt-api-endpoint{min-width:0;display:grid;grid-template-columns:48px minmax(0,1fr) 44px;align-items:center;gap:10px;padding:14px 13px;border-bottom:1px solid #edf1f4}
+.qt-api-endpoint:last-child{border-bottom:0}
+.qt-api-method{display:grid;place-items:center;min-height:27px;border-radius:7px;background:#e8f5fb;color:#1688bf;font-size:10px;font-weight:800}
+.qt-api-endpoint>div{min-width:0;display:flex;flex-direction:column;gap:5px}
+.qt-api-endpoint code{color:#586e82;font-size:12px;line-height:1.5;overflow-wrap:anywhere;word-break:break-word}
+.qt-api-endpoint small{color:#98a3ac;font-size:11px}
+.qt-api-endpoint>button{height:38px;border:0;border-radius:9px;background:#eaf5fb;color:#1688c5;font-size:20px}
+.qt-code-panel{position:relative;padding:18px;border:1px solid #dfe8ef;border-radius:13px;background:#f7f9fc}
+.qt-code-panel pre{margin:0;color:#586f83;font:12px/1.85 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-wrap:anywhere}
+.qt-code-panel>button{margin-top:15px;padding:10px 14px;border:0;border-radius:9px;background:#e5f3fb;color:#1688c5;font-size:12px;font-weight:700}
+.qt-profile-notice{padding:17px 18px;border:1px solid #e2edf4;border-radius:13px;background:#f6fafc}
+.qt-profile-notice strong{display:block;color:#2d566e;font-size:14px;font-weight:750}
+.qt-profile-notice p{margin:8px 0 0;color:#80919e;font-size:12px;line-height:1.85}
+.qt-profile-doc-link{display:inline-flex;align-items:center;gap:8px;margin-top:17px;color:#1688c5;font-size:13px;font-weight:700;text-decoration:none}
+.qt-profile-value{padding:13px 16px;color:#526578;font-size:14px;overflow-wrap:anywhere}
+.qt-profile-value.qt-profile-muted{color:#98a3ac;background:#f8fafc}
+.qt-profile-state{display:inline-flex;align-items:center;padding:5px 10px;border-radius:20px;background:#eaf7f1;color:#24966f;font-size:12px;font-weight:700}
+@media(max-width:600px){
+ .qt-profile-card{border-radius:18px}
+ .qt-profile-tabs{margin:0 18px}
+ .qt-profile-tabs button{min-width:0;flex:1;padding:19px 10px 16px;font-size:14px}
+ .qt-profile-pane{padding:23px 17px 26px}
+ .qt-profile-section h3{font-size:18px;margin-bottom:17px}
+ .qt-profile-description{font-size:12px;margin-bottom:18px}
+ .qt-profile-field{margin-bottom:19px}
+ .qt-copy-field,.qt-profile-value{min-height:51px;border-radius:11px}
+ .qt-copy-field code{padding:12px;font-size:12px}
+ .qt-copy-field button{flex-basis:49px;font-size:20px}
+ .qt-api-endpoint{grid-template-columns:43px minmax(0,1fr) 38px;gap:8px;padding:12px 9px}
+ .qt-api-endpoint code{font-size:11px}
+ .qt-api-endpoint>button{height:35px}
+ .qt-code-panel{padding:13px}
+ .qt-code-panel pre{font-size:11px}
+ .qt-profile-divider{margin:23px 0}
+ .qt-profile-notice{padding:15px}
+}
