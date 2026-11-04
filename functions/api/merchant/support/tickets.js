@@ -88,7 +88,7 @@ export async function onRequestGet({ request, env }) {
     return json({ error: "客服消息读取失败。" }, 503);
   }
 }
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost({ request, env, context }) {
   if (!sameOrigin(request)) return json({ error: "请求来源校验失败。" }, 403);
   if (!env.AUTH_DB) return json({ error: "客服工单服务暂不可用。" }, 503);
   const user = await currentUser(request, env.AUTH_DB);
@@ -148,13 +148,15 @@ export async function onRequestPost({ request, env }) {
     }
     let aiMessage = null;
     if (aiEligible) {
-      const answer = sensitiveRequest(content) ? "正在为您转接人工客服，请稍候。" : await createAiReply(env,content);
-      const aiId = randomHex(16), aiNow = Math.floor(Date.now()/1000);
-      await db.batch([
-        db.prepare("INSERT INTO chat_messages(id,ticket_id,sender_user_id,sender_role,message_type,content,metadata_json,created_at) VALUES(?,?,NULL,'ai','text',?,'{}',?)").bind(aiId,ticket.id,answer,aiNow),
-        db.prepare("UPDATE support_tickets SET updated_at=? WHERE id=?").bind(aiNow,ticket.id)
-      ]);
-      aiMessage = { id: aiId, sender_role: "ai", message_type: "text", content: answer, metadata_json: "{}", created_at: aiNow };
+      const task = (async () => {
+        const answer = await createAiReply(env,content);
+        const aiId = randomHex(16), aiNow = Math.floor(Date.now()/1000);
+        await db.batch([
+          db.prepare("INSERT INTO chat_messages(id,ticket_id,sender_user_id,sender_role,message_type,content,metadata_json,created_at) VALUES(?,?,NULL,'ai','text',?,'{}',?)").bind(aiId,ticket.id,answer,aiNow),
+          db.prepare("UPDATE support_tickets SET updated_at=? WHERE id=?").bind(aiNow,ticket.id)
+        ]);
+      })().catch(error => console.error("[support:ai:save]",String(error?.message||error).slice(0,120)));
+      if (context?.waitUntil) context.waitUntil(task); else await task;
     } else if (type === "text" && sensitiveRequest(content)) {
       const transfer = "正在为您转接人工客服，请稍候。", aiId = randomHex(16), aiNow = Math.floor(Date.now()/1000);
       await db.prepare("INSERT INTO chat_messages(id,ticket_id,sender_user_id,sender_role,message_type,content,metadata_json,created_at) VALUES(?,?,NULL,'ai','text',?,'{}',?)").bind(aiId,ticket.id,transfer,aiNow).run();
