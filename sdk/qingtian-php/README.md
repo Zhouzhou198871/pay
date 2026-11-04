@@ -1,1 +1,11 @@
-# 晴天支付 PHP SDK\n\nPHP 8.1+，需要 cURL 与 OpenSSL 扩展。`QingtianPayClient.php` 同时提供 V1 MD5 和 V2 RSA-SHA256 下单方法。\n\n```php\nrequire __DIR__ . '/QingtianPayClient.php';\n$client = new \\QingtianPay\\QingtianPayClient('https://pay.lynli.me', '123456', getenv('QT_V1_KEY'), file_get_contents('/run/secrets/qt-v2-private.pem'));\n$result = $client->createOrderV1(['out_trade_no'=>'ORDER-1001','amount'=>'12.50','pay_type'=>'alipay','notify_url'=>'https://merchant.example.com/notify']);\n```\n\nV2 请调用 `createOrderV2()`。私钥和 MD5 密钥只能保存在商户服务端。
+# PHP-SDK（V2.1）
+
+下载后修改 `lib/epay.config.php`，填入商户后台 API 信息页显示的值即可。
+
+配置项：
+- `apiurl`：晴天支付 API 基础地址
+- `pid`：商户 ID
+- `platform_public_key`：平台公钥，用于验签
+- `merchant_private_key`：商户私钥，用于请求签名
+
+密钥只能放在服务端。不要提交到公开仓库或写入浏览器代码。SDK 示例入口见 `QingtianPayClient.php`。
