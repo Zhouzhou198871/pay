@@ -62,6 +62,7 @@ Pages Functions 在本地开发时需要配置 D1 binding 与本地环境变量�
 | `RESEND_API_KEY` | Secret | 事务邮件 |
 | `MAIL_FROM` | Text | 邮件发件人 |
 | `ADMIN_USER_IDS` | Text | 管理员用户 ID 白名单，逗号分隔 |
+| `PUBLIC_BASE_URL` | Text | 对外规范域名，用于支付回调与通知 URL；自定义域名/反代上线时同步更新 |
 | `ZHIPU_API_KEY` | Secret | 智谱 GLM 客服调用密钥 |
 | `NZZF_PID` | Text | 上游支付渠道商户编号 |
 | `NZZF_MERCHANT_PRIVATE_KEY` | Secret | 上游商户私钥 |
