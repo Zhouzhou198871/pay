@@ -3,6 +3,29 @@ import { currentUser, hashPassword, json, randomHex, sha256, verifyPassword } fr
 const networks = new Set(["USDT-TRC20", "USDT-ERC20", "USDT-BEP20"]);
 const encoder = new TextEncoder();
 
+async function encryptV2PrivateKey(privatePem, masterSecret) {
+  const keyBytes = await crypto.subtle.digest('SHA-256', encoder.encode(masterSecret));
+  const key = await crypto.subtle.importKey('raw', keyBytes, 'AES-GCM', false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, encoder.encode(privatePem));
+  const toHex = (bytes) => [...new Uint8Array(bytes)].map((v) => v.toString(16).padStart(2, '0')).join('');
+  return toHex(iv) + '.' + toHex(encrypted);
+}
+
+function pem(label, bytes) {
+  const binary = String.fromCharCode(...new Uint8Array(bytes));
+  const base64 = btoa(binary);
+  return '-----BEGIN ' + label + '-----\n' + base64.match(/.{1,64}/g).join('\n') + '\n-----END ' + label + '-----';
+}
+
+async function generateV2KeyPair(masterSecret) {
+  const pair = await crypto.subtle.generateKey({ name: 'RSASSA-PKCS1-v1_5', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['sign', 'verify']);
+  const [privateDer, publicDer] = await Promise.all([crypto.subtle.exportKey('pkcs8', pair.privateKey), crypto.subtle.exportKey('spki', pair.publicKey)]);
+  const privatePem = pem('PRIVATE KEY', privateDer);
+  const publicPem = pem('PUBLIC KEY', publicDer);
+  return { privatePem, publicPem, ciphertext: await encryptV2PrivateKey(privatePem, masterSecret) };
+}
+
 function validAddress(address, network) {
   if (network === "USDT-TRC20") return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(address);
   if (network === "USDT-ERC20" || network === "USDT-BEP20") return /^0x[a-fA-F0-9]{40}$/.test(address);
@@ -79,6 +102,9 @@ export async function onRequestGet({ request, env }) {
       merchant: {
         merchant_no: merchant.merchant_no,
         api_key: merchant.api_key,
+        v2_public_key: merchant.v2_public_key || "",
+        v2_key_created_at: merchant.v2_key_created_at || null,
+        v2_key_configured: Boolean(merchant.v2_public_key && merchant.v2_private_key),
         usdt_address: merchant.usdt_address || "",
         usdt_network: merchant.usdt_network || "USDT-TRC20",
         withdraw_password_set: Boolean(merchant.withdraw_password_hash),
@@ -153,6 +179,15 @@ export async function onRequestPatch({ request, env }) {
       const apiKey = randomHex(20);
       await db.prepare("UPDATE pay_merchants SET api_key = ? WHERE id = ?").bind(apiKey, merchant.id).run();
       return json({ success: true, api_key: apiKey, message: "V1 商户密钥已重置，请同步更新接入方配置。" });
+    }
+
+    if (body.action === "generate_v2_keys" || body.action === "reset_v2_keys") {
+      const keys = await generateV2KeyPair(env.AUTH_SECRET);
+      const now = Math.floor(Date.now() / 1000);
+      await db.prepare("UPDATE pay_merchants SET v2_private_key = ?, v2_public_key = ?, v2_key_created_at = ? WHERE id = ?")
+        .bind(keys.ciphertext, keys.publicPem, now, merchant.id).run();
+      return json({ success: true, v2_public_key: keys.publicPem, v2_private_key_once: keys.privatePem, v2_key_created_at: now,
+        message: body.action === "reset_v2_keys" ? "V2 RSA 密钥对已重置。旧私钥立即失效，请更新调用方配置。" : "V2 RSA 密钥对已生成。私钥仅本次展示，请立即安全保存。" });
     }
 
     return json({ error: "不支持的资料操作。" }, 400);
