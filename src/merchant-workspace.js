@@ -492,33 +492,42 @@ let qtSupportPoll = null;
 let qtAdminTicketId = "";
 let qtAdminTicketPoll = null;
 async function supportApi(url, options={}) {
-  const response=await fetch(url,{credentials:"same-origin",headers:{Accept:"application/json",...(options.body?{"Content-Type":"application/json"}:{})},...options});
+  const isForm = typeof FormData !== "undefined" && options.body instanceof FormData;
+  const response=await fetch(url,{credentials:"same-origin",headers:{Accept:"application/json",...(options.body&&!isForm?{"Content-Type":"application/json"}:{})},...options});
   const data=await response.json().catch(()=>({}));
   if(response.status===401){location.href="/";throw new Error("登录状态已失效。")}
   if(!response.ok)throw new Error(data.error||"客服服务暂不可用。");
   return data;
 }
-function appendChatMessage(root,item){
+function appendChatMessage(root,item,before=false){
   const messages=root.querySelector("#qt-chat-messages");
   const row=document.createElement("div");
-  row.className="qt-chat-message "+(item.sender_role==="merchant"?"is-user":"is-agent");
+  row.className="qt-chat-message "+(item.sender_role==="merchant"?"is-user":item.sender_role==="ai"?"is-ai":"is-agent");
+  const who=document.createElement("small");who.className="qt-chat-sender";who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="ai"?"晴天 AI 客服":item.sender_role==="admin"?"人工管理员":"系统";
   const content=document.createElement("div");content.textContent=item.content||"";
-  row.append(content);
+  row.append(who,content);
+  let meta={};try{meta=JSON.parse(item.metadata_json||"{}")}catch{}
   if(item.message_type==="permission_request"){
-    let meta={};try{meta=JSON.parse(item.metadata_json||"{}")}catch{}
     const tag=document.createElement("small");tag.className="qt-chat-message-meta";
     tag.textContent="权限申请 · "+({website:"网站",bot:"机器人",app:"APP"}[meta.app_type]||"应用")+" · "+(meta.app_name||"");
     row.append(tag);
   }
+  if(Array.isArray(meta.attachments))meta.attachments.forEach(file=>{
+    const link=document.createElement("a");link.className="qt-chat-attachment";link.href="/api/merchant/support/attachments/"+encodeURIComponent(file.attachment_id);link.target="_blank";link.rel="noopener";link.textContent=(String(file.mime_type||"").startsWith("image/")?"图片 · ":"附件 · ")+(file.file_name||"查看附件");
+    if(String(file.mime_type||"").startsWith("image/")){const img=document.createElement("img");img.src=link.href;img.alt=file.file_name||"上传图片";link.replaceChildren(img,document.createTextNode(file.file_name||"查看图片"));}
+    row.append(link);
+  });
   if(item.message_type==="approval_result")row.classList.add("is-system");
   const time=document.createElement("time");time.textContent=date(item.created_at);row.append(time);
-  messages.append(row);messages.scrollTop=messages.scrollHeight;
+  if(before)messages.insertBefore(row,messages.children[1]||null);else messages.append(row);
+  if(!before)messages.scrollTop=messages.scrollHeight;
 }
 async function refreshSupportChat(){
   const root=qtSupportChatRoot;if(!root||!root.isConnected)return;
   try{
-    const data=await supportApi("/api/merchant/support/tickets");
+    const data=await supportApi("/api/merchant/support/tickets?limit=50");
     const messages=root.querySelector("#qt-chat-messages");messages.replaceChildren();
+    if(data.has_more&&data.next_cursor){const older=document.createElement("button");older.type="button";older.className="qt-chat-load-older";older.textContent="加载更早消息";older.addEventListener("click",async()=>{older.disabled=true;try{const cursor=data.next_cursor;const prev=await supportApi("/api/merchant/support/tickets?limit=50&before_at="+encodeURIComponent(cursor.before_at)+"&before_id="+encodeURIComponent(cursor.before_id));const marker=messages.firstChild;prev.messages.forEach(item=>appendChatMessage(root,item,true));if(!prev.has_more)older.remove();else if(prev.next_cursor){data.next_cursor=prev.next_cursor;older.disabled=false;} }catch(e){older.disabled=false;older.textContent="加载失败，点击重试"}});messages.append(older);}
     if(!data.messages?.length){
       const welcome=document.createElement("div");welcome.className="qt-chat-message is-agent";welcome.textContent="您好，欢迎联系晴天支付客服。您可以发送咨询消息，或提交网站、机器人、APP 的 API 调用权限申请。";messages.append(welcome);
     }else data.messages.forEach(item=>appendChatMessage(root,item));
@@ -538,10 +547,12 @@ function mountSupportChat() {
         <label>应用类型<select id="qt-chat-app-type"><option value="website">网站</option><option value="bot">机器人</option><option value="app">APP</option></select></label>
         <label>网站 / 应用名称<input id="qt-chat-app-name" maxlength="100" required placeholder="请输入网站或应用名称"></label>
         <label>网站网址（网站类型必填）<input id="qt-chat-app-url" maxlength="500" type="url" placeholder="https://example.com"></label>
+        <div class="qt-developer-pledge"><b>《开发者合规承诺》</b><p>我承诺资金来源合法，不用于违法违规业务。如利用本平台洗钱、诈骗等违法活动，平台将依法采取必要风控措施、保存相关证据并向有关部门报告；我愿依法承担相应责任及损失。</p><label><input id="qt-chat-compliance" type="checkbox" required> 我已阅读并同意上述承诺</label></div>
+        <label>上传核验资料（截图、营业执照等，最多 5 个文件）<input id="qt-chat-permission-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,.doc,.docx"></label>
         <div><button type="button" class="qt-chat-permission-cancel" id="qt-chat-permission-cancel">取消</button><button type="submit">提交申请</button></div>
       </form>
       <div class="qt-chat-tools"><button type="button" id="qt-chat-permission-open">＋ 申请调用权限</button><span>网站 · 机器人 · APP</span></div>
-      <form class="qt-chat-compose" id="qt-chat-form"><input id="qt-chat-input" maxlength="2000" autocomplete="off" placeholder="输入消息，提交至客服工单…" aria-label="输入客服消息" required><button type="submit" aria-label="发送消息">发送</button></form>
+      <form class="qt-chat-compose" id="qt-chat-form"><label class="qt-chat-file-button">＋<input id="qt-chat-files" type="file" multiple hidden accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,.doc,.docx"></label><input id="qt-chat-input" maxlength="2000" autocomplete="off" placeholder="输入消息，提交至客服工单…" aria-label="输入客服消息"><button type="submit" aria-label="发送消息">发送</button></form>
     </section>`;
   document.body.append(root);qtSupportChatRoot=root;
   const panel=root.querySelector("#qt-chat-panel"),launcher=root.querySelector("#qt-chat-launcher"),input=root.querySelector("#qt-chat-input");
@@ -550,9 +561,9 @@ function mountSupportChat() {
   launcher.addEventListener("click",()=>panel.hidden?open():close());
   root.querySelector("#qt-chat-close").addEventListener("click",close);
   root.querySelector("#qt-chat-form").addEventListener("submit",async event=>{
-    event.preventDefault();const value=input.value.trim();if(!value)return;
+    event.preventDefault();const value=input.value.trim(),files=root.querySelector("#qt-chat-files").files;if(!value&&!files.length)return;
     const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
-    try{await supportApi("/api/merchant/support/tickets",{method:"POST",body:JSON.stringify({type:"text",content:value})});input.value="";await refreshSupportChat()}
+    try{const form=new FormData();form.append("payload",JSON.stringify({type:"text",content:value}));Array.from(files).forEach(file=>form.append("files",file));await supportApi("/api/merchant/support/tickets",{method:"POST",body:form});input.value="";root.querySelector("#qt-chat-files").value="";await refreshSupportChat()}
     catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"消息发送失败"}
     finally{button.disabled=false}
   });
@@ -563,7 +574,7 @@ function mountSupportChat() {
   root.querySelector("#qt-chat-permission").addEventListener("submit",async event=>{
     event.preventDefault();const button=permission.querySelector('button[type="submit"]');button.disabled=true;
     try{
-      await supportApi("/api/merchant/support/tickets",{method:"POST",body:JSON.stringify({type:"permission_request",app_type:root.querySelector("#qt-chat-app-type").value,app_name:root.querySelector("#qt-chat-app-name").value.trim(),website_url:root.querySelector("#qt-chat-app-url").value.trim()})});
+      const form=new FormData();form.append("payload",JSON.stringify({type:"permission_request",app_type:root.querySelector("#qt-chat-app-type").value,app_name:root.querySelector("#qt-chat-app-name").value.trim(),website_url:root.querySelector("#qt-chat-app-url").value.trim(),compliance_accepted:root.querySelector("#qt-chat-compliance").checked}));Array.from(root.querySelector("#qt-chat-permission-files").files).forEach(file=>form.append("files",file));await supportApi("/api/merchant/support/tickets",{method:"POST",body:form});
       permission.reset();permission.hidden=true;await refreshSupportChat();
     }catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"申请提交失败"}
     finally{button.disabled=false}
