@@ -63,13 +63,13 @@ channel_sources AS (
 )
 SELECT c.channel_code, c.display_name, c.status,
        COALESCE(SUM(CASE WHEN po.status = 'paid' AND DATE(po.paid_at, 'unixepoch') = DATE('now')
-                         THEN po.amount_cents ELSE 0 END), 0) AS today_amount_cents,
+                         THEN COALESCE(po.amount_micro, po.amount_cents * 10000) ELSE 0 END), 0) AS today_amount_micro,
        COALESCE(SUM(CASE WHEN po.status = 'paid' AND DATE(po.paid_at, 'unixepoch') = DATE('now', '-1 day')
-                         THEN po.amount_cents ELSE 0 END), 0) AS yesterday_amount_cents,
+                         THEN COALESCE(po.amount_micro, po.amount_cents * 10000) ELSE 0 END), 0) AS yesterday_amount_micro,
        COALESCE(100.0 * SUM(CASE WHEN po.status = 'paid' THEN 1 ELSE 0 END)
                 / NULLIF(COUNT(po.id), 0), 0) AS success_rate,
-       COALESCE(100.0 * SUM(CASE WHEN po.status = 'paid' THEN po.fee_cents ELSE 0 END)
-                / NULLIF(SUM(CASE WHEN po.status = 'paid' THEN po.amount_cents ELSE 0 END), 0), 0) AS fee_rate
+       COALESCE(100.0 * SUM(CASE WHEN po.status = 'paid' THEN po.fee_cents * 10000 ELSE 0 END)
+                / NULLIF(SUM(CASE WHEN po.status = 'paid' THEN COALESCE(po.amount_micro, po.amount_cents * 10000) ELSE 0 END), 0), 0) AS fee_rate
 FROM channel_sources c
 LEFT JOIN owned_merchants om ON 1 = 1
 LEFT JOIN payment_orders po ON po.merchant_id = om.id AND lower(po.method) = lower(c.channel_code)
@@ -84,7 +84,7 @@ WITH RECURSIVE days(day, idx) AS (
 ),
 daily AS (
   SELECT DATE(po.paid_at, 'unixepoch') AS day,
-         SUM(po.amount_cents) AS amount_cents,
+         SUM(COALESCE(po.amount_micro, po.amount_cents * 10000)) AS amount_micro,
          COUNT(*) AS orders
   FROM payment_orders po
   JOIN pay_merchants pm ON pm.id = po.merchant_id
@@ -114,7 +114,7 @@ export async function onRequestGet({ request, env }) {
     ]);
 
     const days = trend.results || [];
-    const totalAmountCents = days.reduce((sum, day) => sum + Number(day.amount_cents || 0), 0);
+    const totalAmountMicro = days.reduce((sum, day) => sum + Number(day.amount_micro || 0), 0);
     const totalTrendOrders = days.reduce((sum, day) => sum + Number(day.orders || 0), 0);
 
     return json({
