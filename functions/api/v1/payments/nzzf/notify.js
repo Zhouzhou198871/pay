@@ -1,4 +1,4 @@
-import { verifyNzzfParams, isFreshNzzfTimestamp } from '../../../../_lib/nzzf.js';
+import { verifyNzzfParams } from '../../../../_lib/nzzf.js';
 import { amountToCents, calculateNetCredit } from '../../../../_lib/nzzf-provider.js';
 
 const reply = (value) => new Response(value, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' } });
@@ -48,7 +48,8 @@ async function processNotification({ request, env }) {
     if (!params ||
         String(params.pid || '') !== String(env.NZZF_PID) ||
         String(params.sign_type || '').toUpperCase() !== 'RSA' ||
-        !isFreshNzzfTimestamp(params.timestamp) ||
+        !/^\\d{10}$/.test(String(params.timestamp || '')) ||
+        Number(params.timestamp) > Math.floor(Date.now() / 1000) + 300 ||
         !(await verifyNzzfParams(params, env.NZZF_PLATFORM_PUBLIC_KEY))) return fail();
 
     if (String(params.type || '') !== 'alipay') return fail();
