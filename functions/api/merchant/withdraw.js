@@ -65,7 +65,7 @@ export async function onRequestPost({ request, env }) {
       payoutMicro = amountMicro - feeMicro;
       totalDebitMicro = amountMicro;
       payoutCents = Math.round(payoutMicro * rate / 10000);
-      bankInfo = JSON.stringify({ method, real_name: realName, qr_image: qrImage, rate_usdt_cny: rate });
+      bankInfo = JSON.stringify({ method, real_name: realName, qr_image_url: qrImage, rate_usdt_cny: rate });
       destination = (method === 'wechat' ? '微信' : '支付宝') + ' · ' + realName;
       description = '法币提现申请（6% 手续费，按配置汇率折算）';
     }
