@@ -490,6 +490,7 @@ async function loadRecords(key, page = 1) {
 let qtSupportChatRoot = null;
 let qtSupportPoll = null;
 let qtAdminTicketId = "";
+let qtAdminTicketPoll = null;
 async function supportApi(url, options={}) {
   const response=await fetch(url,{credentials:"same-origin",headers:{Accept:"application/json",...(options.body?{"Content-Type":"application/json"}:{})},...options});
   const data=await response.json().catch(()=>({}));
@@ -600,7 +601,7 @@ async function renderAdminSupportTickets(){
    (data.messages||[]).forEach(item=>{const row=document.createElement("article");row.className="qt-admin-message "+(item.sender_role==="merchant"?"is-merchant":"is-admin");const who=document.createElement("b");who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="admin"?"管理员":"系统";const content=document.createElement("p");content.textContent=item.content;const time=document.createElement("small");time.textContent=date(item.created_at);row.append(who,content,time);
     if(item.message_type==="permission_request"){hasPermission=true;let m={};try{m=JSON.parse(item.metadata_json||"{}")}catch{}const meta=document.createElement("small");meta.className="qt-admin-permission-meta";meta.textContent="权限类型："+({website:"网站",bot:"机器人",app:"APP"}[m.app_type]||"应用")+" · "+(m.app_name||"")+(m.website_url?" · "+m.website_url:"");row.append(meta)}messages.append(row)});
    const actions=detail.querySelector("#qt-admin-ticket-actions");
-   if(hasPermission&&!data.ticket.api_access_granted){
+   if(data.pending_permission_request&&!data.ticket.api_access_granted){
     const approve=document.createElement("button");approve.type="button";approve.className="qt-primary-button";approve.textContent="同意并开通 API 权限";
     const reject=document.createElement("button");reject.type="button";reject.className="qt-outline-button";reject.textContent="拒绝申请";
     approve.onclick=()=>review("approve","");reject.onclick=()=>{const note=window.prompt("请输入拒绝原因（至少 3 个字符）");if(note)review("reject",note)};
@@ -611,6 +612,8 @@ async function renderAdminSupportTickets(){
   }catch(error){detail.textContent=error.message||"工单详情读取失败"}
  }
  panel.querySelector("#qt-admin-ticket-refresh").onclick=loadList;await loadList();
+ if(qtAdminTicketPoll)clearInterval(qtAdminTicketPoll);
+ qtAdminTicketPoll=setInterval(()=>{if(currentSection==="support-tickets")loadList()},10000);
 }
 function selectSection(key) {
   currentSection = key; currentPage = 1; requestSequence++;
