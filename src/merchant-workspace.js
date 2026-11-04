@@ -162,29 +162,23 @@ function loadOverviewData() {
       const channelRoot = document.getElementById("qt-channel-list");
       if (channelRoot) {
         const channels = Array.isArray(data.channels) ? data.channels : [];
-        if (!channels.length) {
-          channelRoot.innerHTML = '<div class="qt-data-empty">数据库中暂无已配置或产生订单的收款通道</div>';
-        } else {
-          channelRoot.innerHTML = channels.map((channel) => {
-            const title = escapeText(channel.display_name || channel.channel_code || "收款通道");
-            const code = escapeText(channel.channel_code || "");
-            const statusLabels = { active: "已启用", pending: "待审核", disabled: "已停用", rejected: "未通过", observed: "有订单记录" };
-            const status = escapeText(statusLabels[channel.status] || channel.status || "");
-            const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
-            const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
-            return `
-              <article class="qt-channel-row">
-                <span class="qt-channel-mark">${title.slice(0,1)}</span>
-                <div class="qt-channel-name"><strong>${title}</strong><small>${code} · ${status}</small></div>
-                <div class="qt-channel-metrics">
-                  <div><small>今日收入</small><b>${formatCents(channel.today_amount_cents, channel.currency || "CNY")}</b></div>
-                  <div><small>昨日收入</small><b>${formatCents(channel.yesterday_amount_cents, channel.currency || "CNY")}</b></div>
-                  <div><small>通道成功率</small><b class="qt-success-text">${rate}%</b></div>
-                  <div><small>实际费率</small><b>${feeRate}%</b></div>
-                </div>
-              </article>`;
-          }).join("");
-        }
+        const alipay = channels.find((channel) => ["alipay", "ali_pay", "支付宝"].includes(String(channel.channel_code || "").toLowerCase()) || String(channel.display_name || "").includes("支付宝"));
+        const today = alipay ? formatCents(alipay.today_amount_cents, alipay.currency || "CNY") : "¥ 0.00";
+        const yesterday = alipay ? formatCents(alipay.yesterday_amount_cents, alipay.currency || "CNY") : "¥ 0.00";
+        const successRate = alipay && alipay.success_rate !== null && alipay.success_rate !== undefined
+          ? Number(alipay.success_rate).toFixed(2).replace(/\.?0+$/, "")
+          : "100";
+        channelRoot.innerHTML = `
+          <article class="qt-channel-row qt-channel-row-alipay">
+            <div class="qt-channel-heading">
+              <span class="qt-channel-mark qt-alipay-mark" aria-hidden="true">支</span>
+              <strong>支付宝</strong>
+            </div>
+            <div class="qt-channel-detail-row"><span>今日收入：</span><b>${today}</b></div>
+            <div class="qt-channel-detail-row"><span>昨日收入：</span><b>${yesterday}</b></div>
+            <div class="qt-channel-detail-row"><span>通道成功率：</span><b class="qt-success-text">${successRate}%</b></div>
+            <div class="qt-channel-detail-row"><span>支付宝费率：</span><b>10%</b></div>
+          </article>`;
       }
 
       const trend = data.trend || {};
