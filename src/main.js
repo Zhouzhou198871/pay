@@ -118,27 +118,39 @@ async function renderDashboard() {
       </header>
       <div class="merchant-backdrop" id="merchant-backdrop"></div>
       <aside class="merchant-drawer" id="merchant-drawer" aria-label="商户导航">
-        <div class="drawer-head"><a class="drawer-brand" href="/"><img src="${LOGO}" alt=""><span><b>晴天支付</b><small>商户支付接口平台</small></span></a><button class="drawer-close" id="close-merchant-menu" aria-label="关闭菜单">×</button></div>
-        <div class="drawer-section-label">商户工作台</div>
-        <nav class="drawer-nav">
-          <button class="drawer-link active" data-section="overview"><span class="drawer-icon blue">▦</span><b>用户中心</b></button>
-          <button class="drawer-link" data-section="profile"><span class="drawer-icon blue-soft">♙</span><span>个人资料</span><i>›</i></button>
-        </nav>
-        <div class="drawer-section-label">交易与资金</div>
-        <nav class="drawer-nav">
-          <button class="drawer-link" data-section="orders"><span class="drawer-icon purple">▤</span><span>订单记录</span></button>
-          <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple">▱</span><span>提现记录</span></button>
-          <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple">▥</span><span>资金明细</span></button>
-        </nav>
-        <div class="drawer-section-label" id="qt-admin-finance-label" hidden>管理员</div>
-        <nav class="drawer-nav" id="qt-admin-finance-nav" hidden><button class="drawer-link" data-section="adminFinance"><span class="drawer-icon purple">▧</span><span>财务管理 / 审核中心</span></button></nav>
-        <div class="drawer-section-label">其他</div>
-        <nav class="drawer-nav">
-          <button class="drawer-link" data-section="payments"><span class="drawer-icon cyan">▣</span><span>聚合收款</span></button>
-          <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan">▤</span><span>开发文档</span></button>
-          <button class="drawer-link" data-section="support"><span class="drawer-icon cyan">♧</span><span>联系客服</span></button>
-        </nav>
-        <div class="drawer-user"><span class="drawer-user-avatar">♙</span><span class="drawer-user-copy"><b id="drawer-user-name">当前商户</b><small id="drawer-user-email">商户账户</small></span><button id="drawer-logout" aria-label="退出登录">⇥</button></div>
+        <div class="drawer-head">
+          <a class="drawer-brand" href="/" aria-label="晴天支付首页">
+            <img src="${LOGO}" alt="晴天支付 Logo">
+            <span><b>晴天支付</b><small>商户支付接口平台</small></span>
+          </a>
+          <button class="drawer-close" id="close-merchant-menu" aria-label="关闭菜单">×</button>
+        </div>
+        <div class="drawer-scroll">
+          <div class="drawer-section-label">商户工作台</div>
+          <nav class="drawer-nav">
+            <button class="drawer-link" data-section="overview"><span class="drawer-icon blue"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="5" rx="2"/><rect x="13" y="10" width="8" height="11" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/></svg></span><span>用户中心</span></button>
+            <button class="drawer-link" data-section="profile"><span class="drawer-icon blue-soft"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.7-3.6 3-5.5 7-5.5s6.3 1.9 7 5.5"/></svg></span><span>个人资料</span></button>
+          </nav>
+          <div class="drawer-section-label">交易与资金</div>
+          <nav class="drawer-nav">
+            <button class="drawer-link" data-section="orders"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5M10 12h6M10 16h6"/></svg></span><span>订单记录</span></button>
+            <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M15 14h2"/></svg></span><span>提现记录</span></button>
+            <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span><span>资金明细</span></button>
+          </nav>
+          <div class="drawer-section-label" id="qt-admin-finance-label" hidden>其他</div>
+          <nav class="drawer-nav" id="qt-admin-finance-nav" hidden><button class="drawer-link" data-section="adminFinance"><span class="drawer-icon purple"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4zM8 8h8M8 12h8M8 16h5"/></svg></span><span>财务管理 / 审核中心</span></button></nav>
+          <div class="drawer-section-label">其他</div>
+          <nav class="drawer-nav">
+            <button class="drawer-link" data-section="payments"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8v8H8zM4 10h16"/></svg></span><span>聚合收款</span><i>›</i></button>
+            <button class="drawer-link" data-section="docs"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4M9 12h7M9 16h7"/></svg></span><span>开发文档</span></button>
+            <button class="drawer-link" data-section="support"><span class="drawer-icon cyan"><svg viewBox="0 0 24 24"><path d="M4 13v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="12" width="4" height="7" rx="2"/><rect x="17" y="12" width="4" height="7" rx="2"/><path d="M17 19c-1 2-3 2-5 2"/></svg></span><span>联系客服</span></button>
+          </nav>
+        </div>
+        <div class="drawer-user">
+          <span class="drawer-user-avatar" id="drawer-user-avatar">晴</span>
+          <span class="drawer-user-copy"><b id="drawer-user-name">当前商户</b><small id="drawer-user-merchant">商户号读取中</small></span>
+          <button id="drawer-logout" aria-label="退出登录" title="退出登录"><svg viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg></button>
+        </div>
       </aside>
       <section class="merchant-content qt-dashboard-content">
         <div class="qt-dashboard-heading"><div><span class="merchant-eyebrow">MERCHANT CENTER</span><h2 id="merchant-greeting">用户中心</h2></div><span class="merchant-status"><i></i>账户正常</span></div>
