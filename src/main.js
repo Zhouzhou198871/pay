@@ -129,6 +129,8 @@ async function renderDashboard() {
           <button class="drawer-link" data-section="withdrawals"><span class="drawer-icon purple">▱</span><span>提现记录</span></button>
           <button class="drawer-link" data-section="ledger"><span class="drawer-icon purple">▥</span><span>资金明细</span></button>
         </nav>
+        <div class="drawer-section-label" id="qt-admin-finance-label" hidden>管理员</div>
+        <nav class="drawer-nav" id="qt-admin-finance-nav" hidden><button class="drawer-link" data-section="adminFinance"><span class="drawer-icon purple">▧</span><span>财务管理 / 审核中心</span></button></nav>
         <div class="drawer-section-label">其他</div>
         <nav class="drawer-nav">
           <button class="drawer-link" data-section="payments"><span class="drawer-icon cyan">▣</span><span>聚合收款</span></button>
