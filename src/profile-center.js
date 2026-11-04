@@ -50,6 +50,13 @@ async function renderProfileCenter() {
         <p class="qtpc-help">V2 接口地址：<code>${esc(apiBase)}/api/v2/payments</code></p>
       </section>
       <hr class="qtpc-divider">
+      <section class="qtpc-section" id="qtpc-platform-key-section">
+        <h3>平台回调验签公钥</h3>
+        <p class="qtpc-help">平台使用独立的平台 RSA-2048 私钥对异步支付通知签名。所有商户使用同一平台公钥验签，平台私钥不会向商户公开。</p>
+        <div class="qtpc-field"><label>平台公钥（商户验签用）</label><div class="qtpc-keyblock"><code id="qtpc-platform-public">${esc(merchant.platform_public_key||"平台公钥暂不可用")}</code><button type="button" data-copy-target="#qtpc-platform-public" ${merchant.platform_public_key?"":"disabled"}>复制平台公钥</button></div></div>
+        <p class="qtpc-help">SHA256withRSA（RSASSA-PKCS1-v1_5 + SHA-256），签名字段 sign，sign_type 为 RSA2。</p>
+      </section>
+      <hr class="qtpc-divider">
       <section class="qtpc-section"><h3>签名与安全说明</h3><div class="qtpc-note"><strong>商户凭据安全</strong>商户 ID 用于标识接入账户；MD5 密钥用于服务端请求签名校验。请仅在您自己的服务端保存密钥，不要写入网页、公开代码仓库或客户端应用。平台登录会话使用 HttpOnly Cookie，与商户 API 密钥相互独立。</div></section>
     </div>
     <div class="qtpc-pane" data-pane="settings" hidden>

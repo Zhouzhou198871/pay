@@ -109,10 +109,34 @@ params.sign = signer.sign(privateKey, 'base64');
 
 同一商户的 `out_trade_no` 唯一，重复下单返回 HTTP `409` / `ORDER_EXISTS`。时间戳超出 5 分钟返回 `TIMESTAMP_EXPIRED`，签名错误返回 `SIGNATURE_INVALID`。
 
-## 5. 关于平台响应签名
+## 5. 平台异步通知签名与商户验签
+
+平台回调使用全局平台 RSA-2048 密钥对。商户中心「个人资料 → API 信息 → 平台回调验签公钥」展示平台公钥，所有商户共用此公钥。
+
+- 平台私钥存储于 D1 系统配置表 `platform_system_keys`，使用 `AUTH_SECRET` 经 AES-256-GCM 加密；只在服务端解密签名。
+- 平台公钥为 SPKI PEM，可公开给商户。算法为 SHA256withRSA（RSASSA-PKCS1-v1_5 + SHA-256），签名为标准 Base64。
+- 待签名参数排除 `sign` 与 `sign_type`，忽略 null/undefined，按参数名 ASCII 字典序排序，再以 `key=value` 和 `&` 拼接。
+- 回调含 `sign_type=RSA2` 与 `sign=<Base64>`。商户必须先验签，再核对商户号、平台订单号、商户订单号、金额及最终状态。
+
+Node.js 验签示例：
+
+```js
+import { createVerify } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+const platformPublicKey = readFileSync('./platform-public.pem', 'utf8');
+const callback = { merchant_no:'123456', trade_no:'QT...', out_trade_no:'ORDER...', amount:'12.50', status:'paid', timestamp:'1793750000', sign_type:'RSA2', sign:'BASE64_SIGNATURE' };
+const canonical = Object.keys(callback).filter(k => !['sign','sign_type'].includes(k) && callback[k] != null).sort().map(k => `${k}=${callback[k]}`).join('&');
+const verifier = createVerify('RSA-SHA256'); verifier.update(canonical,'utf8'); verifier.end();
+if (!verifier.verify(platformPublicKey,callback.sign,'base64')) throw new Error('平台回调签名无效');
+// 验签成功后再核对订单金额、商户号、订单号与状态。
+```
+
+资料 GET 接口返回 `platform_public_key`；平台私钥绝不通过 API 返回。
+
+## 6. 关于平台响应签名
 
 当前 V2 已实现商户私钥请求签名和平台使用商户公钥验签。若要让商户验证平台响应数据，还需要独立的平台 RSA 签名密钥对：平台私钥仅由平台保管，平台公钥公开给商户。商户私钥不能兼作平台响应签名私钥。平台响应签名将在独立的平台密钥配置完成后提供。
 
-## 6. 当前业务边界
+## 7. 当前业务边界
 
-V2 接口当前实现 RSA 验签、时间戳校验、商户订单号幂等和待支付订单创建。支付宝上游、支付链接、异步通知发送与回调验签尚未接通。
+V2 接口当前实现 RSA 验签、时间戳校验、商户订单号幂等和待支付订单创建。支付宝上游、支付链接、异步通知投递与支付宝支付状态回调尚未接通；平台回调 RSA 签名能力和商户验签规范已就绪，通知投递接入时调用服务端 `signPlatformCallback`。

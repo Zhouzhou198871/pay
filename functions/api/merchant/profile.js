@@ -1,4 +1,4 @@
-import { currentUser, hashPassword, json, randomHex, sha256, verifyPassword } from "../../_lib/auth.js";
+import { currentUser, hashPassword, json, randomHex, sha256, verifyPassword } from "../../_lib/auth.js";\nimport { ensurePlatformKeyPair } from "../../_lib/platform-signature.js";
 
 const networks = new Set(["USDT-TRC20", "USDT-ERC20", "USDT-BEP20"]);
 const encoder = new TextEncoder();
@@ -104,7 +104,7 @@ export async function onRequestGet({ request, env }) {
         api_key: merchant.api_key,
         v2_public_key: merchant.v2_public_key || "",
         v2_key_created_at: merchant.v2_key_created_at || null,
-        v2_key_configured: Boolean(merchant.v2_public_key && merchant.v2_private_key),
+        v2_key_configured: Boolean(merchant.v2_public_key && merchant.v2_private_key),\n        platform_public_key: platformPublicKey,
         usdt_address: merchant.usdt_address || "",
         usdt_network: merchant.usdt_network || "USDT-TRC20",
         withdraw_password_set: Boolean(merchant.withdraw_password_hash),
