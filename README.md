@@ -1,105 +1,94 @@
 # 晴天支付（Qingtian Pay）- 基于 Cloudflare 生态的零门槛白牌聚合支付网关
 
-<p align="center">
-  <img src="logo.png" alt="晴天支付 Logo" width="112">
-</p>
+[![CI](https://github.com/Zhouzhou198871/pay/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Zhouzhou198871/pay/actions/workflows/ci.yml)
+[![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Cloudflare Pages](https://img.shields.io/badge/Cloudflare-Pages-orange?logo=cloudflare)](https://pages.cloudflare.com/)
 
-<p align="center">
-  <a href="https://github.com/Zhouzhou198871/pay/actions"><img src="https://img.shields.io/github/actions/workflow/status/Zhouzhou198871/pay/ci.yml?branch=main&label=CI" alt="CI passing"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="MIT License"></a>
-  <a href="https://pages.cloudflare.com/"><img src="https://img.shields.io/badge/Cloudflare-Pages-orange?logo=cloudflare" alt="Cloudflare Pages"></a>
-</p>
+面向合规经营商户的支付接入与交易管理平台，采用 Vite、Cloudflare Pages Functions 与 Cloudflare D1 构建。生产站点：**https://pay.lynli.me**
 
-晴天支付是基于 Cloudflare Pages Functions 与 D1 构建的白牌支付网关项目，提供商户工作台、支付 API、订单管理、提现申请与客服工单等能力。生产功能、支付渠道及商户权限以实际部署配置、服务协议和审核结果为准。
+## 核心特性
+
+- **Cloudflare D1 持久化**：账户、商户、订单、资金账本、提现和客服工单统一存储；关键查询配备复合索引与分页，避免一次性加载完整历史。
+- **AI 智能客服**：可选接入智谱 GLM（glm-4-flash），为接入流程、费率和 API 基础问题提供自动答复；提现、审批等敏感事项转人工。
+- **多渠道提现申请**：支持 USDT 提现资料及微信/支付宝收款码资料提交；后台审核、状态记录和外部打款凭证留档。
+- **白牌 H5 收银台**：商户可通过标准化接口和 H5 支付页接入已开放的支付渠道。
+- **商户 API 权限审批**：网站、机器人和 APP 接入申请、合规承诺、附件核验、管理员审批及审计记录。
+- **受限管理后台**：`/admin` 及管理 API 均由服务端 `ADMIN_USER_IDS` 白名单鉴权。
 
 ## 架构概览
 
 ```mermaid
-flowchart TD
-  U[商户 / 付款用户] --> EDGE[Cloudflare Edge]
-  EDGE --> PAGES[Cloudflare Pages<br/>H5 收银台 / 商户工作台 / 管理后台]
-  PAGES --> FN[Pages Functions API]
-  FN --> AUTH[认证与 ADMIN_USER_IDS 权限校验]
-  FN --> D1[(Cloudflare D1)]
-  FN --> AI[智谱 AI 客服<br/>可选 Secret 配置]
-  FN --> PAY[已配置的支付服务商]
-  FN --> NOTIFY[商户 HTTPS 异步通知]
-  D1 --> AUDIT[订单 / 账本 / 提现 / 工单审计记录]
+flowchart TB
+  U[商户浏览器 / H5 收银台] --> P[Cloudflare Pages]
+  P --> F[Pages Functions API]
+  F --> A[账户认证与 ADMIN_USER_IDS 鉴权]
+  F --> D[(Cloudflare D1)]
+  D --> O[订单 / 资金账本 / 提现]
+  D --> S[工单 / 消息 / 附件元数据]
+  F --> Z[智谱 GLM API]
+  F --> N[已配置的支付渠道上游]
+  A --> M[/admin 管理控制台/]
 ```
-
-## 核心特性
-
-- **Cloudflare Edge 与 D1 持久化**：边缘函数处理请求，D1 保存账户、订单、账本、提现及工单数据；通过组合索引和分页接口降低历史记录查询成本。
-- **AI 智能客服**：支持配置智谱 API Key，在无人工客服在线时为常见接入问题提供自动答复；提现状态、权限审批等敏感事项应转人工处理。
-- **多渠道提现工作流**：支持按已开放渠道提交提现申请、记录费用与收款信息、管理员审核及打款凭证登记。后台“登记打款”不等于自动执行银行转账或链上转账。
-- **白牌 H5 收银台**：支持商户 API 创建订单及托管收银台体验；具体支付渠道受生产环境服务商配置和账户审核约束。
-- **商户与管理员分权**：商户 API 权限需审核；管理接口由 `ADMIN_USER_IDS` 白名单保护。
-- **可审计客服工单**：支持商户与管理员消息、权限申请、开发者合规承诺及受权限控制的附件查看。
 
 ## 技术栈
 
-- Cloudflare Pages / Pages Functions
-- Cloudflare D1（SQLite）
-- Vite
-- JavaScript / Web Crypto API
-- GitHub Actions
+| 层 | 技术 |
+|---|---|
+| Web 前端 | Vite、原生 JavaScript、响应式 CSS |
+| API 与业务逻辑 | Cloudflare Pages Functions |
+| 数据持久化 | Cloudflare D1（SQLite） |
+| AI 客服 | 智谱 GLM API（可选） |
+| 部署 | Cloudflare Pages + GitHub Actions |
 
 ## 本地开发
 
 ```bash
 npm install
-npm run dev
 npm run check
 npm test
 npm run build
+npm run dev
 ```
 
-Pages Functions 本地开发需使用 Wrangler 绑定 D1。生产数据库迁移请按版本顺序审阅 `migrations/` 后执行，不要在正式环境随意删除交易或账本数据。
+Pages Functions 在本地开发时需要配置 D1 binding 与本地环境变量。不要将密钥写入仓库或提交到 Git。
 
-## 生产环境变量
+## Cloudflare 环境变量
 
-在 Cloudflare Dashboard → Workers & Pages → `qingtian-pay` → Settings → Variables and Secrets 中配置。敏感值必须使用 Secret 类型，禁止提交到仓库或聊天记录。
+在 Cloudflare Pages 项目 `qingtian-pay` 的 Production 环境中按实际启用功能配置：
 
 | 变量 | 类型 | 用途 |
 |---|---|---|
-| `AUTH_SECRET` | Secret | 会话 / 验证相关密钥 |
+| `AUTH_SECRET` | Secret | 认证签名与验证码保护 |
+| `RESEND_API_KEY` | Secret | 事务邮件 |
+| `MAIL_FROM` | Text | 邮件发件人 |
 | `ADMIN_USER_IDS` | Text | 管理员用户 ID 白名单，逗号分隔 |
-| `RESEND_API_KEY` | Secret | 邮件发送 |
-| `GITHUB_CLIENT_ID` | Text | GitHub OAuth 客户端 ID |
-| `GITHUB_CLIENT_SECRET` | Secret | GitHub OAuth 客户端密钥 |
-| `TURNSTILE_SITE_KEY` | Text | Turnstile 公钥 |
-| `TURNSTILE_SECRET_KEY` | Secret | Turnstile 密钥 |
-| `ZHIPU_API_KEY` | Secret | 智谱 AI 客服密钥（可选） |
-| `PUBLIC_BASE_URL` | Text | 对外服务根地址，例如 `https://pay.example.com` |
-| `NZZF_PID` | Text | 已签约支付服务商商户编号 |
-| `NZZF_MERCHANT_PRIVATE_KEY` | Secret | 支付服务商商户私钥 |
-| `NZZF_PLATFORM_PUBLIC_KEY` | Text | 支付服务商验签公钥 |
-| `NZZF_USDT_CNY_RATE` | Text | 折算汇率 |
-| `NZZF_FEE_RATE_BPS` | Text | 费率基点 |
-| `WITHDRAW_USDT_CNY_RATE` | Text | 提现折算汇率 |
+| `ZHIPU_API_KEY` | Secret | 智谱 GLM 客服调用密钥 |
+| `NZZF_PID` | Text | 上游支付渠道商户编号 |
+| `NZZF_MERCHANT_PRIVATE_KEY` | Secret | 上游商户私钥 |
+| `NZZF_PLATFORM_PUBLIC_KEY` | Text | 上游平台公钥 |
+| `NZZF_USDT_CNY_RATE` | Text | 上游结算汇率 |
+| `NZZF_FEE_RATE_BPS` | Text | 渠道手续费基点 |
+| `NZZF_API_URL` | Text | 上游 API 地址；默认值由服务端实现提供 |
+| `WITHDRAW_USDT_CNY_RATE` | Text | 法币提现折算汇率 |
 
-支付服务商参数、结算参数与费率必须依据真实签约合同及渠道要求配置。更换自定义域名或反向代理域名时，更新 `PUBLIC_BASE_URL`，并同步校验支付回调白名单、OAuth 回调、Cookie 安全属性及 DNS / TLS 配置。
+仅在 Cloudflare Dashboard 的 Secret 类型字段中录入密钥。若凭据曾粘贴到聊天、日志或代码仓库，应先撤销并轮换。
+
+## API 地址与自定义域名
+
+浏览器端 API 使用同源相对路径（例如 `/api/merchant/orders`），不把生产域名写死在前端代码中。绑定自定义域名或配置反向代理时，将页面流量与 `/api/*` 一并转发到同一 Pages 项目即可；无需为了更换站点域名逐个修改 API URL。支付上游地址等服务端外部地址通过对应环境变量管理。
 
 ## 管理后台
 
-- 管理入口：`/admin.html`
-- 管理 API：`/api/admin/*`
-- 仅当前登录用户 ID 命中 `ADMIN_USER_IDS` 才可访问管理 API。
-- 提现审核中的“登记打款”仅登记已完成的外部打款凭证，不会自动向收款人转账。
-- 商户 API 权限由客服工单审核流程开通。
+访问 `/admin`。服务端会使用当前登录会话并校验 `ADMIN_USER_IDS`；未登录或不在白名单中的账户不能读取后台数据或调用管理 API。
 
-## API 文档
+后台提供数据概览、商户状态管理、订单查询、提现审核及客服工单审批。提现审核中的“登记已打款”用于记录已在外部渠道完成的转账凭证，**不会自动向银行、微信或支付宝发起资金转账**。
 
-- [开发者接入指南](docs/DEVELOPER_GUIDE.md)
-- [API 接口参考](docs/API_REFERENCE.md)
-- [Firebase / Firestore 接入规范](docs/FIREBASE_FIRESTORE_GUIDE.md)
+## 合规与免责声明
 
-## 安全与合规免责声明
+本项目是软件系统与技术接入工具，不代表任何支付牌照、资金托管资质、银行账户或第三方支付渠道授权。实际经营者必须自行确认其经营主体、业务地区、支付服务模式、数据处理活动及合作渠道符合适用法律法规和监管要求，并在上线前取得所需许可、备案和合作方授权。
 
-本项目仅供合法合规的支付技术集成与业务管理使用。**严禁将本平台用于洗钱、诈骗、赌博、制裁规避、非法集资、侵犯个人信息或其他违法违规活动。** 商户必须确保业务及资金来源合法，并遵守适用法律法规、支付机构规则、反洗钱和数据保护要求。平台可依据适用法律及风险规则要求补充核验资料、限制服务并依法向有权机关报告。
-
-本项目代码或技术能力不构成支付牌照、资金托管资格、银行结算能力、交易成功率、资金安全或收益保证。上线运营前，运营主体必须自行完成必要的法律、牌照、支付渠道、税务、隐私与信息安全审查，并签署真实有效的服务协议。
+**严禁将本平台用于洗钱、诈骗、赌博、非法集资、制裁规避、侵害消费者权益或其他违法违规用途。** 平台运营方应实施商户尽职调查、交易监测、风险处置、记录留存及依法报告机制。任何费率、结算、提现和风控说明均以正式商户协议、已开通渠道规则及实际审核结果为准；不得将软件功能描述为资金绝对安全、必然到账或保证赔付。
 
 ## License
 
-本仓库按 MIT License 发布，详见 [LICENSE](LICENSE)。第三方服务、商标、支付渠道及依赖组件仍受各自条款约束。
+本项目按 [MIT License](LICENSE) 授权。
