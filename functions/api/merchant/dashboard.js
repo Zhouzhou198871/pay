@@ -1,7 +1,7 @@
 import { merchantContext } from "../../_lib/merchant.js";
 import { json } from "../../_lib/auth.js";
 
-const MERCHANT_SQL = `SELECT site_name, status FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
+const MERCHANT_SQL = `SELECT id, site_name, status FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`;
 
 const SUMMARY_SQL = `
 SELECT
