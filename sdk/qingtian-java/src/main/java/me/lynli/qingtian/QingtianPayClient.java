@@ -55,18 +55,18 @@ public final class QingtianPayClient {
     return jsonString(value.toString());
   }
   private String jsonString(String value) {
-    StringBuilder out=new StringBuilder("\\"");
+    StringBuilder out=new StringBuilder("\"");
     for(char ch:value.toCharArray()) {
       switch(ch) {
-        case '\\"' -> out.append("\\\\"");
-        case '\\\\' -> out.append("\\\\\\\\");
-        case '\\n' -> out.append("\\\\n");
-        case '\\r' -> out.append("\\\\r");
-        case '\\t' -> out.append("\\\\t");
-        default -> { if(ch<0x20) out.append(String.format("\\\\u%04x",(int)ch)); else out.append(ch); }
+        case '"' -> out.append("\\\"");
+        case '\\' -> out.append("\\\\");
+        case '\n' -> out.append("\\n");
+        case '\r' -> out.append("\\r");
+        case '\t' -> out.append("\\t");
+        default -> { if(ch<0x20) out.append(String.format("\\u%04x",(int)ch)); else out.append(ch); }
       }
     }
-    return out.append('\\"').toString();
+    return out.append('"').toString();
   }
   private String post(String path,String jsonBody) throws Exception {
     HttpRequest request=HttpRequest.newBuilder(URI.create(baseUrl+path)).timeout(Duration.ofSeconds(20))
