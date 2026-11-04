@@ -89,8 +89,8 @@ export async function onRequestPost({ request, env }) {
       "INSERT INTO payment_orders (id, trade_no, merchant_id, app_id, out_trade_no, amount_cents, currency, method, subject, status, pay_url, pay_info, notify_url, amount_micro, pay_type, request_timestamp, created_at) VALUES (?, ?, ?, ?, ?, ?, 'USDT', 'alipay', ?, 'pending', ?, ?, ?, ?, 'alipay', ?, ?)"
     ).bind(
       id, tradeNo, merchant.id, merchant.app_id, outTradeNo,
-      Math.max(1, Math.round(amountMicro / 10000)), "晴天支付收款",
-      checkoutUrl, JSON.stringify(payInfo), notifyUrl, now, now
+      amountCents, "晴天支付收款",
+      checkoutUrl, JSON.stringify(payInfo), notifyUrl, amountMicro, now, now
     ).run();
 
     return json({
