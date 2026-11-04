@@ -18,7 +18,7 @@ export async function onRequestGet({ params, env }) {
     ? Number(order.amount_micro) / 1000000
     : Number(order.amount_cents || 0) / 100;
   const amount = Number.isFinite(rawAmount) ? rawAmount.toFixed(currency === 'USDT' ? 6 : 2).replace(/0+$/, '').replace(/\.$/, '') : '0.00';
-  const amountLabel = currency === 'CNY' ? '¥' + amount : amount + ' ' + currency;
+  const amountLabel = payInfo.amount_cny ? '¥' + esc(payInfo.amount_cny) : currency === 'CNY' ? '¥' + amount : amount + ' ' + currency;
   const subject = isInternalDemoRecord && /UI\s*测试订单/i.test(String(order.subject || ''))
     ? '订单支付'
     : String(order.subject || '订单支付');
