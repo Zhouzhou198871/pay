@@ -49,7 +49,7 @@ function sameOrigin(request) {
 }
 
 async function ensureMerchant(db, user, origin, secret) {
-  let merchant = await db.prepare("SELECT id, user_id, site_name, site_url, status, app_id, merchant_no, api_key, usdt_address, usdt_network, withdraw_password_hash FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1")
+  let merchant = await db.prepare("SELECT id, user_id, site_name, site_url, status, app_id, merchant_no, api_key, usdt_address, usdt_network, withdraw_password_hash, v2_private_key, v2_public_key, v2_key_created_at FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1")
     .bind(user.id).first();
 
   if (!merchant) {
