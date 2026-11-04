@@ -40,10 +40,12 @@ export async function onRequestPost({request,env}){
   let ticket=await db.prepare("SELECT id FROM support_tickets WHERE user_id=? AND merchant_id=? AND status!='closed' ORDER BY updated_at DESC LIMIT 1").bind(user.id,merchant.id).first();
   const created=!ticket;
   if(!ticket)ticket={id:randomHex(16)};
-  const messageId=randomHex(16);
+  const messageId=randomHex(16),applicationId=type==="permission_request"?randomHex(16):"";
+  if(applicationId)metadata.application_id=applicationId;
   const statements=[];
   if(created)statements.push(db.prepare("INSERT INTO support_tickets(id,user_id,merchant_id,subject,status,created_at,updated_at) VALUES(?,?,?,'商户客服咨询','open',?,?)").bind(ticket.id,user.id,merchant.id,now,now));
   else statements.push(db.prepare("UPDATE support_tickets SET updated_at=?,status='open' WHERE id=?").bind(now,ticket.id));
+  if(applicationId)statements.push(db.prepare("INSERT INTO api_access_requests(id,ticket_id,user_id,merchant_id,app_type,app_name,website_url,status,created_at) VALUES(?,?,?,?,?,?,?,'pending',?)").bind(applicationId,ticket.id,user.id,merchant.id,metadata.app_type,metadata.app_name,metadata.website_url||"",now));
   statements.push(db.prepare("INSERT INTO chat_messages(id,ticket_id,sender_user_id,sender_role,message_type,content,metadata_json,created_at) VALUES(?,?,?,'merchant',?,?,?,?)").bind(messageId,ticket.id,user.id,type,content,JSON.stringify(metadata),now));
   await db.batch(statements);
   return json({success:true,ticket_id:ticket.id,message:{id:messageId,sender_role:"merchant",message_type:type,content,metadata_json:JSON.stringify(metadata),created_at:now},message_text:"消息已提交至客服工单。"},201);
