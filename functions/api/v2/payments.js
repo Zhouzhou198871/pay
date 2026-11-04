@@ -53,9 +53,9 @@ export async function onRequestPost({ request, env }) {
     const useNzzf = Boolean(String(env.NZZF_PID || '').trim());
     const provider = useNzzf ? 'nzzf' : 'alipay';
     const notifyTarget = useNzzf
-      ? 'https://pay.lynli.me/api/v1/payments/nzzf/notify'
+      ? new URL('/api/v1/payments/nzzf/notify', String(env.PUBLIC_BASE_URL || new URL(request.url).origin)).toString()
       : String(env.ALIPAY_NOTIFY_URL || '');
-    const successTarget = 'https://pay.lynli.me/checkout/success?order_no=' + encodeURIComponent(tradeNo);
+    const successTarget = new URL('/checkout/success', String(env.PUBLIC_BASE_URL || new URL(request.url).origin)).toString() + '?order_no=' + encodeURIComponent(tradeNo);
     const checkout = useNzzf
       ? await createNzzfCheckout({ env, tradeNo, subject: outTradeNo, amountMicro, notifyUrl: notifyTarget, returnUrl: successTarget, clientIp: request.headers.get('CF-Connecting-IP') || '' })
       : await createAlipayCheckout({ env, db: env.AUTH_DB, tradeNo, subject: outTradeNo, amountMicro, payType });
