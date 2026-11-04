@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace QingtianPay\Nzzf;
 
+use InvalidArgumentException;
 use RuntimeException;
 
 final class Client
@@ -40,6 +41,28 @@ final class Client
             if (array_key_exists($key, $filters)) $params[$key] = $filters[$key];
         }
         return $this->post('/api/merchant/orders', $params);
+    }
+
+    /**
+     * Close an unpaid order. Exactly one of trade_no or out_trade_no is required.
+     * NZZF only permits closing orders that have not been paid.
+     */
+    public function closeOrder(?string $tradeNo = null, ?string $outTradeNo = null): array
+    {
+        $hasTradeNo = $tradeNo !== null && trim($tradeNo) !== '';
+        $hasOutTradeNo = $outTradeNo !== null && trim($outTradeNo) !== '';
+        if ($hasTradeNo === $hasOutTradeNo) {
+            throw new InvalidArgumentException('Provide exactly one of trade_no or out_trade_no');
+        }
+        return $this->post('/api/pay/close', $hasTradeNo
+            ? ['trade_no' => trim($tradeNo)]
+            : ['out_trade_no' => trim((string) $outTradeNo)]);
+    }
+
+    /** Verify NZZF V2 RSA notification parameters (GET query or parsed form array). */
+    public function verifyNotification(array $params): bool
+    {
+        return Signer::verify($params, $this->platformPublicKey);
     }
 
     /** Generic signed POST for endpoints whose exact contract is documented. */
