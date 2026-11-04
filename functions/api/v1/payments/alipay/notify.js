@@ -18,8 +18,8 @@ export async function onRequestPost({ request, env }) {
     if (!(await verifyAlipayNotify(params, env.ALIPAY_PUBLIC_KEY))) return failure();
     if (String(params.app_id || '') !== String(env.ALIPAY_APP_ID) || String(params.seller_id || '') !== String(env.ALIPAY_SELLER_ID)) return failure();
     const order = await env.AUTH_DB.prepare(
-      "SELECT po.id, po.trade_no, po.merchant_id, po.out_trade_no, po.amount_micro, po.currency, po.status, po.provider_trade_no, po.pay_info, pm.user_id FROM payment_orders po JOIN pay_merchants pm ON pm.id = po.merchant_id WHERE po.trade_no = ? OR po.out_trade_no = ? LIMIT 1"
-    ).bind(String(params.out_trade_no || ''), String(params.out_trade_no || '')).first();
+      "SELECT po.id, po.trade_no, po.merchant_id, po.out_trade_no, po.amount_micro, po.currency, po.status, po.provider_trade_no, po.pay_info, pm.user_id FROM payment_orders po JOIN pay_merchants pm ON pm.id = po.merchant_id WHERE po.trade_no = ? LIMIT 1"
+    ).bind(String(params.out_trade_no || '')).first();
     if (!order || order.currency !== 'USDT') return failure();
     let payInfo;
     try { payInfo = JSON.parse(order.pay_info || '{}'); } catch { return failure(); }
