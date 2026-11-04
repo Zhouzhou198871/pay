@@ -5,5 +5,7 @@ export async function onRequestGet({ params, env }) {
   if (!/^[A-Za-z0-9_.:-]{1,80}$/.test(orderNo)) return json({ code: 'NOT_FOUND' }, 404);
   const order = await env.AUTH_DB.prepare("SELECT out_trade_no, amount_cents, currency, method, subject, status, pay_url, created_at, paid_at FROM payment_orders WHERE out_trade_no = ? LIMIT 1").bind(orderNo).first();
   if (!order) return json({ code: 'NOT_FOUND' }, 404);
-  return json({ code: 'SUCCESS', data: { order_no: order.out_trade_no, amount: (Number(order.amount_cents || 0) / 100).toFixed(2), currency: order.currency, method: order.method, subject: order.subject, status: order.status, qr_content: order.pay_url, created_at: order.created_at, paid_at: order.paid_at || null } });
+  const isTest = String(order.out_trade_no).startsWith('TEST_UI_');
+  const qrContent = isTest ? 'https://example.com/mock-payment/' + encodeURIComponent(order.out_trade_no) : order.pay_url;
+  return json({ code: 'SUCCESS', data: { order_no: order.out_trade_no, amount: (Number(order.amount_cents || 0) / 100).toFixed(2), currency: order.currency, method: order.method, subject: order.subject, status: order.status, qr_content: qrContent, created_at: order.created_at, paid_at: order.paid_at || null } });
 }
