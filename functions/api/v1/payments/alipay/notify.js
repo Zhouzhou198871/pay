@@ -38,8 +38,8 @@ export async function onRequestPost({ request, env }) {
     const entryNo = 'ALIPAY' + order.trade_no;
     const description = '支付宝订单入账 ' + order.out_trade_no + '（扣除手续费 ' + feeRateBps + ' bps）';
     const results = await env.AUTH_DB.batch([
-      env.AUTH_DB.prepare("UPDATE payment_orders SET status = 'paid', provider_trade_no = ?, paid_at = ?, fee_cents = ?, credit_cents = ? WHERE id = ? AND status = 'pending'")
-        .bind(String(params.trade_no), now, Math.round(feeMicro / 10000), Math.round(creditMicro / 10000), order.id),
+      env.AUTH_DB.prepare("UPDATE payment_orders SET status = 'paid', provider_trade_no = ?, paid_at = ?, fee_cents = ?, credit_cents = ?, actual_paid_cents = ? WHERE id = ? AND status = 'pending'")
+        .bind(String(params.trade_no), now, Math.round(feeMicro / 10000), Math.round(creditMicro / 10000), notifiedCents, order.id),
       env.AUTH_DB.prepare(
         "INSERT INTO merchant_ledger (id, user_id, entry_no, direction, amount_micro, balance_after_micro, currency, category, description, related_type, related_id, created_at) " +
         "SELECT ?, ?, ?, 'credit', ?, COALESCE((SELECT balance_after_micro FROM merchant_ledger WHERE user_id = ? AND currency = 'USDT' ORDER BY created_at DESC, rowid DESC LIMIT 1), 0) + ?, 'USDT', 'payment_credit', ?, 'payment_order', ?, ? " +
