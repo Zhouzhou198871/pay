@@ -106,7 +106,7 @@ export async function nzzfPost({ env, path, params = {}, fetchImpl = fetch }) {
     throw new Error('NZZF_INVALID_JSON_RESPONSE');
   }
   if (!response.ok) throw new Error('NZZF_HTTP_' + response.status);
-  if (data && data.sign && !(await verifyNzzfParams(data, publicKey))) {
+  if (!data || typeof data.sign !== 'string' || String(data.sign_type || '').toUpperCase() !== 'RSA' || !(await verifyNzzfParams(data, publicKey))) {
     throw new Error('NZZF_RESPONSE_SIGNATURE_INVALID');
   }
   return data;
