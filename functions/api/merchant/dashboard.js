@@ -8,11 +8,11 @@ SELECT
   (SELECT COUNT(*)
    FROM payment_orders po
    JOIN pay_merchants pm ON pm.id = po.merchant_id
-   WHERE pm.user_id = ? AND po.status = 'paid') AS total_orders,
+   WHERE pm.user_id = ? AND po.status = 'paid' AND po.currency = 'USDT') AS total_orders,
   (SELECT COUNT(*)
    FROM payment_orders po
    JOIN pay_merchants pm ON pm.id = po.merchant_id
-   WHERE pm.user_id = ? AND po.status = 'paid'
+   WHERE pm.user_id = ? AND po.status = 'paid' AND po.currency = 'USDT'
      AND DATE(po.created_at, 'unixepoch') = DATE('now')) AS today_orders
 `;
 
@@ -56,7 +56,7 @@ channel_sources AS (
          'observed'
   FROM payment_orders po
   JOIN owned_merchants om ON om.id = po.merchant_id
-  WHERE NOT EXISTS (
+  WHERE po.currency = 'USDT' AND NOT EXISTS (
     SELECT 1 FROM merchant_payment_channels c
     WHERE c.user_id = ? AND lower(c.channel_code) = lower(po.method)
   )
@@ -72,7 +72,7 @@ SELECT c.channel_code, c.display_name, c.status,
                 / NULLIF(SUM(CASE WHEN po.status = 'paid' THEN COALESCE(po.amount_micro, po.amount_cents * 10000) ELSE 0 END), 0), 0) AS fee_rate
 FROM channel_sources c
 LEFT JOIN owned_merchants om ON 1 = 1
-LEFT JOIN payment_orders po ON po.merchant_id = om.id AND lower(po.method) = lower(c.channel_code)
+LEFT JOIN payment_orders po ON po.merchant_id = om.id AND po.currency = 'USDT' AND lower(po.method) = lower(c.channel_code)
 GROUP BY c.channel_code, c.display_name, c.status
 ORDER BY c.display_name
 `;
@@ -88,7 +88,7 @@ daily AS (
          COUNT(*) AS orders
   FROM payment_orders po
   JOIN pay_merchants pm ON pm.id = po.merchant_id
-  WHERE pm.user_id = ? AND po.status = 'paid'
+  WHERE pm.user_id = ? AND po.status = 'paid' AND po.currency = 'USDT'
     AND po.paid_at >= UNIXEPOCH('now', '-6 days', 'start of day')
   GROUP BY DATE(po.paid_at, 'unixepoch')
 )
