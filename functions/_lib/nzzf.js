@@ -3,7 +3,7 @@ const encoder = new TextEncoder();
 function pemBody(value) {
   return String(value || '')
     .replace(/\\n/g, '\n')
-    .replace(/-----BEGIN [^-]+-----|-----END [^-]+-----|\\s/g, '');
+    .replace(/-----BEGIN [^-]+-----|-----END [^-]+-----|\s/g, '');
 }
 
 function decodeBase64(value) {
@@ -11,17 +11,13 @@ function decodeBase64(value) {
   return Uint8Array.from(raw, (char) => char.charCodeAt(0));
 }
 
-/**
- * NZZF V2 canonical parameter string.
- * Empty values, sign/sign_type and array/object values are excluded.
- */
+/** NZZF V2: omit empty values, sign/sign_type, and array/object parameters. */
 export function canonicalNzzfParams(params) {
   return Object.keys(params || {})
     .filter((key) => key !== 'sign' && key !== 'sign_type')
     .filter((key) => {
       const value = params[key];
-      return value !== undefined && value !== null && value !== '' &&
-        typeof value !== 'object';
+      return value !== undefined && value !== null && value !== '' && typeof value !== 'object';
     })
     .sort()
     .map((key) => key + '=' + String(params[key]))
@@ -44,9 +40,7 @@ async function importRsaKey(pem, usage) {
 export async function signNzzfParams(params, merchantPrivateKey) {
   const key = await importRsaKey(merchantPrivateKey, 'sign');
   const signature = await crypto.subtle.sign(
-    'RSASSA-PKCS1-v1_5',
-    key,
-    encoder.encode(canonicalNzzfParams(params))
+    'RSASSA-PKCS1-v1_5', key, encoder.encode(canonicalNzzfParams(params))
   );
   return btoa(String.fromCharCode(...new Uint8Array(signature)));
 }
@@ -69,16 +63,13 @@ export async function verifyNzzfParams(params, platformPublicKey) {
 
 export function isFreshNzzfTimestamp(value, nowSeconds = Math.floor(Date.now() / 1000)) {
   const timestamp = String(value ?? '');
-  if (!/^\\d{10}$/.test(timestamp)) return false;
+  if (!/^\d{10}$/.test(timestamp)) return false;
   return Math.abs(nowSeconds - Number(timestamp)) <= 300;
 }
 
-/**
- * Signed NZZF V2 POST helper. Does not assume an endpoint response schema.
- * The caller must verify business fields and status before using the response.
- */
+/** Signed application/x-www-form-urlencoded POST; JSON response is signature-checked when signed. */
 export async function nzzfPost({ env, path, params = {}, fetchImpl = fetch }) {
-  const baseUrl = String(env.NZZF_API_URL || 'https://nzzf.org').replace(/\\/+$/, '');
+  const baseUrl = String(env.NZZF_API_URL || 'https://nzzf.org').replace(/\/+$/, '');
   if (!path.startsWith('/') || path.startsWith('//')) throw new Error('NZZF_INVALID_API_PATH');
   const pid = String(env.NZZF_PID || '').trim();
   const privateKey = String(env.NZZF_MERCHANT_PRIVATE_KEY || '').trim();
@@ -100,14 +91,12 @@ export async function nzzfPost({ env, path, params = {}, fetchImpl = fetch }) {
     body.set(key, String(value));
   }
 
+  const timeout = Math.min(20000, Math.max(3000, Number(env.NZZF_TIMEOUT_MS || 12000)));
   const response = await fetchImpl(baseUrl + path, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
     body: body.toString(),
-    signal: AbortSignal.timeout(Math.min(20000, Math.max(3000, Number(env.NZZF_TIMEOUT_MS || 12000))))
+    signal: AbortSignal.timeout(timeout)
   });
   const responseText = await response.text();
   let data;
