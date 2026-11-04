@@ -35,10 +35,11 @@ export async function createAlipayCheckout({ env, db, tradeNo, subject, amountMi
   const notifyUrl = String(env.ALIPAY_NOTIFY_URL).trim();
   const returnUrl = String(env.ALIPAY_RETURN_URL || '').trim();
   const rate = Number(env.ALIPAY_USDT_CNY_RATE);
+  try { const notify = new URL(notifyUrl); if (notify.protocol !== 'https:' || notify.username || notify.password || notify.hash) throw new Error(); } catch { return { ok: false, code: 'ALIPAY_CONFIG_INVALID', message: 'ALIPAY_NOTIFY_URL 必须是有效的 HTTPS 地址。' }; }
   if (!/^\d{16,32}$/.test(appId)) return { ok: false, code: 'ALIPAY_CONFIG_INVALID', message: 'ALIPAY_APP_ID 格式不正确。' };
   if (!Number.isFinite(rate) || rate <= 0 || rate > 100000) return { ok: false, code: 'ALIPAY_CONFIG_INVALID', message: 'ALIPAY_USDT_CNY_RATE 必须为大于 0 的有效汇率。' };
   try {
-    const gateway = String(registry.gateway_url || env.ALIPAY_GATEWAY_URL || DEFAULT_GATEWAY).trim();
+    const gateway = String(env.ALIPAY_GATEWAY_URL || registry.gateway_url || DEFAULT_GATEWAY).trim();
     const gatewayUrl = new URL(gateway);
     if (gatewayUrl.protocol !== 'https:' || !['openapi.alipay.com', 'openapi.alipaydev.com'].includes(gatewayUrl.hostname)) return { ok: false, code: 'ALIPAY_GATEWAY_INVALID', message: '支付宝网关地址不在允许的官方域名范围内。' };
     const isH5 = payType === 'alipay_h5';
