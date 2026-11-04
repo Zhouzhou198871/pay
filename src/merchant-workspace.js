@@ -208,8 +208,8 @@ function loadOverviewData() {
           const label = escapeText(channel.display_name || channel.channel_code || "支付通道");
           const today = yuan(channel.today_amount_cents);
           const yesterday = yuan(channel.yesterday_amount_cents);
-          const success = Number(channel.success_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
-          const fee = Number(channel.fee_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
+          const success = Number(channel.success_rate || 0).toFixed(2).replace(/\.?0+$/, "");
+          const fee = Number(channel.fee_rate || 0).toFixed(2).replace(/\.?0+$/, "");
           return `<article class="qt-alipay-summary"><div class="qt-alipay-summary__heading"><span class="qt-alipay-summary__icon" aria-hidden="true">支</span><strong>${label}</strong></div><div class="qt-alipay-summary__row"><span>今日收入：</span><b>${today}</b></div><div class="qt-alipay-summary__row"><span>昨日收入：</span><b>${yesterday}</b></div><div class="qt-alipay-summary__row"><span>通道成功率：</span><b class="qt-success-text">${success}%</b></div><div class="qt-alipay-summary__row"><span>实际费率：</span><b>${fee}%</b></div></article>`;
         }).join("") : '<div class="qt-data-empty">暂无已配置或产生订单的支付通道，统计为 0。</div>';
       }
