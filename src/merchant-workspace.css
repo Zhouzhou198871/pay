@@ -191,3 +191,15 @@
 .qt-channel-detail-row>b{color:#526578;font-weight:650;font-variant-numeric:tabular-nums}
 .qt-channel-detail-row>.qt-success-text{color:#25966f!important}
 @media(max-width:480px){.qt-channel-row-alipay{padding:0 20px}.qt-channel-heading{min-height:58px}.qt-channel-detail-row{min-height:53px;font-size:13px}}
+
+/* Alipay summary: isolated, full-width five-row layout */
+#qt-channel-list .qt-alipay-summary{display:flex!important;flex-direction:column!important;align-items:stretch!important;width:100%!important;min-width:0!important;box-sizing:border-box!important;padding:0 24px!important;margin:0!important;grid-column:1/-1!important}
+#qt-channel-list .qt-alipay-summary__heading{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:11px!important;width:100%!important;min-width:0!important;min-height:62px!important;box-sizing:border-box!important;border-bottom:1px solid #edf1f4!important}
+#qt-channel-list .qt-alipay-summary__icon{display:grid!important;place-items:center!important;flex:0 0 36px!important;width:36px!important;height:36px!important;box-sizing:border-box!important;border-radius:7px!important;background:#1677e8!important;color:#fff!important;font-size:21px!important;font-weight:800!important;line-height:1!important}
+#qt-channel-list .qt-alipay-summary__heading>strong{display:block!important;flex:0 1 auto!important;width:auto!important;min-width:0!important;margin:0!important;color:#526578!important;font-size:16px!important;font-weight:750!important;line-height:1.4!important;white-space:nowrap!important;word-break:keep-all!important}
+#qt-channel-list .qt-alipay-summary__row{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;gap:7px!important;width:100%!important;min-width:0!important;min-height:56px!important;box-sizing:border-box!important;margin:0!important;padding:0!important;border-bottom:1px solid #edf1f4!important;font-size:14px!important;line-height:1.5!important;white-space:nowrap!important}
+#qt-channel-list .qt-alipay-summary__row:last-child{border-bottom:0!important}
+#qt-channel-list .qt-alipay-summary__row>span{display:block!important;flex:0 0 auto!important;width:auto!important;margin:0!important;color:#748596!important;font-size:14px!important;white-space:nowrap!important;word-break:keep-all!important}
+#qt-channel-list .qt-alipay-summary__row>b{display:block!important;flex:0 0 auto!important;width:auto!important;margin:0!important;color:#526578!important;font-size:14px!important;font-weight:650!important;font-variant-numeric:tabular-nums!important;white-space:nowrap!important;word-break:keep-all!important}
+#qt-channel-list .qt-alipay-summary__row>.qt-success-text{color:#25966f!important}
+@media(max-width:480px){#qt-channel-list .qt-alipay-summary{padding:0 20px!important}#qt-channel-list .qt-alipay-summary__heading{min-height:58px!important}#qt-channel-list .qt-alipay-summary__row{min-height:53px!important;font-size:13px!important}#qt-channel-list .qt-alipay-summary__row>span,#qt-channel-list .qt-alipay-summary__row>b{font-size:13px!important}}
