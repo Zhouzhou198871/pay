@@ -38,8 +38,36 @@ public final class QingtianPayClient {
     signer.update(canonical(params,true).getBytes(StandardCharsets.UTF_8));
     return Base64.getEncoder().encodeToString(signer.sign());
   }
-  public String createOrderV1(String jsonBody) throws Exception { return post("/api/v1/payments",jsonBody); }
-  public String createOrderV2(String jsonBody) throws Exception { return post("/api/v2/payments",jsonBody); }
+  public String createOrderV1(Map<String,?> order) throws Exception { return createOrder(order,false); }
+  public String createOrderV2(Map<String,?> order) throws Exception { return createOrder(order,true); }
+  private String createOrder(Map<String,?> order,boolean rsa) throws Exception {
+    Map<String,Object> params=new LinkedHashMap<>(); params.putAll(order);
+    params.put("merchant_no",merchantNo); params.put("timestamp",Long.toString(System.currentTimeMillis()/1000));
+    params.put("sign",rsa?signV2(params):signV1(params));
+    return post(rsa?"/api/v2/payments":"/api/v1/payments",toJson(params));
+  }
+  private String toJson(Map<String,?> values) {
+    return values.entrySet().stream().map(e -> jsonString(e.getKey())+":"+jsonValue(e.getValue())).collect(Collectors.joining(",","{","}"));
+  }
+  private String jsonValue(Object value) {
+    if(value==null) return "null";
+    if(value instanceof Number || value instanceof Boolean) return value.toString();
+    return jsonString(value.toString());
+  }
+  private String jsonString(String value) {
+    StringBuilder out=new StringBuilder("\\"");
+    for(char ch:value.toCharArray()) {
+      switch(ch) {
+        case '\\"' -> out.append("\\\\"");
+        case '\\\\' -> out.append("\\\\\\\\");
+        case '\\n' -> out.append("\\\\n");
+        case '\\r' -> out.append("\\\\r");
+        case '\\t' -> out.append("\\\\t");
+        default -> { if(ch<0x20) out.append(String.format("\\\\u%04x",(int)ch)); else out.append(ch); }
+      }
+    }
+    return out.append('\\"').toString();
+  }
   private String post(String path,String jsonBody) throws Exception {
     HttpRequest request=HttpRequest.newBuilder(URI.create(baseUrl+path)).timeout(Duration.ofSeconds(20))
       .header("Content-Type","application/json").header("Accept","application/json")
