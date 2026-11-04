@@ -8,5 +8,5 @@ export async function onRequestGet({ params, env }) {
   let info = {};
   try { info = JSON.parse(order.pay_info || '{}'); } catch {}
   if (info.provider !== 'nzzf') return json({ code: 'NOT_FOUND' }, 404);
-  return json({ code: 'SUCCESS', data: { order_no: order.trade_no, amount: (Number(order.amount_micro) / 1000000).toFixed(6).replace(/0+$/, '').replace(/\\.$/, ''), currency: order.currency, status: order.status, paid_at: order.paid_at || null, qr_content: info.qrcode_content || '' } });
+  return json({ code: 'SUCCESS', data: { order_no: order.trade_no, amount: (Number(order.amount_micro) / 1000000).toFixed(6).replace(/0+$/, '').replace(/[.]$/, ''), currency: order.currency, status: order.status, paid_at: order.paid_at || null, qr_content: info.qrcode_content || '' } });
 }
