@@ -37,7 +37,7 @@ export async function onRequestGet({ request, env }) {
       context.db.prepare(
         "SELECT po.id, po.trade_no AS system_order_no, po.out_trade_no AS merchant_order_no, po.subject, " +
         "COALESCE(po.amount_micro, po.amount_cents * 10000) AS amount_micro, po.amount_cents, po.actual_paid_cents, " +
-        "po.fee_cents, po.credit_cents, COALESCE(ml.amount_micro, po.credit_cents * 10000) AS credit_micro, " +
+        "po.fee_cents, po.credit_cents, CASE WHEN po.status = 'paid' THEN COALESCE(ml.amount_micro, po.credit_cents * 10000) ELSE NULL END AS credit_micro, " +
         "po.currency, po.status, po.pay_type AS payment_channel, po.method, po.provider_trade_no, po.created_at, po.paid_at, " +
         "NULL AS refunded_at" + where +
         " ORDER BY po.created_at DESC, po.id DESC LIMIT ? OFFSET ?"
