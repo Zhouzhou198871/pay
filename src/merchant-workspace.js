@@ -502,6 +502,7 @@ async function supportApi(url, options={}) {
 function appendChatMessage(root,item,before=false){
   const messages=root.querySelector("#qt-chat-messages");
   const row=document.createElement("div");
+  row.dataset.messageId=item.id||"";
   row.className="qt-chat-message "+(item.sender_role==="merchant"?"is-user":item.sender_role==="ai"?"is-ai":"is-agent");
   const who=document.createElement("small");who.className="qt-chat-sender";who.textContent=item.sender_role==="merchant"?"商户":item.sender_role==="ai"?"晴天 AI 客服":item.sender_role==="admin"?"人工管理员":"系统";
   const content=document.createElement("div");content.textContent=item.content||"";
@@ -526,11 +527,16 @@ async function refreshSupportChat(){
   const root=qtSupportChatRoot;if(!root||!root.isConnected)return;
   try{
     const data=await supportApi("/api/merchant/support/tickets?limit=50");
-    const messages=root.querySelector("#qt-chat-messages");messages.replaceChildren();
-    if(data.has_more&&data.next_cursor){const older=document.createElement("button");older.type="button";older.className="qt-chat-load-older";older.textContent="加载更早消息";older.addEventListener("click",async()=>{older.disabled=true;try{const cursor=data.next_cursor;const prev=await supportApi("/api/merchant/support/tickets?limit=50&before_at="+encodeURIComponent(cursor.before_at)+"&before_id="+encodeURIComponent(cursor.before_id));const marker=messages.firstChild;prev.messages.slice().reverse().forEach(item=>appendChatMessage(root,item,true));if(!prev.has_more)older.remove();else if(prev.next_cursor){data.next_cursor=prev.next_cursor;older.disabled=false;} }catch(e){older.disabled=false;older.textContent="加载失败，点击重试"}});messages.append(older);}
-    if(!data.messages?.length){
+    const messages=root.querySelector("#qt-chat-messages");
+    let older=messages.querySelector(".qt-chat-load-older");
+    if(data.has_more&&data.next_cursor){
+      if(!older){older=document.createElement("button");older.type="button";older.className="qt-chat-load-older";older.textContent="加载更早消息";older.addEventListener("click",async()=>{older.disabled=true;try{const beforeAt=older.dataset.beforeAt,beforeId=older.dataset.beforeId;const prev=await supportApi("/api/merchant/support/tickets?limit=50&before_at="+encodeURIComponent(beforeAt)+"&before_id="+encodeURIComponent(beforeId));prev.messages.slice().reverse().forEach(item=>appendChatMessage(root,item,true));if(!prev.has_more)older.remove();else if(prev.next_cursor){older.dataset.beforeAt=prev.next_cursor.before_at;older.dataset.beforeId=prev.next_cursor.before_id;older.disabled=false;}}catch(e){older.disabled=false;older.textContent="加载失败，点击重试"}});messages.prepend(older);}
+      older.dataset.beforeAt=data.next_cursor.before_at;older.dataset.beforeId=data.next_cursor.before_id;
+    }else older?.remove();
+    const known=new Set(Array.from(messages.querySelectorAll("[data-message-id]")).map(node=>node.dataset.messageId));
+    if(!data.messages?.length&&!known.size&&!messages.querySelector(".qt-chat-message")){
       const welcome=document.createElement("div");welcome.className="qt-chat-message is-agent";welcome.textContent="您好，欢迎联系晴天支付客服。您可以发送咨询消息，或提交网站、机器人、APP 的 API 调用权限申请。";messages.append(welcome);
-    }else data.messages.forEach(item=>appendChatMessage(root,item));
+    }else data.messages.filter(item=>!known.has(item.id)).forEach(item=>appendChatMessage(root,item));
     const state=root.querySelector("#qt-chat-status");state.textContent=data.api_access_granted?"API 权限已开通":"客服工单 · 在线提交";
   }catch(error){const state=root.querySelector("#qt-chat-status");if(state)state.textContent=error.message||"消息同步失败"}
 }
