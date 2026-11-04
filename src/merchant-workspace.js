@@ -1,6 +1,6 @@
 import "./merchant-workspace.css";
 
-const ENDPOINTS = {
+const ENDPOINTS = {\n  dashboard: "/api/merchant/dashboard",
   orders: "/api/merchant/orders",
   withdrawals: "/api/merchant/withdrawals",
   ledger: "/api/merchant/ledger",
@@ -70,27 +70,27 @@ function formatYuanMicro(value, currency = "CNY") {
 }
 function renderOverview() {
   const panel = $("#merchant-panel-content");
-  const name = currentUser?.display_name || currentUser?.email?.split("@")[0] || "商户";
+  const name = currentUser?.display_name || currentUser?.username || "";
   panel.innerHTML = `
     <section class="qt-stat-grid" aria-label="数据概览">
-      <article class="qt-stat-card qt-stat-blue"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">可提现余额</span><strong id="qt-withdrawable">—</strong><small>账户币种</small></article>
-      <article class="qt-stat-card qt-stat-violet"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">待提现余额</span><strong id="qt-pending">—</strong><small>USDT</small></article>
-      <article class="qt-stat-card qt-stat-cyan"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="qt-stat-label">订单总数</span><strong id="qt-order-count">—</strong><small>笔订单</small></article>
-      <article class="qt-stat-card qt-stat-green"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 2 5-7"/></svg></span><span class="qt-stat-label">今日订单</span><strong id="qt-today-orders">—</strong><small>笔订单</small></article>
+      <article class="qt-stat-card qt-stat-blue"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">可提现余额</span><strong id="qt-withdrawable">读取中</strong><small id="qt-withdrawable-currency">账户币种</small></article>
+      <article class="qt-stat-card qt-stat-violet"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M17 6.5c0-1.7-2.2-3-5-3S7 4.8 7 6.5 9.2 9.5 12 9.5s5 1.3 5 3-2.2 3-5 3-5 1.3-5 3"/></svg></span><span class="qt-stat-label">待提现余额</span><strong id="qt-pending">读取中</strong><small id="qt-pending-currency">USDT</small></article>
+      <article class="qt-stat-card qt-stat-cyan"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span><span class="qt-stat-label">订单总数</span><strong id="qt-order-count">读取中</strong><small>笔订单</small></article>
+      <article class="qt-stat-card qt-stat-green"><span class="qt-stat-icon"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16M8 15l4-4 3 2 5-7"/></svg></span><span class="qt-stat-label">今日订单</span><strong id="qt-today-orders">读取中</strong><small>笔订单</small></article>
     </section>
     <section class="qt-card qt-merchant-card">
       <div class="qt-card-actions"><button class="qt-soft-button" data-section="docs"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/></svg>API 信息</button><button class="qt-soft-button" data-section="profile"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4z"/></svg>修改资料</button></div>
       <div class="qt-merchant-identity"><div class="qt-wallet-orb"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h.01M7 6V4a2 2 0 0 1 2-2h9"/></svg></div><h2>你好，${escapeText(name)}</h2><span class="qt-merchant-state"><i></i>商户状态：正常</span></div>
     </section>
-    <section class="qt-balance-card"><span>账户余额</span><strong id="qt-total-balance">—</strong><small>以账本最新余额为准</small></section>
+    <section class="qt-balance-card"><span>账户余额</span><strong id="qt-total-balance">读取中</strong><small>以账本最新余额为准</small></section>
     <section class="qt-card qt-channel-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg></span><div><h3>通道统计</h3><p>已配置收款通道及其统计字段</p></div></div>
       <div id="qt-channel-list"><div class="qt-data-empty">正在读取通道信息…</div></div>
     </section>
     <section class="qt-card qt-trend-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 6-7"/></svg></span><div><h3>近 7 天收入走势</h3><p>按订单支付时间统计</p></div></div>
-      <div class="qt-trend-total"><strong id="qt-seven-day-total">—</strong><span id="qt-seven-day-orders">— 单</span></div>
-      <div class="qt-chart" aria-label="近七天收入图表，暂无可用统计数据"><div class="qt-chart-columns">${lastSevenDateLabels().map(day => `<div class="qt-chart-column"><div class="qt-chart-value"><b>—</b><small>— 单</small></div><div class="qt-chart-track"><i></i></div><span>${day}</span></div>`).join("")}</div><p class="qt-chart-caption">暂无收入汇总数据，图表数值将在统计接口开放后显示</p></div>
+      <div class="qt-trend-total"><strong id="qt-seven-day-total">读取中</strong><span id="qt-seven-day-orders">读取中</span></div>
+      <div class="qt-chart" aria-label="近七天收入图表，暂无可用统计数据"><div class="qt-chart-columns">${lastSevenDateLabels().map(day => `<div class="qt-chart-column"><div class="qt-chart-value"><b>读取中</b><small>读取中</small></div><div class="qt-chart-track"><i></i></div><span>${day}</span></div>`).join("")}</div><p class="qt-chart-caption">暂无收入汇总数据，图表数值将在统计接口开放后显示</p></div>
     </section>
     <section class="qt-card qt-steps-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg></span><div><h3>新商户快速开始</h3><p>按以下步骤完成收款接入</p></div></div>
@@ -116,29 +116,90 @@ function renderOverview() {
 function escapeText(value) {
   return String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
-async function loadOverviewData() {
-  const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
-  const requests = await Promise.allSettled([
-    fetch("/api/merchant/orders?page=1&page_size=1", { credentials: "same-origin", headers: { Accept: "application/json" } }).then(r => { if (!r.ok) throw new Error("订单统计暂不可用"); return r.json(); }),
-    fetch("/api/merchant/ledger?page=1&page_size=1", { credentials: "same-origin", headers: { Accept: "application/json" } }).then(r => { if (!r.ok) throw new Error("账本暂不可用"); return r.json(); }),
-    fetch("/api/merchant/channels?page=1&page_size=50", { credentials: "same-origin", headers: { Accept: "application/json" } }).then(r => { if (!r.ok) throw new Error("通道信息暂不可用"); return r.json(); })
-  ]);
-  if (currentSection !== "overview") return;
-  if (requests[0].status === "fulfilled") setText("qt-order-count", String(requests[0].value.pagination?.total ?? "—"));
-  const ledger = requests[1].status === "fulfilled" ? requests[1].value.items?.[0] : null;
-  if (ledger && ledger.balance_after_micro != null) setText("qt-total-balance", formatYuanMicro(ledger.balance_after_micro, ledger.currency || "CNY"));
-  const channelRoot = document.getElementById("qt-channel-list");
-  if (!channelRoot) return;
-  if (requests[2].status === "fulfilled") {
-    const channels = Array.isArray(requests[2].value.items) ? requests[2].value.items : [];
-    if (!channels.length) { channelRoot.innerHTML = '<div class="qt-data-empty">当前账户尚未配置收款通道</div>'; return; }
-    channelRoot.innerHTML = channels.map((channel) => `
-      <article class="qt-channel-row">
-        <span class="qt-channel-mark">${escapeText(channel.display_name || channel.channel_code || "通")}</span>
-        <div class="qt-channel-name"><strong>${escapeText(channel.display_name || channel.channel_code || "收款通道")}</strong><small>${escapeText(channel.channel_code || "—")} · ${escapeText(channel.status || "状态未知")}</small></div>
-        <div class="qt-channel-metrics"><div><small>今日收入</small><b>—</b></div><div><small>昨日收入</small><b>—</b></div><div><small>成功率</small><b>—</b></div><div><small>通道费率</small><b>—</b></div></div>
-      </article>`).join("");
-  } else channelRoot.innerHTML = '<div class="qt-data-empty">通道信息暂时无法读取</div>';
+function formatCents(value, currency = "CNY") {
+  const amount = Number(value || 0) / 100;
+  const formatted = amount.toLocaleString("zh-CN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return currency === "CNY" ? "¥ " + formatted : formatted + " " + currency;
+}
+function loadOverviewData() {
+  const setText = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = String(value); };
+  fetch(ENDPOINTS.dashboard, { credentials: "same-origin", headers: { Accept: "application/json" } })
+    .then(async (response) => {
+      const payload = await response.json().catch(() => ({}));
+      if (response.status === 401) { location.href = "/"; return null; }
+      if (!response.ok) throw new Error(payload.error || "统计数据读取失败");
+      return payload;
+    })
+    .then((data) => {
+      if (!data || currentSection !== "overview") return;
+      const summary = data.summary || {};
+      setText("qt-order-count", Number(summary.total_orders || 0).toLocaleString("zh-CN"));
+      setText("qt-today-orders", Number(summary.today_orders || 0).toLocaleString("zh-CN"));
+
+      const balances = Array.isArray(data.balances) ? data.balances : [];
+      const balance = balances.find((item) => item.currency === "USDT") || balances[0] || { currency: "USDT", available_micro: 0, pending_micro: 0, total_micro: 0 };
+      const currency = balance.currency || "USDT";
+      setText("qt-withdrawable", formatYuanMicro(balance.available_micro || 0, currency));
+      setText("qt-pending", formatYuanMicro(balance.pending_micro || 0, currency));
+      setText("qt-total-balance", formatYuanMicro(balance.total_micro || 0, currency));
+      setText("qt-withdrawable-currency", currency);
+      setText("qt-pending-currency", currency);
+
+      const channelRoot = document.getElementById("qt-channel-list");
+      if (channelRoot) {
+        const channels = Array.isArray(data.channels) ? data.channels : [];
+        if (!channels.length) {
+          channelRoot.innerHTML = '<div class="qt-data-empty">数据库中暂无已配置或产生订单的收款通道</div>';
+        } else {
+          channelRoot.innerHTML = channels.map((channel) => {
+            const title = escapeText(channel.display_name || channel.channel_code || "收款通道");
+            const code = escapeText(channel.channel_code || "");
+            const status = escapeText(channel.status || "");
+            const rate = Number(channel.success_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
+            const feeRate = Number(channel.fee_rate || 0).toFixed(2).replace(/\\.?0+$/, "");
+            return `
+              <article class="qt-channel-row">
+                <span class="qt-channel-mark">${title.slice(0,1)}</span>
+                <div class="qt-channel-name"><strong>${title}</strong><small>${code} · ${status}</small></div>
+                <div class="qt-channel-metrics">
+                  <div><small>今日收入</small><b>${formatCents(channel.today_amount_cents, channel.currency || "CNY")}</b></div>
+                  <div><small>昨日收入</small><b>${formatCents(channel.yesterday_amount_cents, channel.currency || "CNY")}</b></div>
+                  <div><small>通道成功率</small><b class="qt-success-text">${rate}%</b></div>
+                  <div><small>通道费率</small><b>${feeRate}%</b></div>
+                </div>
+              </article>`;
+          }).join("");
+        }
+      }
+
+      const trend = data.trend || {};
+      setText("qt-seven-day-total", formatCents(trend.total_amount_cents || 0));
+      setText("qt-seven-day-orders", Number(trend.total_orders || 0).toLocaleString("zh-CN") + " 单");
+      const chart = document.querySelector(".qt-chart-columns");
+      if (chart) {
+        const days = Array.isArray(trend.days) ? trend.days : [];
+        const maxAmount = Math.max(0, ...days.map((day) => Number(day.amount_cents || 0)));
+        chart.innerHTML = days.map((day) => {
+          const amount = Number(day.amount_cents || 0);
+          const height = maxAmount > 0 ? Math.max(4, amount / maxAmount * 100) : 3;
+          const dateLabel = String(day.day || "").slice(5).replace("-", "-");
+          return `<div class="qt-chart-column">
+            <div class="qt-chart-value"><b>${formatCents(amount)}</b><small>${Number(day.orders || 0)} 单</small></div>
+            <div class="qt-chart-track"><i style="height:${height}%"></i></div>
+            <span>${escapeText(dateLabel)}</span>
+          </div>`;
+        }).join("");
+      }
+      const caption = document.querySelector(".qt-chart-caption");
+      if (caption) caption.textContent = "数据来自 D1 已支付订单，按支付时间统计；无订单日期按 0 展示。";
+    })
+    .catch((error) => {
+      ["qt-withdrawable","qt-pending","qt-order-count","qt-today-orders","qt-total-balance","qt-seven-day-total","qt-seven-day-orders"].forEach((id) => setText(id, "读取失败"));
+      const root = document.getElementById("qt-channel-list");
+      if (root) root.innerHTML = '<div class="qt-data-empty">统计数据读取失败，请刷新页面重试</div>';
+      const caption = document.querySelector(".qt-chart-caption");
+      if (caption) caption.textContent = error.message || "统计数据暂时无法读取";
+    });
 }
 function renderProfile() {
   const panel = $("#merchant-panel-content"); panel.innerHTML = "";
