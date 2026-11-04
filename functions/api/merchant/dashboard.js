@@ -130,7 +130,7 @@ export async function onRequestGet({ request, env }) {
       balances: balances.results || [],
       channels: channels.results || [],
       trend: {
-        total_amount_cents: totalAmountCents,
+        total_amount_micro: totalAmountMicro,
         total_orders: totalTrendOrders,
         days
       }
