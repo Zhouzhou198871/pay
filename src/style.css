@@ -178,3 +178,106 @@ body.merchant-menu-open{overflow:hidden}
 .primary-button.is-loading span:before{content:"";width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:qt-auth-spin .7s linear infinite}
 @keyframes qt-auth-spin{to{transform:rotate(360deg)}}
 @media(max-width:380px){.remember-me{font-size:10px}.login-meta{gap:8px}}
+
+
+/* Drawer account footer: fixed-height, single-line identity and generous logout target */
+.drawer-user{
+  flex:0 0 82px;
+  height:82px;
+  min-height:82px;
+  max-height:82px;
+  padding:12px 13px;
+  gap:11px;
+  overflow:hidden;
+  box-sizing:border-box;
+}
+.drawer-user-avatar{width:44px;height:44px;flex:0 0 44px;font-size:22px}
+.drawer-user-copy{flex:1 1 auto;min-width:0;max-width:calc(100% - 112px);overflow:hidden;gap:4px}
+.drawer-user-copy b,.drawer-user-copy small{
+  display:block;
+  width:100%;
+  min-width:0;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.drawer-user-copy b{font-size:14px;line-height:1.35}
+.drawer-user-copy small{font-size:11px;line-height:1.35}
+.drawer-user button{
+  flex:0 0 46px;
+  width:46px;
+  height:46px;
+  min-width:46px;
+  margin:0 0 0 auto;
+  padding:0;
+  display:grid;
+  place-items:center;
+  align-self:center;
+  border:1px solid #e2ebf2;
+  border-radius:13px;
+  background:#fff;
+  color:#71808d;
+  font-size:23px;
+  line-height:1;
+  cursor:pointer;
+  transition:background .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+}
+.drawer-user button:hover{background:#eaf5fb;border-color:#cfe6f4;color:#1688c5}
+.drawer-user button:focus-visible{outline:3px solid rgba(22,136,197,.22);outline-offset:2px}
+.drawer-user button:active{transform:scale(.96)}
+
+/* Embedded developer documentation center */
+.qt-docs-hub{display:flex;flex-direction:column;gap:16px;min-width:0;width:100%}
+.qt-docs-hero{
+  width:100%;min-height:142px;padding:25px 28px;display:flex;align-items:center;gap:20px;text-align:left;
+  border:1px solid #e4edf5;border-radius:22px;background:linear-gradient(112deg,#f5fbff 0%,#fff 66%,#f5faff 100%);
+  box-shadow:0 8px 22px rgba(43,76,108,.055);color:#1c3552;cursor:pointer;
+  transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease
+}
+.qt-docs-hero:hover{transform:translateY(-2px);border-color:#cfe4f5;box-shadow:0 13px 28px rgba(43,96,143,.1)}
+.qt-docs-hero:focus-visible,.qt-docs-shortcuts button:focus-visible{outline:3px solid rgba(31,126,205,.2);outline-offset:3px}
+.qt-docs-hero-icon{width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;border-radius:18px;background:#e5f3fc;color:#2189c4;font-size:28px;font-weight:750}
+.qt-docs-hero-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:5px}
+.qt-docs-hero-copy small{color:#4994c1;font-size:10px;font-weight:800;letter-spacing:.16em}
+.qt-docs-hero-copy strong{color:#1e3551;font-size:21px;font-weight:800;line-height:1.35}
+.qt-docs-hero-copy em{color:#8191a1;font-size:12px;font-style:normal;line-height:1.6}
+.qt-docs-hero-action{flex:0 0 auto;display:flex;align-items:center;gap:9px;padding:10px 14px;border-radius:10px;background:#e8f4fb;color:#2485ba;font-size:12px;font-weight:750}
+.qt-docs-hero-action b{font-size:16px}
+.qt-docs-shortcuts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.qt-docs-shortcuts button{min-width:0;min-height:82px;padding:14px 16px;display:grid;grid-template-columns:34px minmax(0,1fr) 14px;grid-template-rows:auto auto;align-items:center;column-gap:10px;text-align:left;border:1px solid #e7edf3;border-radius:15px;background:#fff;color:#334b65;cursor:pointer;transition:border-color .18s ease,background .18s ease}
+.qt-docs-shortcuts button:hover{border-color:#c9e2f3;background:#fafdff}
+.qt-docs-shortcuts button>span{grid-row:1/3;width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:#edf6fc;color:#318bbd;font-size:11px;font-weight:800}
+.qt-docs-shortcuts button>b{min-width:0;color:#314a65;font-size:13px;font-weight:750;line-height:1.4}
+.qt-docs-shortcuts button>small{min-width:0;color:#93a0ad;font-size:10px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qt-docs-shortcuts button>i{grid-column:3;grid-row:1/3;color:#7da8c6;font-size:20px;font-style:normal}
+.qt-docs-viewer{display:none;min-width:0;overflow:hidden;border:1px solid #e4ebf2;border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(42,77,112,.07);scroll-margin-top:24px}
+.qt-docs-viewer.is-open{display:block;animation:qt-docs-reveal .24s ease both}
+@keyframes qt-docs-reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.qt-docs-viewer-head{height:58px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #e9eff4;background:#fff}
+.qt-docs-viewer-head>div{min-width:0;display:flex;align-items:center;gap:9px}
+.qt-docs-viewer-head>div>i{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#20aa7a;box-shadow:0 0 0 4px #e9f8f1}
+.qt-docs-viewer-head strong{color:#314b67;font-size:12px;font-weight:750}
+.qt-docs-viewer-head small{padding-left:9px;border-left:1px solid #e3eaf0;color:#96a2ae;font-size:10px}
+.qt-docs-viewer-head>a{flex:0 0 auto;color:#3687b7;font-size:11px;font-weight:700;text-decoration:none}
+.qt-docs-viewer iframe{display:block;width:100%;height:min(78vh,980px);min-height:620px;border:0;background:#fff}
+@media(max-width:700px){
+  .drawer-user{flex-basis:76px;height:76px;min-height:76px;max-height:76px;padding:10px;gap:9px}
+  .drawer-user-avatar{width:40px;height:40px;flex-basis:40px}
+  .drawer-user-copy{max-width:calc(100% - 100px)}
+  .drawer-user-copy b{font-size:13px}
+  .drawer-user-copy small{font-size:10px}
+  .drawer-user button{width:44px;height:44px;min-width:44px;flex-basis:44px}
+  .qt-docs-hero{min-height:124px;padding:18px 16px;gap:12px;border-radius:17px}
+  .qt-docs-hero-icon{width:46px;height:46px;flex-basis:46px;border-radius:14px;font-size:23px}
+  .qt-docs-hero-copy strong{font-size:17px}
+  .qt-docs-hero-copy em{font-size:11px}
+  .qt-docs-hero-action{padding:8px 9px;font-size:10px}
+  .qt-docs-shortcuts{grid-template-columns:1fr;gap:9px}
+  .qt-docs-shortcuts button{min-height:70px}
+  .qt-docs-viewer{border-radius:14px}
+  .qt-docs-viewer-head{height:52px;padding:0 12px}
+  .qt-docs-viewer-head small{display:none}
+  .qt-docs-viewer iframe{height:76vh;min-height:560px}
+}
