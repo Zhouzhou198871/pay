@@ -26,7 +26,7 @@ latest_ledger AS (
   FROM merchant_ledger WHERE user_id = ?
 ),
 pending AS (
-  SELECT currency, SUM(amount_micro) AS pending_micro
+  SELECT currency, SUM(amount_micro - fee_micro) AS pending_micro
   FROM merchant_withdrawals
   WHERE user_id = ? AND status IN ('pending', 'approved', 'processing')
   GROUP BY currency
