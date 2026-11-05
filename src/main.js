@@ -317,7 +317,7 @@ async function submitAuth(event) {
     location.href = "/dashboard";
   } catch (error) {
     resetCaptcha();
-    showToast(error.message || "操作失败，请稍后重试", "error");
+    showToast("网络繁忙，请稍后重试。", "error");
     button.disabled = false;
     button.classList.remove("is-loading");
     button.querySelector("span").textContent = mode === "register" ? "创建账户" : "登录账户";
