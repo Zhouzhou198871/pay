@@ -3,7 +3,7 @@ import { renderAdmin } from "./admin.js";
 import "./merchant-workspace.js";
 import { renderPaypage } from "./paypage.js";
 const app = document.querySelector("#app");
-const LOGO = "/favicon.svg";
+const LOGO = "/favicon.svg?v=20261106";
 let mode = "login";
 let countdown = 0;
 let timer = null;
