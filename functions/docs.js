@@ -85,7 +85,7 @@ merchant_private_key=商户私钥</code></pre><p>下载后修改 epay.config.pro
   "out_trade_no": "ORDER202611040001",
   "amount": "12.50",
   "pay_type": "alipay",
-  "notify_url": "https://merchant.example.com/payment/notify"
+  "notify_url": "https://your-merchant-domain.com/payment/notify"
 }</code></pre></div></div>
 <div class="step-card"><span>03</span><div><h3>第三步：发送请求</h3><p>调用 SDK 的 V1 或 V2 下单方法，请求会发送到对应版本接口。只有 HTTP 201 且响应 <code>code</code> 为 <code>SUCCESS</code> 才表示订单创建成功；订单创建不等同于用户已付款。请勿将当前尚未开放的商户异步通知当作已交付能力。</p><pre><code class="language-js">import { QingtianPayClient } from './index.js';
 
@@ -99,9 +99,9 @@ const result = await client.createOrderV1({
   out_trade_no: 'ORDER202611040001',
   amount: '12.50',
   pay_type: 'alipay',
-  notify_url: 'https://merchant.example.com/payment/notify'
+  notify_url: 'https://your-merchant-domain.com/payment/notify'
 });
-console.log(result.data.trade_no);</code></pre></div></div>
+document.querySelector('#order-number').textContent = result.data.trade_no;</code></pre></div></div>
 </section>
 <section id="quickstart"><div class="section-kicker">01 · GET STARTED</div><h2>接入指引</h2><p class="lead">完成商户身份初始化、保存密钥，并在服务端发起签名请求，即可接入下单接口。</p>
 <h3>获取商户号与 V1 MD5 密钥</h3><ol><li>登录晴天支付，进入「商户工作台 → 个人资料 → API 信息」。</li><li>首次读取商户资料时，平台会为当前账户初始化商户记录，并分配六位 <code>merchant_no</code> 与 40 位十六进制 <code>api_key</code>。</li><li>商户号用于标识商户；V1 MD5 密钥用于请求签名。请只在您自己的后端服务保存密钥。</li><li>如需轮换 V1 密钥，在商户资料接口执行 <code>rotate_api_key</code>；旧密钥立即失效。</li></ol>
