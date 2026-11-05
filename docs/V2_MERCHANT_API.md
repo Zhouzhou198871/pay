@@ -38,7 +38,7 @@
   "out_trade_no": "ORDER202611040001",
   "amount": "12.50",
   "pay_type": "alipay",
-  "notify_url": "https://merchant.example.com/payment/notify",
+  "notify_url": "https://your-merchant-domain.com/payment/notify",
   "timestamp": "1793750000",
   "sign": "BASE64_SIGNATURE"
 }
@@ -55,7 +55,7 @@
 示例待签名字符串：
 
 ```text
-amount=12.50&merchant_no=123456&notify_url=https://merchant.example.com/payment/notify&out_trade_no=ORDER202611040001&pay_type=alipay&timestamp=1793750000
+amount=12.50&merchant_no=123456&notify_url=https://your-merchant-domain.com/payment/notify&out_trade_no=ORDER202611040001&pay_type=alipay&timestamp=当前时间戳
 ```
 
 签名必须在商户服务端生成。请确保签名字符串的字段值与实际提交的 JSON 字段值完全一致。
@@ -72,7 +72,7 @@ const params = {
   out_trade_no: 'ORDER202611040001',
   amount: '12.50',
   pay_type: 'alipay',
-  notify_url: 'https://merchant.example.com/payment/notify',
+  notify_url: 'https://your-merchant-domain.com/payment/notify',
   timestamp: String(Math.floor(Date.now() / 1000))
 };
 const canonical = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&');
