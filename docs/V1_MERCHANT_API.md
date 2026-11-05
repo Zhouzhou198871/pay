@@ -37,7 +37,7 @@ Accept: application/json
   "out_trade_no": "ORDER202611040001",
   "amount": "12.50",
   "pay_type": "alipay",
-  "notify_url": "https://merchant.example.com/payment/notify",
+  "notify_url": "https://your-merchant-domain.com/payment/notify",
   "timestamp": "当前 Unix 秒级时间戳",
   "sign": "按下方规则生成的小写 MD5"
 }
@@ -66,7 +66,7 @@ Accept: application/json
 示意：
 
 ```text
-amount=12.50&merchant_no=123456&notify_url=https://merchant.example.com/payment/notify&out_trade_no=ORDER202611040001&pay_type=alipay&timestamp=当前时间戳&key=你的api_key
+amount=12.50&merchant_no=123456&notify_url=https://your-merchant-domain.com/payment/notify&out_trade_no=ORDER202611040001&pay_type=alipay&timestamp=当前时间戳&key=你的api_key
 ```
 
 `sign = MD5(上面完整字符串)`
