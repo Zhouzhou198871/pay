@@ -4,7 +4,7 @@ const esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({"&":"&am
 const request = async (method, body) => {
   const response = await fetch("/api/merchant/profile", { method, credentials:"same-origin", headers:{Accept:"application/json", ...(body?{"Content-Type":"application/json"}:{})}, ...(body?{body:JSON.stringify(body)}:{}) });
   const data = await response.json().catch(()=>({}));
-  if (!response.ok) throw new Error(data.error || "请求失败，请稍后重试。");
+  if (!response.ok) throw new Error("网络繁忙，请稍后重试。");
   return data;
 };
 const toast = (message, ok=false) => {
@@ -19,7 +19,7 @@ async function renderProfileCenter() {
   panel.innerHTML='<div class="section-loading">正在读取商户资料…</div>';
   let data;
   try{data=await request("GET");}
-  catch(error){panel.innerHTML='<div class="section-empty"><h3>资料读取失败</h3><p>'+esc(error.message)+'</p><button class="record-retry" id="qtpc-retry">重新读取</button></div>';panel.querySelector("#qtpc-retry")?.addEventListener("click",renderProfileCenter);return;}
+  catch(error){panel.innerHTML='<div class="section-empty"><h3>资料读取暂不可用</h3><p>网络繁忙，请稍后重试。</p><button class="record-retry" id="qtpc-retry">重新读取</button></div>';panel.querySelector("#qtpc-retry")?.addEventListener("click",renderProfileCenter);return;}
   const user=data.user||{},merchant=data.merchant||{};
   const apiBase=location.origin;
   panel.innerHTML=`
@@ -110,21 +110,21 @@ async function renderProfileCenter() {
     if(new_password&&!current_password){msg.className="qtpc-error";msg.textContent="修改登录密码需要填写当前密码。";return;}
     button.disabled=true;button.textContent="保存中…";
     try{await request("PATCH",{action:"account",display_name,current_password,new_password});msg.className="qtpc-success";msg.textContent="账户资料已保存。";toast("账户资料已保存",true);if(new_password){form.reset();$("#qtpc-name",panel).value=display_name;}}
-    catch(err){msg.className="qtpc-error";msg.textContent=err.message;toast(err.message);}
+    catch(err){msg.className="qtpc-error";msg.textContent="网络繁忙，请稍后重试。";toast("网络繁忙，请稍后重试。");}
     finally{button.disabled=false;button.textContent="保存账户资料";}
   });
   panel.querySelector("#qtpc-payout")?.addEventListener("submit",async e=>{
     e.preventDefault();const form=e.currentTarget,button=form.querySelector("button[type=submit]"),msg=form.querySelector("#qtpc-payout-message");
     button.disabled=true;button.textContent="保存中…";
     try{await request("PATCH",{action:"payout",usdt_address:form.usdt_address.value.trim(),usdt_network:form.usdt_network.value});msg.className="qtpc-success";msg.textContent="USDT 提款地址已保存。";toast("USDT 提款地址已保存",true);const hint=panel.querySelector("#qtpc-password-hint");hint.innerHTML="<strong>提现安全验证</strong>已绑定提款地址，可设置支付密码。";panel.querySelector("#qtpc-withdraw-password").hidden=false;}
-    catch(err){msg.className="qtpc-error";msg.textContent=err.message;toast(err.message);}
+    catch(err){msg.className="qtpc-error";msg.textContent="网络繁忙，请稍后重试。";toast("网络繁忙，请稍后重试。");}
     finally{button.disabled=false;button.textContent="确定修改";}
   });
   panel.querySelector("#qtpc-withdraw-password")?.addEventListener("submit",async e=>{
     e.preventDefault();const form=e.currentTarget,button=form.querySelector("button[type=submit]"),password=$("#qtpc-withdraw-password-value",panel).value,current=$("#qtpc-current-withdraw-password",panel)?.value||"";
     button.disabled=true;button.textContent="保存中…";
     try{await request("PATCH",{action:"withdraw_password",withdraw_password:password,current_withdraw_password:current});panel.querySelector("#qtpc-password-state").textContent="已设置";panel.querySelector("#qtpc-password-state").classList.remove("off");form.reset();toast("支付密码已安全保存",true);}
-    catch(err){toast(err.message);}
+    catch(err){toast("网络繁忙，请稍后重试。");}
     finally{button.disabled=false;button.textContent=merchant.withdraw_password_set?"修改支付密码":"设置支付密码";}
   });
   panel.querySelector("#qtpc-v2-generate")?.addEventListener("click",async()=>{
@@ -139,7 +139,7 @@ async function renderProfileCenter() {
       panel.querySelector("#qtpc-v2-private").value=result.v2_private_key_once;
       button.textContent="重置 V2 RSA 密钥对";
       toast("V2 密钥对已生成。私钥仅展示本次，请立即复制保存。",true);
-    }catch(err){toast(err.message);button.textContent=configured?"重置 V2 RSA 密钥对":"生成 V2 RSA 密钥对";}
+    }catch(err){toast("网络繁忙，请稍后重试。");button.textContent=configured?"重置 V2 RSA 密钥对":"生成 V2 RSA 密钥对";}
     finally{button.disabled=false;}
   });
   panel.querySelector("#qtpc-v2-copy-private")?.addEventListener("click",async()=>{
@@ -150,7 +150,7 @@ async function renderProfileCenter() {
     if(!confirm("重置后旧 MD5 密钥立即失效，确认继续？"))return;
     const button=panel.querySelector("#qtpc-rotate");button.disabled=true;button.textContent="重置中…";
     try{const result=await request("PATCH",{action:"rotate_api_key"});panel.querySelector("#qtpc-api-key").textContent=result.api_key;toast("商户 MD5 密钥已重置",true);}
-    catch(err){toast(err.message);}
+    catch(err){toast("网络繁忙，请稍后重试。");}
     finally{button.disabled=false;button.textContent="重置商户 MD5 密钥";}
   });
 }
