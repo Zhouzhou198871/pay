@@ -3,7 +3,8 @@ const page = `<!doctype html>
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#ffffff"><meta name="description" content="晴天支付开放平台 API 文档：商户接入、V1 MD5、V2 RSA2、统一下单、通知验签与错误码。">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">\n<title>开发者文档 - 晴天支付</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>开发者文档 - 晴天支付</title>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <style>
