@@ -627,8 +627,8 @@ async function renderAdminSupportTickets(){
     approve.onclick=()=>review("approve","");reject.onclick=()=>{const note=window.prompt("请输入拒绝原因（至少 3 个字符）");if(note)review("reject",note)};
     actions.append(approve,reject);
    }else if(data.ticket.api_access_granted){const granted=document.createElement("span");granted.className="qt-access-granted";granted.textContent="该商户 API 权限已开通";actions.append(granted)}
-   detail.querySelector("#qt-admin-ticket-reply").onsubmit=async e=>{e.preventDefault();const textarea=e.currentTarget.querySelector("textarea"),button=e.currentTarget.querySelector("button");button.disabled=true;try{await supportApi("/api/admin/support/tickets",{method:"POST",body:JSON.stringify({ticket_id:id,message:textarea.value.trim()})});textarea.value="";detail.querySelector("#qt-admin-ticket-feedback").textContent="回复已发送";await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"发送失败"}finally{button.disabled=false}};
-   async function review(action,note){const buttons=actions.querySelectorAll("button");buttons.forEach(b=>b.disabled=true);try{const result=await supportApi("/api/admin/support/tickets/"+encodeURIComponent(id)+"/review",{method:"POST",body:JSON.stringify({action,note})});detail.querySelector("#qt-admin-ticket-feedback").textContent=result.message;await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"审批失败";buttons.forEach(b=>b.disabled=false)}}
+   detail.querySelector("#qt-admin-ticket-reply").onsubmit=async e=>{e.preventDefault();const textarea=e.currentTarget.querySelector("textarea"),button=e.currentTarget.querySelector("button");button.disabled=true;try{await supportApi("/api/admin/support/tickets",{method:"POST",body:JSON.stringify({ticket_id:id,message:textarea.value.trim()})});textarea.value="";detail.querySelector("#qt-admin-ticket-feedback").textContent="回复已发送";await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent="网络繁忙，请稍后重试。"}finally{button.disabled=false}};
+   async function review(action,note){const buttons=actions.querySelectorAll("button");buttons.forEach(b=>b.disabled=true);try{const result=await supportApi("/api/admin/support/tickets/"+encodeURIComponent(id)+"/review",{method:"POST",body:JSON.stringify({action,note})});detail.querySelector("#qt-admin-ticket-feedback").textContent=result.message;await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent="网络繁忙，请稍后重试。";buttons.forEach(b=>b.disabled=false)}}
   }catch(error){detail.textContent="网络繁忙，请稍后重试。"}
  }
  panel.querySelector("#qt-admin-ticket-refresh").onclick=loadList;await loadList();
@@ -712,7 +712,7 @@ function initWorkspace() {
       if (merchantLabel) merchantLabel.textContent = merchantNo ? "商户号 · " + merchantNo : "商户资料待初始化";
     }).catch(() => { const merchantLabel = $("#drawer-user-merchant"); if (merchantLabel) merchantLabel.textContent = "商户账户"; });
     selectSection("overview");
-  }).catch((error) => showEmpty("账户信息读取失败", error.message || "请刷新页面重试。"));
+  }).catch((error) => showEmpty("账户信息暂不可用", "网络繁忙，请稍后重试。"));
 
   document.addEventListener("click", (event) => {
     const target = event.target instanceof Element ? event.target : null;
