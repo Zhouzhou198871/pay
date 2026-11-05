@@ -87,7 +87,7 @@ function renderOverview() {
       <div class="qt-card-actions"><button class="qt-soft-button" data-section="docs"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21z"/><path d="M4 5.5v13A2.5 2.5 0 0 1 6.5 16H20"/></svg>API 信息</button><button class="qt-soft-button" data-section="profile"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L9 17l-4 1 1-4z"/></svg>修改资料</button></div>
       <div class="qt-merchant-identity"><div class="qt-wallet-orb"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 9h18M16 14h.01M7 6V4a2 2 0 0 1 2-2h9"/></svg></div><h2>你好，${escapeText(name)}</h2><span class="qt-merchant-state" id="qt-merchant-status"><i></i>正在读取商户状态</span></div>
     </section>
-    <section class="qt-balance-card"><div><span>账户余额</span><strong id="qt-total-balance">读取中</strong><small>以账本最新余额为准</small></div><div class="qt-balance-actions"><button type="button" class="qt-soft-button" id="qt-open-withdraw">申请提现</button><button type="button" class="qt-text-button" data-section="ledger">查看资金明细 →</button></div></section>
+    <section class="qt-balance-card"><div class="qt-balance-primary"><span class="qt-balance-label">账户余额 (USDT)</span><strong class="qt-balance-value"><span id="qt-total-balance-value">读取中</span><small>USDT</small></strong></div><div class="qt-balance-actions"><button type="button" class="qt-soft-button" id="qt-open-withdraw">申请提现</button><button type="button" class="qt-text-button" data-section="ledger">查看资金明细 →</button></div></section>
     <dialog class="qt-admin-dialog" id="qt-withdraw-dialog"><form id="qt-withdraw-form" method="dialog"><div class="qt-dialog-heading"><div><small>USDT PAYOUT</small><h3>申请提现</h3></div><button type="button" class="qt-dialog-close" data-close-withdraw aria-label="关闭">×</button></div><p class="qt-dialog-hint">提现申请将从可用余额扣除，请确认地址和金额无误。</p><div class="qt-dialog-address" id="qt-withdraw-address">正在读取提现地址…</div><label for="qt-withdraw-amount">提现金额（USDT）</label><input id="qt-withdraw-amount" name="amount" inputmode="decimal" placeholder="例如 25.5" pattern="\\d+(\\.\\d{1,6})?" required><label for="qt-withdraw-password">支付密码</label><input id="qt-withdraw-password" name="withdraw_password" type="password" autocomplete="current-password" minlength="8" maxlength="64" placeholder="输入支付密码" required><p class="qt-dialog-feedback" id="qt-withdraw-feedback" role="status"></p><div class="qt-dialog-actions"><button type="button" class="qt-outline-button" data-close-withdraw>取消</button><button type="submit" class="qt-primary-button">提交申请</button></div></form></dialog>
     <section class="qt-card qt-channel-card">
       <div class="qt-section-title"><span class="qt-title-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h3"/></svg></span><div><h3>通道统计</h3><p>收入、成功率与实际费率均按 D1 订单统计</p></div></div>
@@ -183,7 +183,7 @@ function loadOverviewData() {
       const currency = balance.currency;
       setText("qt-withdrawable", formatYuanMicro(balance.available_micro || 0, currency));
       setText("qt-pending", formatYuanMicro(balance.pending_micro || 0, currency));
-      setText("qt-total-balance", formatYuanMicro(balance.total_micro || 0, currency));
+      setText("qt-total-balance-value", formatYuanMicro(balance.total_micro || 0, currency).replace(/\\s+USDT$/, ""));
       setText("qt-withdrawable-currency", currency);
       setText("qt-pending-currency", currency);
 
