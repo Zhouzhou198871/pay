@@ -72,12 +72,12 @@ function signV2(params, privateKeyPem) {
     "amount": "12.5",
     "currency": "USDT",
     "pay_type": "alipay",
-    "status": "unpaid",
+    "status": "pending",
     "created_at": 1793750000,
     "expires_at": 1793750900,
     "checkout_url": "支付通道返回的结账地址"
   }
-}</code></pre></div><div class="note warn">当前响应字段为 <code>trade_no</code>（平台流水号），不是 <code>order_no</code>。当前实现返回的 <code>checkout_url</code> 是支付通道结账地址；独立晴天收银台仍在开发中。请勿假定此字段已是晴天支付自有收银台链接。</div></div>
+}</code></pre></div><div class="note warn">当前响应字段为 <code>trade_no</code>（平台流水号），不是 <code>order_no</code>。当前实现返回的 <code>checkout_url</code> 是支付通道结账地址；晴天支付收银台地址请以当前接口响应中的 checkout_url 为准。</div></div>
 <div class="sub" id="query"><div class="endpoint-head"><h3>查询订单</h3><span class="method planned">GET · 规划中</span></div><div class="path">/api/v1/payments/{order_no}</div><p>预期用于按平台订单号查询订单状态，返回 <code>pending</code>、<code>paid</code> 或 <code>failed</code>。<b>此查询路由当前尚未在生产代码中实现，暂不可调用。</b>当前平台流水字段为 <code>trade_no</code>，后续正式开放时会同步公布鉴权方式、参数及响应结构。</p></div>
 <div class="sub" id="notify"><div class="endpoint-head"><h3>异步通知（回调）</h3><span class="method planned">商户通知投递 · 规划中</span></div><p>商户下单时提供的 <code>notify_url</code> 是预留通知地址。平台向商户推送订单结果的通用通知投递当前尚未启用，因此不能将其视为已经上线的回调服务。</p><p>规划中的通知字段如下，正式开放前以平台实际签名协议为准：</p><div class="table-wrap"><table><thead><tr><th>字段</th><th>说明</th></tr></thead><tbody><tr><td>merchant_no</td><td>商户号</td></tr><tr><td>trade_no</td><td>平台订单流水号</td></tr><tr><td>out_trade_no</td><td>商户订单号</td></tr><tr><td>amount</td><td>订单金额（USDT）</td></tr><tr><td>currency</td><td>币种</td></tr><tr><td>status</td><td><code>paid</code> / <code>failed</code></td></tr><tr><td>timestamp</td><td>通知时间，Unix 秒</td></tr><tr><td>sign_type</td><td><code>RSA2</code></td></tr><tr><td>sign</td><td>平台 RSA2 签名（Base64）</td></tr></tbody></table></div><div class="codebox"><div class="codehead"><span>JSON · CALLBACK PROPOSAL</span><button class="copy" type="button">复制代码</button></div><pre><code class="language-json">{
   "merchant_no": "123456",
