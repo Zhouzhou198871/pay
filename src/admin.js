@@ -27,6 +27,6 @@ export async function renderAdmin(){
   window.setInterval(heartbeat,30000);
   selectTab("overview");
  }catch(e){
-  app.innerHTML='<main class="qt-admin-denied"><h1>晴天支付管理后台</h1><p>'+esc(e.message)+'</p><a href="/">返回登录</a></main>';
+  app.innerHTML='<main class="qt-admin-denied"><h1>晴天支付管理后台</h1><p>'+esc(/管理员权限/.test(String(e.message||''))?'当前账户没有管理员权限。':'网络繁忙，请稍后重试。')+'</p><a href="/">返回登录</a></main>';
  }
 }
