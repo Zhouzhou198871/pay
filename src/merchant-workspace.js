@@ -22,7 +22,7 @@ const LABELS = {
   "support-tickets": ["客服工单", "客服工单", "商户咨询消息与 API 权限申请审批"]
 };
 const STATUS = {
-  pending: "处理中", paid: "已支付", failed: "失败", cancelled: "已取消",
+  pending: "待支付", paid: "已支付", failed: "失败", cancelled: "已取消",
   refunded: "已退款", approved: "已通过", processing: "打款处理中",
   rejected: "已拒绝", active: "已启用", disabled: "已停用",
   credit: "收入", debit: "支出"
@@ -41,7 +41,9 @@ const money = (micro, currency = "USDT") => {
 const date = (seconds) => {
   const n = Number(seconds);
   if (!Number.isFinite(n) || n <= 0) return "—";
-  return new Intl.DateTimeFormat("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(n * 1000));
+  const d = new Date(n * 1000);
+  if (Number.isNaN(d.getTime())) return "—";
+  return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).format(d);
 };
 const statusText = (value) => STATUS[value] || esc(value);
 
@@ -133,7 +135,7 @@ function renderOverview() {
       feedback.textContent = payload.message || "提现申请已提交";
       withdrawForm.reset();
       window.setTimeout(() => { withdrawDialog?.close(); selectSection("overview"); }, 900);
-    } catch (error) { feedback.textContent = error.message || "网络异常，请重试"; }
+    } catch (error) { feedback.textContent = "网络繁忙，请稍后重试。"; }
     finally { submit.disabled = false; }
   });
   panel.querySelectorAll("[data-copy-value]").forEach((button) => button.addEventListener("click", async () => {
@@ -227,7 +229,7 @@ function loadOverviewData() {
       const root = document.getElementById("qt-channel-list");
       if (root) root.innerHTML = '<div class="qt-data-empty">统计数据读取失败，请刷新页面重试</div>';
       const caption = document.querySelector(".qt-chart-caption");
-      if (caption) caption.textContent = error.message || "统计数据暂时无法读取";
+      if (caption) caption.textContent = "网络繁忙，请稍后重试。";
     });
 }
 function renderProfile() {
@@ -352,13 +354,13 @@ fetch("${baseUrl}/api/merchant/dashboard", {
     event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-payout-settings-feedback"); const button = form.querySelector('button[type="submit"]');
     button.disabled = true; feedback.textContent = "正在保存…";
     try { const response = await fetch("/api/merchant/profile", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "payout", usdt_network: panel.querySelector("#qt-payout-network").value, usdt_address: panel.querySelector("#qt-payout-address").value.trim() }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "提现地址已保存"; }
-    catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
+    catch (error) { feedback.textContent = "网络繁忙，请稍后重试。"; } finally { button.disabled = false; }
   });
   panel.querySelector("#qt-withdraw-password-settings-form")?.addEventListener("submit", async (event) => {
     event.preventDefault(); const form = event.currentTarget; const feedback = panel.querySelector("#qt-withdraw-password-feedback"); const button = form.querySelector('button[type="submit"]');
     button.disabled = true; feedback.textContent = "正在保存…";
     try { const response = await fetch("/api/merchant/profile", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ action: "withdraw_password", current_withdraw_password: panel.querySelector("#qt-current-withdraw-password").value, withdraw_password: panel.querySelector("#qt-new-withdraw-password").value }) }); const payload = await response.json().catch(() => ({})); if (!response.ok) throw new Error(payload.error || "保存失败"); feedback.textContent = payload.message || "支付密码已保存"; form.reset(); }
-    catch (error) { feedback.textContent = error.message || "网络异常，请重试"; } finally { button.disabled = false; }
+    catch (error) { feedback.textContent = "网络繁忙，请稍后重试。"; } finally { button.disabled = false; }
   });
   panel.querySelectorAll("[data-copy-value],[data-copy-target]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -481,7 +483,7 @@ async function loadRecords(key, page = 1) {
     panel.innerHTML = "";
     const box = document.createElement("div"); box.className = "section-empty";
     const title = document.createElement("h3"); title.textContent = "数据读取失败";
-    const message = document.createElement("p"); message.textContent = error.message || "网络异常，请稍后重试。";
+    const message = document.createElement("p"); message.textContent = "网络繁忙，请稍后重试。";
     const retry = document.createElement("button"); retry.type = "button"; retry.className = "record-retry"; retry.textContent = "点击重试";
     retry.addEventListener("click", () => loadRecords(key, page));
     box.append(title,message,retry); panel.append(box);
@@ -538,7 +540,7 @@ async function refreshSupportChat(){
       const welcome=document.createElement("div");welcome.className="qt-chat-message is-agent";welcome.textContent="您好，欢迎联系晴天支付客服。您可以发送咨询消息，或提交网站、机器人、APP 的 API 调用权限申请。";messages.append(welcome);
     }else data.messages.filter(item=>!known.has(item.id)).forEach(item=>appendChatMessage(root,item));
     const state=root.querySelector("#qt-chat-status");state.textContent=data.api_access_granted?"API 权限已开通":"客服工单 · 在线提交";
-  }catch(error){const state=root.querySelector("#qt-chat-status");if(state)state.textContent=error.message||"消息同步失败"}
+  }catch(error){const state=root.querySelector("#qt-chat-status");if(state)state.textContent="网络繁忙，请稍后重试。"}
 }
 function mountSupportChat() {
   if(qtSupportChatRoot&&qtSupportChatRoot.isConnected)return qtSupportChatRoot;
@@ -552,7 +554,7 @@ function mountSupportChat() {
         <strong>申请调用 API 权限</strong>
         <label>应用类型<select id="qt-chat-app-type"><option value="website">网站</option><option value="bot">机器人</option><option value="app">APP</option></select></label>
         <label>网站 / 应用名称<input id="qt-chat-app-name" maxlength="100" required placeholder="请输入网站或应用名称"></label>
-        <label>网站网址（网站类型必填）<input id="qt-chat-app-url" maxlength="500" type="url" placeholder="https://example.com"></label>
+        <label>网站网址（网站类型必填）<input id="qt-chat-app-url" maxlength="500" type="url" placeholder="https://your-domain.com"></label>
         <div class="qt-developer-pledge"><b>《开发者合规承诺》</b><p>我承诺资金来源合法，不用于违法违规业务。如利用本平台洗钱、诈骗等违法活动，平台将依法采取必要风控措施、保存相关证据并向有关部门报告；我愿依法承担相应责任及损失。</p><label><input id="qt-chat-compliance" type="checkbox" required> 我已阅读并同意上述承诺</label></div>
         <label>上传核验资料（截图、营业执照等，最多 5 个文件）<input id="qt-chat-permission-files" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,application/pdf,text/plain,.doc,.docx"></label>
         <div><button type="button" class="qt-chat-permission-cancel" id="qt-chat-permission-cancel">取消</button><button type="submit">提交申请</button></div>
@@ -570,7 +572,7 @@ function mountSupportChat() {
     event.preventDefault();const value=input.value.trim(),files=root.querySelector("#qt-chat-files").files;if(!value&&!files.length)return;
     const button=event.currentTarget.querySelector("button[type=submit]");button.disabled=true;
     try{const form=new FormData();form.append("payload",JSON.stringify({type:"text",content:value}));Array.from(files).forEach(file=>form.append("files",file));await supportApi("/api/merchant/support/tickets",{method:"POST",body:form});input.value="";root.querySelector("#qt-chat-files").value="";await refreshSupportChat()}
-    catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"消息发送失败"}
+    catch(error){root.querySelector("#qt-chat-status").textContent="网络繁忙，请稍后重试。"}
     finally{button.disabled=false}
   });
   const permission=root.querySelector("#qt-chat-permission");
@@ -582,7 +584,7 @@ function mountSupportChat() {
     try{
       const form=new FormData();form.append("payload",JSON.stringify({type:"permission_request",app_type:root.querySelector("#qt-chat-app-type").value,app_name:root.querySelector("#qt-chat-app-name").value.trim(),website_url:root.querySelector("#qt-chat-app-url").value.trim(),compliance_accepted:root.querySelector("#qt-chat-compliance").checked}));Array.from(root.querySelector("#qt-chat-permission-files").files).forEach(file=>form.append("files",file));await supportApi("/api/merchant/support/tickets",{method:"POST",body:form});
       permission.reset();permission.hidden=true;await refreshSupportChat();
-    }catch(error){root.querySelector("#qt-chat-status").textContent=error.message||"申请提交失败"}
+    }catch(error){root.querySelector("#qt-chat-status").textContent="网络繁忙，请稍后重试。"}
     finally{button.disabled=false}
   });
   return root;
@@ -604,7 +606,7 @@ async function renderAdminSupportTickets(){
     const meta=document.createElement("small");meta.textContent=(item.last_message_type==="permission_request"?"权限申请 · ":"")+item.email+" · "+date(item.last_message_at||item.updated_at);
     card.append(title,msg,meta);card.addEventListener("click",()=>loadDetail(item.id));list.append(card);
    });
-  }catch(error){list.textContent=error.message||"工单读取失败"}
+  }catch(error){list.textContent="网络繁忙，请稍后重试。"}
  }
  async function loadDetail(id){
   qtAdminTicketId=id;detail.hidden=false;detail.innerHTML='<div class="section-loading">正在读取工单详情…</div>';
@@ -627,7 +629,7 @@ async function renderAdminSupportTickets(){
    }else if(data.ticket.api_access_granted){const granted=document.createElement("span");granted.className="qt-access-granted";granted.textContent="该商户 API 权限已开通";actions.append(granted)}
    detail.querySelector("#qt-admin-ticket-reply").onsubmit=async e=>{e.preventDefault();const textarea=e.currentTarget.querySelector("textarea"),button=e.currentTarget.querySelector("button");button.disabled=true;try{await supportApi("/api/admin/support/tickets",{method:"POST",body:JSON.stringify({ticket_id:id,message:textarea.value.trim()})});textarea.value="";detail.querySelector("#qt-admin-ticket-feedback").textContent="回复已发送";await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"发送失败"}finally{button.disabled=false}};
    async function review(action,note){const buttons=actions.querySelectorAll("button");buttons.forEach(b=>b.disabled=true);try{const result=await supportApi("/api/admin/support/tickets/"+encodeURIComponent(id)+"/review",{method:"POST",body:JSON.stringify({action,note})});detail.querySelector("#qt-admin-ticket-feedback").textContent=result.message;await loadDetail(id);await loadList()}catch(error){detail.querySelector("#qt-admin-ticket-feedback").textContent=error.message||"审批失败";buttons.forEach(b=>b.disabled=false)}}
-  }catch(error){detail.textContent=error.message||"工单详情读取失败"}
+  }catch(error){detail.textContent="网络繁忙，请稍后重试。"}
  }
  panel.querySelector("#qt-admin-ticket-refresh").onclick=loadList;await loadList();
  const heartbeat=()=>supportApi("/api/admin/support/presence",{method:"POST",body:JSON.stringify({})}).catch(()=>{});
