@@ -82,7 +82,7 @@ Accept: application/json
 
 ```json
 {
-  "email": "developer@example.com",
+  "email": "developer@your-domain.com",
   "purpose": "register",
   "captchaToken": "Turnstile 返回的 token"
 }
@@ -121,7 +121,7 @@ Accept: application/json
 
 ```json
 {
-  "email": "developer@example.com",
+  "email": "developer@your-domain.com",
   "password": "至少 8 位的密码",
   "code": "123456",
   "consent": true
@@ -149,7 +149,7 @@ Accept: application/json
 
 ```json
 {
-  "email": "developer@example.com",
+  "email": "developer@your-domain.com",
   "password": "账户密码",
   "captchaToken": "Turnstile token",
   "consent": true
@@ -172,7 +172,7 @@ Accept: application/json
 {
   "user": {
     "id": "用户 ID",
-    "email": "developer@example.com",
+    "email": "developer@your-domain.com",
     "display_name": "显示名称"
   }
 }
@@ -202,7 +202,7 @@ Accept: application/json
 
 ```json
 {
-  "email": "developer@example.com",
+  "email": "developer@your-domain.com",
   "code": "123456",
   "password": "新的至少 8 位密码",
   "captchaToken": "新的 Turnstile token",
@@ -344,7 +344,7 @@ if (response.status === 401) {
   throw new Error(error.error || "请求失败");
 } else {
   const data = await response.json();
-  console.log(data.items, data.pagination);
+  renderOrderList(data.items, data.pagination);
 }
 ```
 
