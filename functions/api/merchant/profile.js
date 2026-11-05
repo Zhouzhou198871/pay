@@ -61,18 +61,19 @@ async function ensureMerchant(db, user, origin, secret) {
     const ciphertext = await encryptAppSecret(appSecret, secret);
     const siteName = String(user.display_name || user.username || "晴天支付商户").slice(0, 100);
     const siteUrl = origin;
+
+    // INSERT OR IGNORE makes first-login initialization safe under concurrent requests.
+    // Re-read after every attempt so a concurrent request's row is reused, never duplicated.
     for (let attempt = 0; attempt < 20; attempt++) {
       const merchantNo = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
       const apiKey = randomHex(20);
-      try {
-        await db.prepare("INSERT INTO pay_merchants (id,user_id,site_name,site_url,contact,notify_url,status,app_id,app_secret_ciphertext,created_at,merchant_no,api_key,usdt_network) VALUES (?,?,?,?,?,?, 'pending',?,?,?,?,?,'USDT-TRC20')")
-          .bind(id, user.id, siteName, siteUrl, user.email, "", appId, ciphertext, now, merchantNo, apiKey).run();
-        merchant = { id, user_id: user.id, site_name: siteName, site_url: siteUrl, status: "pending", app_id: appId, merchant_no: merchantNo, api_key: apiKey, usdt_address: null, usdt_network: "USDT-TRC20", withdraw_password_hash: null };
-        break;
-      } catch (error) {
-        if (attempt === 19) throw error;
-      }
+      await db.prepare("INSERT OR IGNORE INTO pay_merchants (id,user_id,site_name,site_url,contact,notify_url,status,app_id,app_secret_ciphertext,created_at,merchant_no,api_key,usdt_network) VALUES (?,?,?,?,?,?, 'pending',?,?,?,?,?,'USDT-TRC20')")
+        .bind(id, user.id, siteName, siteUrl, user.email, "", appId, ciphertext, now, merchantNo, apiKey).run();
+      merchant = await db.prepare("SELECT id, user_id, site_name, site_url, status, app_id, merchant_no, api_key, usdt_address, usdt_network, withdraw_password_hash, v2_private_key, v2_public_key, v2_key_created_at, api_access_granted FROM pay_merchants WHERE user_id = ? ORDER BY created_at DESC LIMIT 1")
+        .bind(user.id).first();
+      if (merchant) break;
     }
+    if (!merchant) throw new Error("商户记录初始化失败，请确认 pay_merchants 迁移已执行且唯一索引正常");
   }
 
   if (merchant && (!merchant.merchant_no || !merchant.api_key)) {
@@ -98,6 +99,7 @@ export async function onRequestGet({ request, env }) {
   if (!user) return json({ error: "请先登录。" }, 401);
   try {
     const merchant = await ensureMerchant(env.AUTH_DB, user, new URL(request.url).origin, env.AUTH_SECRET);
+    const platformPublicKey = await ensurePlatformKeyPair(env.AUTH_DB, env.AUTH_SECRET);
     return json({
       user: { id: user.id, email: user.email, display_name: user.display_name || user.username || "" },
       merchant: {
