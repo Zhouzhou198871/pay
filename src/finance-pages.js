@@ -4,8 +4,8 @@ const $=(s,r=document)=>r.querySelector(s);
 const esc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money=(v,c="USDT")=>{if(v==null||!Number.isFinite(Number(v)))return "—";let n=BigInt(Math.trunc(Number(v))),neg=n<0n;if(neg)n=-n;return(neg?"-":"")+(n/1000000n).toLocaleString("en-US")+"."+String(n%1000000n).padStart(6,"0")+" "+c};
 const yuan=v=>v==null||!Number.isFinite(Number(v))?"—":"¥ "+(Number(v)/100).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
-const date=v=>{let n=Number(v);return!Number.isFinite(n)||n<=0?"—":new Intl.DateTimeFormat("zh-CN",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"}).format(new Date(n*1000))};
-const labels={pending:"待审核",paid:"已打款",failed:"失败",cancelled:"已取消",refunded:"已退款",approved:"已通过",processing:"打款处理中",rejected:"已拒绝"};
+const date=v=>{let n=Number(v);if(!Number.isFinite(n)||n<=0)return "—";const d=new Date(n*1000);return Number.isNaN(d.getTime())?"—":new Intl.DateTimeFormat("sv-SE",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"}).format(d)};
+const labels={pending:"待支付",paid:"已支付",failed:"失败",cancelled:"已取消",refunded:"已退款",approved:"已通过",processing:"打款处理中",rejected:"已拒绝"};
 const status=v=>labels[v]||(v?String(v):"—");
 function toast(msg,type="error"){let e=$("#qt-finance-toast");if(!e){e=document.createElement("div");e.id="qt-finance-toast";e.className="qt-finance-toast";document.body.append(e)}e.dataset.type=type;e.textContent=msg;e.classList.add("is-visible");clearTimeout(e._timer);e._timer=setTimeout(()=>e.classList.remove("is-visible"),2600)}
 function cell(v,cls=""){let e=document.createElement("td");e.className=cls;e.textContent=v==null||v===""?"—":String(v);return e}
@@ -28,7 +28,7 @@ function updateEstimate(){
  const raw=input.value.trim(),valid=/^\d{1,10}(?:\.\d{1,6})?$/.test(raw),micro=valid?Math.round(Number(raw)*1e6):0;
  const fee=feeFor(micro),net=withdrawType==="usdt"?micro:Math.max(0,micro-fee);
  $("#qtw-fee",panel).textContent=valid&&micro>0?fmt(fee/1e6,6)+" USDT":"—";
- $("#qtw-net",panel).textContent=valid&&micro>0?(withdrawType==="usdt"?fmt(net/1e6,6)+" USDT":(rate>0?"¥ "+fmt(net/1e6*rate,2):"汇率待配置")):"—";
+ $("#qtw-net",panel).textContent=valid&&micro>0?(withdrawType==="usdt"?fmt(net/1e6,6)+" USDT":(rate>0?"¥ "+fmt(net/1e6*rate,2):"暂无法换算")):"—";
  $("#qtw-rate-note",panel).textContent=withdrawType==="usdt"?"手续费：不足 500 USDT 固定 5 USDT；达到 500 USDT 免手续费。":"合规法币提现手续费：6%；预计到账按配置汇率 "+(rate>0?rate.toFixed(4):"未配置")+" CNY/USDT 换算。";
 }
 function setType(type){
@@ -85,7 +85,7 @@ async function load(p=1){
    },"qt-finance-table qt-withdraw-table");
    root.replaceChildren(w);pages(root,d.pagination,n=>load(n));
   }
- }catch(e){root.textContent=e.message||"提现记录读取失败"}
+ }catch(e){root.textContent="网络繁忙，请稍后重试。"}
 }
 filter.onsubmit=e=>{e.preventDefault();load(1)};filter.onreset=()=>setTimeout(()=>load(1),0);
 form.onsubmit=async e=>{
@@ -107,7 +107,7 @@ form.onsubmit=async e=>{
   const r=await fetch(API.withdraw,{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify(payload)}),d=await r.json().catch(()=>({}));
   if(!r.ok)throw Error(d.error||"提现申请失败");
   toast(d.message||"提现申请已提交","success");form.reset();clearQr();input.value="";$("#qtw-feedback",panel).textContent="";setType("usdt");await load(1);
- }catch(err){$("#qtw-feedback",panel).textContent=err.message||"提现申请失败";toast(err.message||"提现申请失败")}
+ }catch(err){$("#qtw-feedback",panel).textContent="网络繁忙，请稍后重试。";toast("网络繁忙，请稍后重试。")}
  finally{b.disabled=false}
 };
 async function loadAdmin(){
@@ -148,11 +148,11 @@ async function loadAdmin(){
    }
    card.append(actions);list.append(card);
   });
- }catch(e){list.textContent=e.message||"管理员审核列表读取失败"}
+ }catch(e){list.textContent="网络繁忙，请稍后重试。"}
 }
 async function review(id,action,note=""){
  try{const r=await fetch("/api/admin/withdrawals/"+encodeURIComponent(id)+"/review",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({action,note})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"审核操作失败");toast(d.message||"审核状态已更新","success");await loadAdmin();await load(1)}
- catch(e){toast(e.message||"审核操作失败")}
+ catch(e){toast("网络繁忙，请稍后重试。")}
 }
 $("#qtw-admin-refresh",panel).onclick=loadAdmin;
 const dlg=$("#qtw-admin-payout-dialog",panel);
@@ -160,7 +160,7 @@ $("#qtw-admin-dialog-close",panel).onclick=()=>dlg.close();$("#qtw-admin-dialog-
 $("#qtw-admin-payout-form",panel).onsubmit=async e=>{
  e.preventDefault();const b=e.currentTarget.querySelector('[type="submit"]');b.disabled=true;
  try{const r=await fetch("/api/admin/withdrawals/"+encodeURIComponent(adminPayoutId)+"/paid",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json",Accept:"application/json"},body:JSON.stringify({payout_reference:$("#qtw-admin-reference",panel).value.trim(),note:$("#qtw-admin-note",panel).value.trim()})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.error||"打款登记失败");toast(d.message||"已登记打款","success");dlg.close();await loadAdmin();await load(1)}
- catch(err){$("#qtw-admin-payout-feedback",panel).textContent=err.message||"操作失败"}
+ catch(err){$("#qtw-admin-payout-feedback",panel).textContent="网络繁忙，请稍后重试。"}
  finally{b.disabled=false}
 };
 setType("usdt");load();loadAdmin();
