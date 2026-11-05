@@ -53,6 +53,7 @@ function rememberedEmail() {
 }
 
 function authMarkup() {
+  document.title = mode === "register" ? "注册 - 晴天支付" : mode === "forgot" ? "重置密码 - 晴天支付" : "登录 - 晴天支付";
   const registering = mode === "register";
   return shell(`
     <div class="form-heading">
@@ -106,6 +107,7 @@ function openLegal(kind) {
 }
 
 async function renderDashboard() {
+  document.title = "用户中心 - 晴天支付";
   disposeCaptcha();
   app.innerHTML = `
     <main class="merchant-app qt-dashboard">
