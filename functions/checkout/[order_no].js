@@ -17,7 +17,7 @@ export async function onRequestGet({ params, env }) {
   const rawAmount = currency === 'USDT' && order.amount_micro != null
     ? Number(order.amount_micro) / 1000000
     : Number(order.amount_cents || 0) / 100;
-  const amount = Number.isFinite(rawAmount) ? rawAmount.toFixed(currency === 'USDT' ? 6 : 2).replace(/0+$/, '').replace(/\.$/, '') : '0.00';
+  const amount = Number.isFinite(rawAmount) ? rawAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: currency === 'USDT' ? 6 : 2 }) : '0.00';
   const amountLabel = payInfo.amount_cny ? '¥' + esc(payInfo.amount_cny) : currency === 'CNY' ? '¥' + amount : amount + ' ' + currency;
   const subject = isInternalDemoRecord && /UI\s*测试订单/i.test(String(order.subject || ''))
     ? '订单支付'
@@ -28,7 +28,7 @@ export async function onRequestGet({ params, env }) {
   const initialCreatedAt = Number.isFinite(createdAt) && createdAt > 0 ? createdAt : 0;
   const displayDate = initialCreatedAt > 0 ? new Date(initialCreatedAt * 1000) : new Date();
   const safeDisplayDate = Number.isNaN(displayDate.getTime()) || displayDate.getTime() > Date.now() + 60000 ? new Date() : displayDate;
-  const createdAtLabel = safeDisplayDate.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false });
+  const createdAtLabel = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Shanghai', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).format(safeDisplayDate);
   const displayOrderNo = isInternalDemoRecord ? '—' : String(order.out_trade_no || orderNo);
   const method = String(order.method || '');
   const methodLabel = method === 'alipay' || method === 'nzzf' ? '支付宝' : method === 'alipay_h5' ? '支付宝 H5' : method || '—';
@@ -48,7 +48,7 @@ export async function onRequestGet({ params, env }) {
   var createdNode=document.getElementById('created-at');
   var date=createdAt>0?new Date(createdAt*1000):new Date();
   if(Number.isNaN(date.getTime())||date.getTime()>Date.now()+60000)date=new Date();
-  createdNode.textContent=date.toLocaleString('zh-CN',{hour12:false});
+  createdNode.textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).format(date);
   if(qr&&window.QRCode){new QRCode(document.getElementById('qrcode'),{text:qr,width:202,height:202,colorDark:'#14243b',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});}
   else if(qr){document.getElementById('qr-area').innerHTML='<div class="unavailable">二维码暂时无法加载，请稍后刷新页面。</div>';}
   function showFailure(label){\n    var s=document.getElementById('status');s.className='status failed';s.innerHTML='<i></i>'+label;\n    document.getElementById('poll-text').textContent='如对订单状态有疑问，请联系商户核实。';\n    document.getElementById('pay-desc').textContent='本次支付未完成，请勿重复付款。';\n    clearInterval(timer);\n  }\n  function showPaid(){
