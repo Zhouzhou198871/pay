@@ -409,7 +409,7 @@ async function loadCaptcha() {
     if (loadId !== captchaLoadSeq) return;
     slot.innerHTML = '<span>安全验证加载失败，请重试</span> <button type="button" class="text-link" id="captcha-retry">重新加载</button>';
     slot.querySelector("#captcha-retry")?.addEventListener("click", loadCaptcha);
-    showToast(error.message || "安全验证加载失败，请刷新页面重试", "error");
+    showToast("安全验证暂时无法加载，请稍后重试。", "error");
   }
 }
 
