@@ -469,7 +469,7 @@ function renderForgotPassword() {
     if((payload.password||"").length<8){showToast("新密码至少需要 8 位","error");return;}
     if(!payload.captchaToken){showToast("请先完成人机验证","error");return;}
     const button=e.currentTarget.querySelector(".primary-button");button.disabled=true;button.querySelector("span").textContent="正在安全重置…";
-    try{const r=await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"重置失败");showToast("密码重置成功，请使用新密码登录","success");setTimeout(()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();},900);}catch(err){resetCaptcha();showToast(err.message,"error");button.disabled=false;button.querySelector("span").textContent="确认重置密码";}
+    try{const r=await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"重置失败");showToast("密码重置成功，请使用新密码登录","success");setTimeout(()=>{mode="login";app.innerHTML=authMarkup();bindAuthEvents();},900);}catch(err){resetCaptcha();showToast("网络繁忙，请稍后重试。","error");button.disabled=false;button.querySelector("span").textContent="确认重置密码";}
   });
   loadCaptcha();
 }
