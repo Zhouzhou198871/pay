@@ -457,7 +457,7 @@ function renderForgotPassword() {
     if(!email.includes("@")){showToast("请输入有效邮箱地址","error");return;}
     if(!window.__qtCaptchaToken){showToast("请先完成人机验证","error");return;}
     button.disabled=true;button.textContent="发送中…";
-    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";if(window.turnstile)window.turnstile.reset();showToast("验证码已发送","success");}catch(e){resetCaptcha();button.disabled=false;button.textContent="获取验证码";showToast(e.message,"error");}
+    try{const r=await fetch("/api/auth/send-code",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,purpose:"reset",captchaToken:window.__qtCaptchaToken})});resetCaptcha();const d=await r.json();if(!r.ok)throw new Error(d.error||"发送失败");let n=60;button.textContent="重新获取 "+n+"s";const t=setInterval(()=>{n--;if(n<=0){clearInterval(t);button.disabled=false;button.textContent="重新获取";}else button.textContent="重新获取 "+n+"s";},1000);window.__qtCaptchaToken="";if(window.turnstile)window.turnstile.reset();showToast("验证码已发送","success");}catch(e){resetCaptcha();button.disabled=false;button.textContent="获取验证码";showToast("网络繁忙，请稍后重试。","error");}
   });
   document.querySelector("#reset-form")?.addEventListener("submit",async e=>{
     e.preventDefault();const payload=Object.fromEntries(new FormData(e.currentTarget).entries());
