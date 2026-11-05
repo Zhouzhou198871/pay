@@ -306,7 +306,7 @@ fetch("${baseUrl}/api/merchant/dashboard", {
           <div class="qt-profile-field"><label>账户名称</label><div class="qt-profile-value">${escapeText(displayName)}</div></div>
           <div class="qt-profile-field"><label>登录邮箱</label><div class="qt-profile-value">${escapeText(email)}</div></div>
           <div class="qt-profile-field"><label>账户状态</label><div class="qt-profile-value"><span class="qt-profile-state">${escapeText(accountStatus)}</span></div></div>
-          <div class="qt-profile-notice"><strong>资料修改暂未开放</strong><p>当前账户 API 仅支持读取个人资料，没有修改 display_name、邮箱或账户资料的写入接口。这里先展示已验证的账户信息，不会提供无法保存的假表单。</p></div>
+          <div class="qt-profile-notice"><strong>账户资料管理</strong><p>账户基础信息依据已验证的注册资料维护。如需更正账户信息，请通过在线客服提交申请。</p></div>
         </section>
         <hr class="qt-profile-divider">
         <section class="qt-profile-section">
