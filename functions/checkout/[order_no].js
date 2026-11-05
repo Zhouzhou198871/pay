@@ -2,7 +2,7 @@ const html = (body, status = 200) => new Response(body, { status, headers: { 'Co
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 export async function onRequestGet({ params, env }) {
-  if (!env.AUTH_DB) return html('Service unavailable', 503);
+  if (!env.AUTH_DB) return html('系统繁忙，请稍后重试。', 503);
   const orderNo = String(params.order_no || '');
   if (!/^[A-Za-z0-9_.:-]{1,80}$/.test(orderNo)) return html('订单不存在', 404);
   const order = await env.AUTH_DB.prepare(
