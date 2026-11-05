@@ -251,7 +251,7 @@ async function sendCode() {
     button.textContent = "获取验证码";
     const hint = document.querySelector("#captcha-hint");
     if (hint) hint.textContent = "验证码发送未完成，请检查提示后重试。";
-    showToast(error.message, "error");
+    showToast("网络繁忙，请稍后重试。", "error");
   }
 }
 
