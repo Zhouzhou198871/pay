@@ -512,3 +512,13 @@
 .qt-chat-attachment img{display:block;width:86px;height:68px;object-fit:cover;border-radius:6px;background:#f1f5f9}
 .qt-chat-load-older{align-self:center;margin:0 auto 8px;padding:7px 12px;border:1px solid #d8e6f1;border-radius:20px;background:#fff;color:#5080a7;font-size:10px}
 .qt-admin-message.is-ai{align-self:flex-start;border-color:#d5e7f5;background:#f0f8ff}
+
+
+/* Centered USDT balance hierarchy */
+.qt-balance-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:26px 20px 20px}
+.qt-balance-card .qt-balance-primary{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;width:100%;min-width:0}
+.qt-balance-card .qt-balance-label{color:#8794a3;font-size:13px;font-weight:600;letter-spacing:.02em}
+.qt-balance-card .qt-balance-value{display:flex;align-items:baseline;justify-content:center;gap:7px;max-width:100%;color:#1769d2;font-size:clamp(34px,6vw,48px);font-weight:850;line-height:1.12;letter-spacing:-.045em;overflow-wrap:anywhere}
+.qt-balance-card .qt-balance-value small{color:#347acb;font-size:.48em;font-weight:750;letter-spacing:-.01em}
+.qt-balance-card .qt-balance-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;width:100%}
+@media(max-width:640px){.qt-balance-card{gap:15px;padding:23px 15px 17px}.qt-balance-card .qt-balance-value{font-size:clamp(32px,9vw,42px)}.qt-balance-card .qt-balance-actions{width:100%}.qt-balance-card .qt-balance-actions button{flex:1}}
